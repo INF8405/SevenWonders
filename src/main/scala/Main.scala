@@ -1,49 +1,128 @@
 package com.github.jedesah
 
 
-object SevenWonders {
-  def beginGame(nbPlayers: Int): Game = ???
+object SevenWonders 
+{
+  def beginGame( nbPlayers: Int ): Game = ???
 
-  class Card(name: String, cost: Map[Resource, Int], evolutions: List[Card])
+  class Card( 
+    name: String, 
+    cost: Map[Resource, Int]
+  )
 
-  trait ScienceCategory
-  trait Category1 extends ScienceCategory
-  trait Categpry2 extends ScienceCategory
-  trait Category3 extends ScienceCategory
+  class EvolutionCard
+  {
+    name: String, 
+    cost: Map[Resource, Int],
+    evolutions: Set[Card] 
+  } extends Card( name, cost )
 
-  case class ScienceCard(name: String, cost: Map[Resource, Int], evolutions: List[Card], category: ScienceCategory) extends Card(name, cost, evolutions)
-  case class MilitaryCard(name: String, cost: Map[Resource, Int], evolutions: List[Card], value: Int) extends Card(name, cost, evolutions)
-  class CommerceCard(name: String, cost: Map[Resource, Int], evolutions: List[Card]) extends Card(name, cost, evolutions)
-  case class RebateCommerceCard(name: String, cost: Map[Resource, Int], evolutions: List[Card], affectedResources: List[Resource], fromWho: List[NeighboorReference]) extends CommerceCard(name, cost, evolutions)
-  case class RewardCommerceCard(name: String, cost: Map[Resource, Int], evolutions: List[Card], coinReward: Option[CoinReward], victoryReward: Option[VictoryPointReward]) extends CommerceCard(name, cost, evolutions)
-  case class ProductionCommerceCard(name: String, cost: Map[Resource, Int], evolutions: List[Card], prod: Production) extends CommerceCard(name, cost, evolutions)
-  class ResourceCard(name: String, cost: Map[Resource, Int], evolutions: List[Card], production: Production) extends CommerceCard(name, cost, evolutions)
-  case class BasicResourceCard(name: String, cost: Map[Resource, Int], evolutions: List[Card], production: Production) extends ResourceCard(name, cost, evolutions, production)
-  case class AdvancedResourceCard(name: String, cost: Map[Resource, Int], evolutions: List[Card], production: Production) extends ResourceCard(name, cost, evolutions, production)
-  case class PrestigeCard(name: String, cost: Map[Resource, Int], evolutions: List[Card], amount: Int) extends Card(name, cost, evolutions)
-  case class GuildCard(name: String, cost: Map[Resource, Int], evolutions: List[Card], vicPointReward: VictoryPointReward) extends Card(name, cost, evolutions)
+  sealed trait ScienceCategory
+  object ScienceCompass extends ScienceCategory
+  object ScienceGear extends ScienceCategory
+  object ScienceStone extends ScienceCategory
 
-  import scala.reflect.ClassTag
+  case class ScienceCard(
+    name: String, 
+    cost: Map[Resource, Int], 
+    evolutions: Set[Card], 
+    category: ScienceCategory
+  ) extends EvolutionCard( name, cost, evolutions )
 
-  case class CoinReward(amount: Int, forEach: ClassTag[Card], from: List[PlayerReference])
-  case class VictoryPointReward(amount: Int, forEach: ClassTag[Card], from: List[PlayerReference])
+  case class MilitaryCard(
+    name: String, 
+    cost: Map[Resource, Int],
+    evolutions: Set[Card], 
+    value: Int
+  ) extends EvolutionCard( name, cost, evolutions )
 
-  trait Resource
-  trait BasicResource extends Resource
-  trait AdvancedResource extends Resource
-  trait Clay extends BasicResource
-  trait Wood extends BasicResource
-  trait Ore extends BasicResource
-  trait Stone extends BasicResource
-  trait Glass extends AdvancedResource
-  trait Paper extends AdvancedResource
-  trait Tapestry extends AdvancedResource
+  class CommercialCard(
+    name: String,
+    cost: Map[Resource, Int], 
+    evolutions: Set[Card]
+  ) extends EvolutionCard( name, cost, evolutions )
 
-  trait PlayerReference
-  trait NeighboorReference
-  trait Left extends NeighboorReference
-  trait Right extends NeighboorReference
-  trait Self extends PlayerReference
+  case class RebateCommercialCard(
+    name: String,
+    cost: Map[Resource, Int],
+    evolutions: Set[Card], 
+    affectedResources: List[Resource],
+    fromWho: List[NeighboorReference]
+  ) extends CommercialCard( name, cost, evolutions )
+
+  case class ProductionCommercialCard(
+    name: String, 
+    cost: Map[Resource, Int], 
+    evolutions: Set[Card], 
+    prod: Production
+  ) extends CommercialCard( name, cost, evolutions )
+
+  case class RewardCommercialCard(
+    name: String, 
+    cost: Map[Resource, Int], 
+    evolutions: List[Card], 
+    coinReward: Option[CoinReward], 
+    victoryReward: Option[VictoryPointReward]
+  ) extends CommercialCard( name, cost, evolutions )
+
+  class ResourceCard(
+    name: String, 
+    cost: Map[Resource, Int], 
+    production: Production
+  ) extends Card(name, cost )
+
+  case class RawMaterialCard(
+    name: String, 
+    cost: Map[Resource, Int],
+    production: Production
+  ) extends ResourceCard(name, cost, production)
+
+  case class ManufacturedGoodCard(
+    name: String,
+    cost: Map[Resource, Int], 
+    production: Production
+  ) extends ResourceCard(name, cost, production)
+  
+  case class CivilianStructureCard(
+    name: String,
+    cost: Map[Resource, Int],
+    evolutions: Set[Card],
+    amount: Int
+  ) extends EvolutionCard( name, cost, evolutions )
+
+  case class GuildCard(
+    name: String,
+    cost: Map[Resource, Int]//, 
+    //vicPointReward: VictoryPointReward
+  ) extends Card( name, cost )
+
+  case class CoinReward(
+    amount: Int, 
+    forEach: ClassTag[Card], 
+    from: Set[PlayerReference]
+  )
+
+  case class VictoryPointReward(
+    amount: Int//, 
+    //forEach: ClassTag[Card], 
+    //from: Set[PlayerReference]
+  )
+
+  sealed trait Resource
+  object RawMaterial extends Resource
+  object ManufacturedGood extends Resource
+  object Clay extends RawMaterial
+  object Wood extends RawMaterial
+  object Ore extends RawMaterial
+  object Stone extends RawMaterial
+  object Glass extends ManufacturedGood
+  object Paper extends ManufacturedGood
+  object Tapestry extends ManufacturedGood
+
+  sealed trait PlayerReference
+  object Left extends PlayerReference
+  object Right extends PlayerReference
+  object Self extends PlayerReference
 
   trait Production {
     def consume(resources: Map[Resource, Int]): List[Map[Resource, Int]]
@@ -62,7 +141,7 @@ object SevenWonders {
 
   case class Player(hand: List[Card], coins: Int, battleMarkers: List[BattleMarker], played: List[Card]) {
     def discard(card: Card): Player = ???
-    def play(card: Card, trades: Map[Resource, List[PlayerReference]]): Player = ???
+    def play(card: Card, consume: Map[Resource, Set[PlayerReference]]): Player = ???
     def playableCards(availableThroughTrade: List[Production]): List[Card] = ???
     def totalPossibleProductions: List[Production] = ???
     def tradableProductions: List[Production] = ???
@@ -81,8 +160,8 @@ object SevenWonders {
   case class PlayAction(card: Card) extends Action(card)
   case class DiscardAction(card: Card) extends Action(card)
 
-  trait BattleMarker
-  trait LostBattleMarker extends BattleMarker
+  sealed trait BattleMarker
+  class LostBattleMarker extends BattleMarker
   case class WonBattleMarker(vicPoints: Int) extends BattleMarker
 
   type PlayerAmount = Int
