@@ -70,15 +70,19 @@ object SevenWonders
     name: String,
     cost: Multiset[Resource],
     production: Production
-  ) extends ResourceCard(name, cost, production)
+  ) extends ResourceCard(name, cost, production) {
+    def this(name: String, production: Production) = this(name, Multiset(), production)
+  }
 
   case class ManufacturedGoodCard(
     name: String,
     cost: Multiset[Resource],
     production: Production
-  ) extends ResourceCard(name, cost, production)
+  ) extends ResourceCard(name, cost, production) {
+    def this(name: String, production: Production) = this(name, Multiset(), production)
+  }
   
-  case class CivilianStructureCard(
+  case class CivilianCard(
     name: String,
     cost: Multiset[Resource],
     evolutions: Set[Card],
@@ -91,11 +95,13 @@ object SevenWonders
     vicPointReward: VictoryPointReward
   ) extends Card( name, cost, Set() )
 
-  case class CoinReward(
+  trait CoinReward
+  case class SimpleCoinReward(amount: Int) extends CoinReward
+  case class ComplexCoinReward(
     amount: Int,
     //forEach: Manifest[Card],
     from: Set[PlayerReference]
-  )
+  ) extends CoinReward
 
   case class VictoryPointReward(
     amount: Int,
@@ -123,24 +129,29 @@ object SevenWonders
   trait Production {
     def consume(resources: Multiset[Resource]): Set[Multiset[Resource]]
     def +(other: Production): Production
+    def |(other: Production): Production
   }
   case class OptionalProduction(possibilities: Set[CumulativeProduction]) extends Production {
     def consume(resources: Multiset[Resource]): Set[Multiset[Resource]] = ???
     def +(other: Production): Production = ???
+    def |(other: Production): Production = ???
   }
   case class CumulativeProduction(resources: Multiset[Resource]) extends Production {
     def this(resource: Resource) = this(Multiset(resource))
     def consume(resources: Multiset[Resource]): Set[Multiset[Resource]] = ???
     def +(other: Production): Production = ???
+    def |(other: Production): Production = ???
   }
 
-  case class Player(hand: Set[Card], coins: Int, battleMarkers: Multiset[BattleMarker], played: Set[Card]) {
+  implicit def ResourceToProduction(value: Resource) = new CumulativeProduction(value)
+
+  case class Player(hand: Set[Card], coins: Int, battleMarkers: Multiset[BattleMarker], played: Multiset[Card]) {
     def discard(card: Card): Player = ???
-    def play(card: Card, consume: Map[Resource, Multiset[NeighboorReference]]): Player = ???
-    def playableCards(availableThroughTrade: Set[Production]): Set[Card] = ???
-    def totalPossibleProductions: Set[Production] = ???
-    def tradableProductions: Set[Production] = ???
-    def score: Int = ???
+    def play(card: Card, tradedResources: Map[Resource, Multiset[NeighboorReference]]): Player = ???
+    def playableCards(availableThroughTrade: Map[NeighboorReference, Production]): Set[Card] = ???
+    def totalProduction: Production = ???
+    def tradableProduction: Production = ???
+    def score(neightboorCards: Map[NeighboorReference, Multiset[Card]]): Int = ???
   }
 
   type Age = Int
@@ -159,11 +170,124 @@ object SevenWonders
 
   sealed trait BattleMarker
   class DefeatBattleMarker extends BattleMarker
-  case class VicotryBattleMarker(vicPoints: Int) extends BattleMarker
+  case class VictoryBattleMarker(vicPoints: Int) extends BattleMarker
 
   type PlayerAmount = Int
 
   case class GameSetup(allCards: Map[Age, Map[PlayerAmount, Multiset[Card]]], guildCards: Set[GuildCard]) {
     def generateCards: Map[Age, Multiset[Card]] = ???
   }
+
+  ////
+  // AGE I
+  ////
+
+  // Commercial Cards
+  val TAVERN = RewardCommercialCard("TAVERN", Multiset(), Set(), Some(SimpleCoinReward(5)), None)
+  val WEST_TRADING_POST = RebateCommercialCard("WEST TRADING POST", Multiset(), Set(FORUM), Set(Clay, Stone, Wood, Ore), Set(Left))
+  val MARKETPLACE = RebateCommercialCard("MARKETPLACE", Multiset(), Set(CARAVANSERY), Set(Glass, Tapestry, Paper), Set(Left, Right))
+  val EAST_TRADING_POST = RebateCommercialCard("EAST TRADING POST", Multiset(), Set(FORUM), Set(Clay, Stone, Wood, Ore), Set(Right))
+
+  // Military Cards
+  val STOCKADE = MilitaryCard("STOCKADE", Multiset(Wood), Set(), 1)
+  val BARRACKS = MilitaryCard("BARRACKS", Multiset(Ore), Set(), 1)
+  val GUARD_TOWER = MilitaryCard("GUARD TOWER", Multiset(Clay), Set(), 1)
+
+  // Science Cards
+  val WORKSHOP = ScienceCard("WORKSHOP", Multiset(Glass), Set(LABORATORY, ARCHERY_RANGE), ScienceGear)
+  val SCRIPTORIUM = ScienceCard("SCRIPTORIUM", Multiset(Paper), Set(COURTHOUSE, LIBRARY), ScienceStone)
+  val APOTHECARY = ScienceCard("APOTHECARY", Multiset(Tapestry), Set(STABLES, DISPENSARY), ScienceCompass)
+
+
+  // Civilian Cards
+  val THEATER = CivilianCard("THEATER", Multiset(), Set(STATUE), 2)
+  val BATHS = CivilianCard("BATHS", Multiset(Stone), Set(AQUEDUCT), 3)
+  val ALTAR = CivilianCard("ALTAR", Multiset(), Set(TEMPLE), 2)
+  val PAWNSHOP = CivilianCard("PAWNSHOP", Multiset(), Set(), 3)
+
+  // TODO: Add coin cost
+  // Raw Material Cards
+  val TREE_FARM = new RawMaterialCard("TREE FARM", Wood | Clay)
+  val MINE = new RawMaterialCard("MINE", Stone | Ore)
+  val CLAY_PIT = new RawMaterialCard("CLAY PIT",Clay | Ore)
+  val TIMBER_YARD = new RawMaterialCard("TIMBER YARD", Stone | Wood)
+  val STONE_PIT = new RawMaterialCard("STONE PIT", Stone)
+  val FOREST_CAVE = new RawMaterialCard("FOREST CAVE", Wood | Ore)
+  val LUMBER_YARD = new RawMaterialCard("LUMBER YARD", Wood)
+  val ORE_VEIN = new RawMaterialCard("ORE VEIN", Ore)
+  val EXCAVATION = new RawMaterialCard("EXCAVATION", Stone | Clay)
+  val CLAY_POOL = new RawMaterialCard("CLAY POOL", Clay)
+
+  // Manufactured Good Cards
+  val LOOM = new ManufacturedGoodCard("LOOM", Tapestry)
+  val GLASSWORKS = new ManufacturedGoodCard("GLASSWORKS", Glass)
+  val PRESS = new ManufacturedGoodCard("PRESS", Paper)
+
+  ////
+  // AGE II
+  ////
+
+  // Commercial Cards
+  val CARAVANSERY = ProductionCommercialCard("CARAVANSERY", Multiset(Wood, Wood), Set(LIGHTHOUSE), Wood | Stone | Ore | Clay)
+  val FORUM = ProductionCommercialCard("FORUM", Multiset(Clay, Clay), Set(HAVEN), Glass | Tapestry | Paper)
+  val BAZAR = RewardCommercialCard("BAZAR", Multiset(), Set(), Some(ComplexCoinReward(2, Set(Left, Self, Right))), None)
+  val VINEYARD = RewardCommercialCard("VINEYARD", Multiset(), Set(), Some(ComplexCoinReward(1, Set(Left, Self, Right))), None)
+
+  // Military Cards
+  val WALLS = MilitaryCard("WALLS", Multiset(Stone, Stone, Stone), Set(FORTIFICATIONS), 2)
+  val ARCHERY_RANGE = MilitaryCard("ARCHERY RANGE", Multiset(Wood, Wood, Ore), Set(), 2)
+  val TRAINING_GROUND = MilitaryCard("TRAINING GROUND", Multiset(Ore, Ore, Wood), Set(CIRCUS), 2)
+  val STABLES = MilitaryCard("STABLES", Multiset(Clay, Wood, Ore), Set(), 2)
+
+  // Science Cards
+  val SCHOOL = ScienceCard("SCHOOL", Multiset(Wood, Paper), Set(ACADEMY, STUDY), ScienceStone)
+  val LIBRARY = ScienceCard("LIBRARY", Multiset(Stone, Stone, Tapestry), Set(SENATE, UNIVERSITY), ScienceStone)
+  val LABORATORY = ScienceCard("LABORATORY", Multiset(Clay, Clay, Paper), Set(OBSERVATORY, SIEGE_WORKSHOP), ScienceGear)
+  val DISPENSARY = ScienceCard("DISPENSARY", Multiset(Ore, Ore, Glass), Set(LODGE, ARENA), ScienceCompass)
+
+  // Civilian Cards
+  val AQUEDUCT = CivilianCard("AQUEDUC", Multiset(Stone, Stone, Stone), Set(), 5)
+  val STATUE = CivilianCard("STATUE", Multiset(Ore, Ore, Wood), Set(GARDENS), 4)
+  val TEMPLE = CivilianCard("TEMPLE", Multiset(Wood, Clay, Glass), Set(PANTHEON), 3)
+  val COURTHOUSE = CivilianCard("COURTHOUSE", Multiset(Clay, Clay, Tapestry), Set(), 4)
+
+  // TODO: Add coin cost
+  // Raw Material Cards
+  val FOUNDRY = new RawMaterialCard("FOUNDRY", Ore + Ore)
+  val QUARRY = new RawMaterialCard("QUARRY", Stone + Stone)
+  val BRICKYARD = new RawMaterialCard("BRICKYARD", Clay + Clay)
+  val SAWMILL = new RawMaterialCard("SAWMILL", Wood + Wood)
+
+  ////
+  // AGE III
+  ////
+
+  // Commercial Cards
+  val ARENA = RewardCommercialCard("ARENA", Multiset(Stone, Stone, Ore), Set(), Some(ComplexCoinReward(3, Set(Self))), Some(VictoryPointReward(1, Set(Self))))
+  val CHAMBER_OF_COMMERCE = RewardCommercialCard("CHAMBER OF COMMERCE", Multiset(Clay, Clay, Paper), Set(), Some(ComplexCoinReward(2, Set(Self))), Some(VictoryPointReward(2, Set(Self))))
+  val LIGHTHOUSE = RewardCommercialCard("LIGHTHOUSE", Multiset(Stone, Glass), Set(), Some(ComplexCoinReward(1, Set(Self))), Some(VictoryPointReward(1, Set(Self))))
+  val HAVEN = RewardCommercialCard("HAVEN", Multiset(Wood, Ore, Tapestry), Set(), Some(ComplexCoinReward(1, Set(Self))), Some(VictoryPointReward(1, Set(Self))))
+
+  // Military Cards
+  val CIRCUS = MilitaryCard("CIRCUS", Multiset(Stone, Stone, Stone, Ore), Set(), 3)
+  val FORTIFICATIONS = MilitaryCard("FORTIFICATIONS", Multiset(Ore, Ore, Ore, Stone), Set(), 3)
+  val ARSENAL = MilitaryCard("ARSENAL", Multiset(Wood, Wood, Ore, Tapestry), Set(), 3)
+  val SIEGE_WORKSHOP = MilitaryCard("SIEGE WORKSHOP", Multiset(Clay, Clay, Clay, Wood), Set(), 3)
+
+  // Science Cards
+  val OBSERVATORY = ScienceCard("OBSERVATORY", Multiset(Ore, Ore, Glass, Tapestry), Set(), ScienceGear)
+  val ACADEMY = ScienceCard("ACADEMY", Multiset(Stone, Stone, Stone), Set(), ScienceCompass)
+  val LODGE = ScienceCard("LODGE", Multiset(Clay, Clay, Paper, Tapestry), Set(), ScienceCompass)
+  val UNIVERSITY = ScienceCard("UNIVERSITY", Multiset(Wood, Wood, Paper, Glass), Set(), ScienceStone)
+  val STUDY = ScienceCard("STUDY", Multiset(Wood, Paper, Tapestry), Set(), ScienceGear)
+
+  // Civilian Cards
+  val TOWN_HALL = CivilianCard("TOWN HALL", Multiset(Stone, Stone, Ore, Glass), Set(), 6)
+  val PALACE = CivilianCard("PALACE", Multiset(Stone, Ore, Wood, Clay, Glass, Paper, Tapestry), Set(), 8)
+  val PANTHEON = CivilianCard("PANTHEON", Multiset(Clay, Clay, Ore, Glass, Paper, Tapestry), Set(), 7)
+  val GARDENS = CivilianCard("GARDENS", Multiset(Clay, Clay, Wood), Set(), 5)
+  val SENATE = CivilianCard("SENATE", Multiset(Wood, Wood, Stone, Ore), Set(), 6)
+
+  // Guilds
+  // TODO: Add Guilds
 }

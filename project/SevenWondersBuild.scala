@@ -12,7 +12,7 @@ object SevenWondersBuild extends Build {
       version := "0.1-SNAPSHOT",
       scalaVersion := "2.10.0",
       libraryDependencies ++= Seq(
-        "org.scalatest" % "scalatest_2.10" % "2.0.M5b" % "test",
+	"org.specs2" %% "specs2" % "1.14" % "test",
         "com.sidewayscoding" % "multisets_2.10" % "0.1"
       ),
       scalacOptions in Compile := Seq( "-feature" )
