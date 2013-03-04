@@ -145,7 +145,7 @@ object SevenWonders
 
   implicit def ResourceToProduction(value: Resource) = new CumulativeProduction(value)
 
-  case class Player(hand: Set[Card], coins: Int, battleMarkers: Multiset[BattleMarker], played: Multiset[Card]) {
+  case class Player(hand: Set[Card], coins: Int, battleMarkers: Multiset[BattleMarker], played: Set[Card]) {
     def discard(card: Card): Player = ???
     def play(card: Card, tradedResources: Map[Resource, Multiset[NeighboorReference]]): Player = ???
     def playableCards(availableThroughTrade: Map[NeighboorReference, Production]): Set[Card] = ???
