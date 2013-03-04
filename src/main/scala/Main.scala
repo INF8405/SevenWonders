@@ -156,7 +156,7 @@ object SevenWonders
 
   type Age = Int
 
-  case class Game(players: List[Player], cards: Map[Age, Set[Card]], discarded: Set[Card]) {
+  case class Game(players: List[Player], cards: Map[Age, Multiset[Card]], discarded: Multiset[Card]) {
     def getNeighboors(player: Player): Set[Player] = ???
     def getLeftNeighboor(player: Player): Player = ???
     def getRightNeighboor(player: Player): Player = ???
@@ -175,7 +175,7 @@ object SevenWonders
   type PlayerAmount = Int
 
   case class GameSetup(allCards: Map[Age, Map[PlayerAmount, Multiset[Card]]], guildCards: Set[GuildCard]) {
-    def generateCards: Map[Age, Multiset[Card]] = ???
+    def generateCards(nbPlayers: Int): Map[Age, Multiset[Card]] = ???
   }
 
   ////
@@ -290,4 +290,32 @@ object SevenWonders
 
   // Guilds
   // TODO: Add Guilds
+
+  // Game Setup
+  val classicSevenWonders = GameSetup(
+    Map(
+      1 -> Map(
+        3 -> Multiset(),
+        4 -> Multiset(),
+        5 -> Multiset(),
+        6 -> Multiset(),
+        7 -> Multiset()
+      ),
+      2 -> Map(
+        3 -> Multiset(),
+        4 -> Multiset(),
+        5 -> Multiset(),
+        6 -> Multiset(),
+        7 -> Multiset()
+      ),
+      3 -> Map(
+        3 -> Multiset(),
+        4 -> Multiset(),
+        5 -> Multiset(),
+        6 -> Multiset(),
+        7 -> Multiset()
+      )
+    ),
+    Set()
+  )
 }
