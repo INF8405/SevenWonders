@@ -5,7 +5,16 @@ import util.Random
 
 object SevenWonders 
 {
-  def beginGame( nbPlayers: Int ): Game = ???
+  def beginGame( nbPlayers: Int ): Game = {
+    val cards = classicSevenWonders.generateCards(nbPlayers)
+    val shuffledAgeOneCards = Random.shuffle(cards(1).toList)
+    val chosenCivilizations = Random.shuffle(civilizations.toList)
+    val players = shuffledAgeOneCards.grouped(7).toList.zip(chosenCivilizations).map{
+      case (hand, civ) =>
+        Player(hand.to[Multiset], 3, Multiset(), Set(), civ)
+    }
+    Game(players, cards.updated(1, Multiset()), Multiset())
+  }
 
   class Card( 
     name: String, 
@@ -158,7 +167,7 @@ object SevenWonders
 
   implicit def ResourceToProduction(value: Resource) = new CumulativeProduction(value)
 
-  case class Player(hand: Set[Card], coins: Int, battleMarkers: Multiset[BattleMarker], played: Set[Card], civilization: Civilization) {
+  case class Player(hand: Multiset[Card], coins: Int, battleMarkers: Multiset[BattleMarker], played: Set[Card], civilization: Civilization) {
     def discard(card: Card): Player = ???
     def play(card: Card, tradedResources: Map[Resource, Multiset[NeighboorReference]]): Player = ???
     def playableCards(availableThroughTrade: Map[NeighboorReference, Production]): Set[Card] = ???
@@ -333,6 +342,8 @@ object SevenWonders
   val GIZAH = Civilization("GIZAH", Stone)
   val EPHESOS = Civilization("EPHESOS", Paper)
   val BABYLON = Civilization("BABYLON", Clay)
+
+  val civilizations = Set(RHODOS, ALEXANDRIA, HALIKARNASSOS, OLYMPIA, GIZAH, EPHESOS, BABYLON)
 
   // Game Setup
   val classicSevenWonders = GameSetup(
