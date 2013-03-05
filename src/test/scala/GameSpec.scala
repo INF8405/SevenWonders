@@ -41,12 +41,13 @@ class GameSpec extends Specification with defaults {
 
     "currentAge" in {
       val cards = classicSevenWonders.generateCards(3)
-      val game = Game(List(defaultPlayer1, defaultPlayer2, defaultPlayer3), cards - 1, Multiset())
+      val game = Game(List(defaultPlayer1, defaultPlayer2, defaultPlayer3), cards.updated(1, Multiset()), Multiset())
       game.currentAge === 1
     }
 
     "playTurn" in {
       // TODO: play an example game here
+      pending
     }
   }
 }

@@ -1,6 +1,7 @@
 package com.github.jedesah
 
 import com.sidewayscoding.Multiset
+import util.Random
 
 object SevenWonders 
 {
@@ -89,11 +90,13 @@ object SevenWonders
     amount: Int
   ) extends Card( name, cost, evolutions )
 
-  case class GuildCard(
+  class GuildCard(name: String, cost: Multiset[Resource]) extends Card(name, cost, Set())
+
+  case class VictoryPointsGuildCard(
     name: String,
     cost: Multiset[Resource],
     vicPointReward: VictoryPointReward
-  ) extends Card( name, cost, Set() )
+  ) extends GuildCard(name, cost)
 
   trait CoinReward
   case class SimpleCoinReward(amount: Int) extends CoinReward
@@ -132,15 +135,25 @@ object SevenWonders
     def |(other: Production): Production
   }
   case class OptionalProduction(possibilities: Set[CumulativeProduction]) extends Production {
-    def consume(resources: Multiset[Resource]): Set[Multiset[Resource]] = ???
-    def +(other: Production): Production = ???
-    def |(other: Production): Production = ???
+    def consume(resources: Multiset[Resource]): Set[Multiset[Resource]] = possibilities.map(_.consume(resources).head)
+    def +(other: Production): Production = other match {
+      case OptionalProduction(otherPossibilities) => OptionalProduction(possibilities.map( poss1 => otherPossibilities.map( poss2 => poss1 + poss2)).flatten)
+      case cumProd: CumulativeProduction => OptionalProduction(possibilities.map(_ + cumProd))
+    }
+    def |(other: Production): Production = other match {
+      case OptionalProduction(otherPossibilities) => OptionalProduction(possibilities ++ otherPossibilities)
+      case cumProd: CumulativeProduction => OptionalProduction(possibilities + cumProd)
+    }
   }
   case class CumulativeProduction(resources: Multiset[Resource]) extends Production {
     def this(resource: Resource) = this(Multiset(resource))
-    def consume(resources: Multiset[Resource]): Set[Multiset[Resource]] = ???
-    def +(other: Production): Production = ???
-    def |(other: Production): Production = ???
+    def consume(resources: Multiset[Resource]): Set[Multiset[Resource]] = Set(this.resources.diff(resources))
+    def +(other: Production) = throw new Error
+    def +(other: OptionalProduction) = other + this
+    def +(other: CumulativeProduction) = CumulativeProduction(resources ++ other.resources)
+    def |(other: Production) = throw new Error
+    def |(other: OptionalProduction) = other | this
+    def |(other: CumulativeProduction) = OptionalProduction(Set(this, other))
   }
 
   implicit def ResourceToProduction(value: Resource) = new CumulativeProduction(value)
@@ -161,7 +174,7 @@ object SevenWonders
     def getLeftNeighboor(player: Player): Player = ???
     def getRightNeighboor(player: Player): Player = ???
     def playTurn(actions: Map[Player, Action]): Game = ???
-    def currentAge = cards.keys.toList.reverse.find(cards(_) == Nil).get
+    def currentAge = cards.keys.toList.reverse.find(cards(_).isEmpty).get
   }
 
   class Action(card: Card)
@@ -175,7 +188,17 @@ object SevenWonders
   type PlayerAmount = Int
 
   case class GameSetup(allCards: Map[Age, Map[PlayerAmount, Multiset[Card]]], guildCards: Set[GuildCard]) {
-    def generateCards(nbPlayers: Int): Map[Age, Multiset[Card]] = ???
+    def generateCards(nbPlayers: Int): Map[Age, Multiset[Card]] = {
+      if (nbPlayers < 3) throw new IllegalArgumentException("You cannot currently play less than three players")
+      else {
+        // Adding all cards that should be used depending on the amount of players
+        val cardsWithoutGuilds =
+          allCards.mapValues( cards => (3 to nbPlayers).foldLeft(Multiset.empty[Card])((set, key) => set ++ cards(key)))
+        // Add 2 + nbPlayers guild cards selected randomly
+        val shuffledGuildCads = Random.shuffle(guildCards.toList)
+        cardsWithoutGuilds.updated(3, cardsWithoutGuilds(3) ++ shuffledGuildCads.take(nbPlayers + 2))
+      }
+    }
   }
 
   case class Civilization(name: String, base:Production)
@@ -291,7 +314,16 @@ object SevenWonders
   val SENATE = CivilianCard("SENATE", Multiset(Wood, Wood, Stone, Ore), Set(), 6)
 
   // Guilds
-  // TODO: Add Guilds
+  val STRATEGISTS_GUILD = VictoryPointsGuildCard("STARTEGISTS GUILD", Multiset(Ore, Ore, Stone, Tapestry), VictoryPointReward(1, Set(Left, Right)))
+  val TRADERS_GUILD = VictoryPointsGuildCard("TRADERS GUILD", Multiset(Glass, Tapestry, Paper), VictoryPointReward(1, Set(Left, Right)))
+  val MAGISTRATES_GUILD = VictoryPointsGuildCard("MAGISTRATES GUILD", Multiset(Wood, Wood, Wood, Stone, Tapestry), VictoryPointReward(1, Set(Left, Right)))
+  val SHOPOWNERS_GUILD = VictoryPointsGuildCard("SHOPOWNERS GUILD", Multiset(Wood, Wood, Wood, Glass, Paper), VictoryPointReward(1, Set(Self)))
+  val CRAFTMENS_GUILD = VictoryPointsGuildCard("CRAFTSMENS GUILD", Multiset(Ore, Ore, Stone, Stone), VictoryPointReward(2, Set(Left, Right)))
+  val WORKERS_GUILD = VictoryPointsGuildCard("WORKERS GUILD", Multiset(Ore, Ore, Clay, Stone, Wood), VictoryPointReward(1, Set(Left, Right)))
+  val PHILOSOPHERS_GUILD = VictoryPointsGuildCard("PHILOSOPHERS GUILD", Multiset(Clay, Clay, Clay, Paper, Tapestry), VictoryPointReward(1, Set(Left, Right)))
+  object SCIENTISTS_GUILD extends GuildCard("SCIENTISTS GUILD", Multiset(Wood, Wood, Ore, Ore, Paper))
+  val SPIES_GUILD = VictoryPointsGuildCard("SPIES GUILD", Multiset(Clay, Clay, Clay, Glass), VictoryPointReward(1, Set(Left, Right)))
+  val BUILDERS_GUILD = VictoryPointsGuildCard("BUILDERS GUILD", Multiset(Stone, Stone, Clay, Clay, Glass), VictoryPointReward(1, Set(Left, Self, Right)))
 
   // Civilizations
   val RHODOS = Civilization("RHODOS", Ore)
@@ -306,27 +338,27 @@ object SevenWonders
   val classicSevenWonders = GameSetup(
     Map(
       1 -> Map(
-        3 -> Multiset(),
-        4 -> Multiset(),
-        5 -> Multiset(),
-        6 -> Multiset(),
-        7 -> Multiset()
+        3 -> Multiset(APOTHECARY, CLAY_POOL, ORE_VEIN, WORKSHOP, SCRIPTORIUM, BARRACKS, EAST_TRADING_POST, STOCKADE, CLAY_PIT, LOOM, GLASSWORKS, THEATER, BATHS, TIMBER_YARD, PRESS, STONE_PIT, MARKETPLACE, GUARD_TOWER, WEST_TRADING_POST, ALTAR, LUMBER_YARD),
+        4 -> Multiset(GUARD_TOWER, LUMBER_YARD, PAWNSHOP, TAVERN, SCRIPTORIUM, EXCAVATION, ORE_VEIN),
+        5 -> Multiset(CLAY_POOL, ALTAR, APOTHECARY, BARRACKS, STONE_PIT, TAVERN, FOREST_CAVE),
+        6 -> Multiset(THEATER, PRESS, GLASSWORKS, LOOM, MARKETPLACE, MINE, TREE_FARM),
+        7 -> Multiset(WORKSHOP, EAST_TRADING_POST, STOCKADE, BATHS, WEST_TRADING_POST, TAVERN, PAWNSHOP)
       ),
       2 -> Map(
-        3 -> Multiset(),
-        4 -> Multiset(),
-        5 -> Multiset(),
-        6 -> Multiset(),
-        7 -> Multiset()
+        3 -> Multiset(CARAVANSERY, VINEYARD, STATUE, ARCHERY_RANGE, DISPENSARY, WALLS, FOUNDRY, LABORATORY, LIBRARY, STABLES, TEMPLE, AQUEDUCT, COURTHOUSE, FORUM, SCHOOL, GLASSWORKS, BRICKYARD, LOOM, QUARRY, SAWMILL, PRESS),
+        4 -> Multiset(BAZAR, TRAINING_GROUND, DISPENSARY, BRICKYARD, FOUNDRY, QUARRY, SAWMILL),
+        5 -> Multiset(GLASSWORKS, COURTHOUSE, LABORATORY, CARAVANSERY, STABLES, PRESS, LOOM),
+        6 -> Multiset(CARAVANSERY, FORUM, VINEYARD, ARCHERY_RANGE, LIBRARY, TEMPLE, TRAINING_GROUND),
+        7 -> Multiset(AQUEDUCT, STATUE, FORUM, BAZAR, SCHOOL, WALLS, TRAINING_GROUND)
       ),
       3 -> Map(
-        3 -> Multiset(),
-        4 -> Multiset(),
-        5 -> Multiset(),
-        6 -> Multiset(),
-        7 -> Multiset()
+        3 -> Multiset(LODGE, OBSERVATORY, SIEGE_WORKSHOP, ARENA, SENATE, ARSENAL, ACADEMY, TOWN_HALL, PANTHEON, PALACE, HAVEN, LIGHTHOUSE, UNIVERSITY, GARDENS, FORTIFICATIONS, STUDY),
+        4 -> Multiset(UNIVERSITY, ARSENAL, GARDENS, HAVEN, CIRCUS, CHAMBER_OF_COMMERCE),
+        5 -> Multiset(ARENA, TOWN_HALL, CIRCUS, SIEGE_WORKSHOP, SENATE),
+        6 -> Multiset(TOWN_HALL, CIRCUS, LODGE, PANTHEON, CHAMBER_OF_COMMERCE, LIGHTHOUSE),
+        7 -> Multiset(ARENA, OBSERVATORY, ACADEMY, FORTIFICATIONS, ARSENAL, PALACE)
       )
     ),
-    Set()
+    Set(STRATEGISTS_GUILD, TRADERS_GUILD, MAGISTRATES_GUILD, SHOPOWNERS_GUILD, CRAFTMENS_GUILD, WORKERS_GUILD, PHILOSOPHERS_GUILD, SCIENTISTS_GUILD, SPIES_GUILD, BUILDERS_GUILD)
   )
 }
