@@ -34,6 +34,20 @@ class ProductionSpec extends Specification {
       val expected = Set(Multiset(Ore, Stone, Wood))
       actual === expected
     }
+
+    "support the | operator" in {
+      val first = new CumulativeProduction(Wood)
+      val second = new CumulativeProduction(Ore)
+      val actual = first | second
+      val expected = OptionalProduction(Set(first, second))
+      actual === expected
+
+      val third = new CumulativeProduction(Stone)
+      val fourth = new CumulativeProduction(Clay)
+      val actual1 = first | second | third | fourth
+      val expected1 = OptionalProduction(Set(first, second, third, fourth))
+      actual1 === expected1
+    }
   }
 
   "An OptionalProduction" should {
