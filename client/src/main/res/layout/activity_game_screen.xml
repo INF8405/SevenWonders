@@ -1,0 +1,83 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_gravity="center"
+    android:background="@color/sand"
+    android:orientation="vertical"
+    tools:context=".GameScreen" >
+
+    <!--
+    <ca.polymtl.inf8405.sevenwonders.BoardView
+        android:id="@+id/TopBoardView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    -->
+
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/TopBoardView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <ca.polymtl.inf8405.sevenwonders.PlayedCards
+            android:id="@+id/GreenCard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <ca.polymtl.inf8405.sevenwonders.PlayedCards
+            android:id="@+id/BlueCard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <ca.polymtl.inf8405.sevenwonders.PlayedCards
+            android:id="@+id/RedCard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <ca.polymtl.inf8405.sevenwonders.PlayedCards
+            android:id="@+id/GillCard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <ca.polymtl.inf8405.sevenwonders.PlayedCards
+            android:id="@+id/YellowCard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/TopBoardView"
+        android:orientation="horizontal" >
+
+        <ca.polymtl.inf8405.sevenwonders.ResourceView
+            android:id="@+id/AdvancedResourceView"
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <ca.polymtl.inf8405.sevenwonders.ResourceView
+            android:id="@+id/BasicResourceView"
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <ca.polymtl.inf8405.sevenwonders.PlayerStateView
+            android:id="@+id/PlayerStateView"
+            android:layout_width="0px"
+            android:layout_height="match_parent"
+            android:layout_weight="5" />
+    </LinearLayout>
+
+</RelativeLayout>

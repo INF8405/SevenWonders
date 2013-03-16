@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">SevenWonders</string>
+    <string name="menu_settings">Settings</string>
+    <string name="button_play">Play</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_game_screen">GameScreen</string>
+
+    <string name="tempComponent">TempComponent</string>
+    
+    <color name="sand">#FFEF9C</color>
+    <color name="black">#000000</color>
+</resources>

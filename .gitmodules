@@ -1,0 +1,6 @@
+[submodule "multiset"]
+	path = multiset
+	url = git@bitbucket.org:inf8405/multiset.git
+[submodule "sbt-thrift"]
+	path = sbt-thrift
+	url = git@bitbucket.org:inf8405/sbt-thrift.git
