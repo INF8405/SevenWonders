@@ -30,7 +30,7 @@ class ProductionSpec extends Specification {
 
     "support the consume opreration that returns the amount of resources left unpaid" in {
       val prod = CumulativeProduction(Multiset(Ore, Stone))
-      val actual = prod.consume(Multiset(Ore, Ore, Stone, Stone, Wood))
+      val actual = prod.consume(Multiset[Resource](Ore, Ore, Stone, Stone, Wood))
       val expected = Set(Multiset(Ore, Stone, Wood))
       actual === expected
     }
@@ -79,7 +79,7 @@ class ProductionSpec extends Specification {
 
     "support the consume opreration that returns the amount of resources left unpaid" in {
       val prod = OptionalProduction(Set(new CumulativeProduction(Clay), new CumulativeProduction(Ore)))
-      val actual = prod.consume(Multiset(Ore, Ore, Stone, Stone, Wood))
+      val actual = prod.consume(Multiset[Resource](Ore, Ore, Stone, Stone, Wood))
       val expected = Set(Multiset(Ore, Ore, Stone, Stone, Wood), Multiset(Ore, Stone, Stone, Wood))
       actual === expected
     }

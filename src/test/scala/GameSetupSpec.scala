@@ -9,7 +9,7 @@ class GameSetupSpec extends Specification {
       cards(2).size === 21
       cards(3).size === 21
 
-      cards(3).count(_.isInstanceOf[VictoryPointsGuildCard]) === 5
+      cards(3).count(_.isInstanceOf[GuildCard]) === 5
     }
   }
 }

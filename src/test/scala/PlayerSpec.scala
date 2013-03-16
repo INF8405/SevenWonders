@@ -1,5 +1,6 @@
 import org.specs2.mutable._
 import com.github.jedesah.SevenWonders._
+import com.github.jedesah.MultiMap
 
 import com.sidewayscoding.Multiset
 
@@ -20,7 +21,7 @@ class PlayerSpec extends Specification with defaults {
       "- add the card to their playedCards, +" +
       "- substract the coin cost and" +
       "- add any coin value supplied by the played card" in {
-      defaultPlayer.play(TAVERN, Map()) === Player(defaultHand.removed(TAVERN), 7, Multiset(), Set(BATHS, ALTAR, TAVERN), OLYMPIA)
+      defaultPlayer.play(TAVERN, MultiMap()) === Player(defaultHand.removed(TAVERN), 7, Multiset(), Set(BATHS, ALTAR, TAVERN), OLYMPIA)
     }
 
     "playableCards should return the Set of Cards it is possible for the player to play for his next turn" in {

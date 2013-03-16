@@ -17,9 +17,9 @@ object SevenWonders
   }
 
   class Card( 
-    name: String, 
-    cost: Multiset[Resource],
-    evolutions: Set[Card]
+    val name: String,
+    val cost: Multiset[Resource],
+    val evolutions: Set[Card]
   )
 
   sealed trait ScienceCategory
@@ -27,17 +27,21 @@ object SevenWonders
   object ScienceGear extends ScienceCategory
   object ScienceStone extends ScienceCategory
 
+  trait ProductionCard {
+    val prod: Production
+  }
+
   case class ScienceCard(
-    name: String,
-    cost: Multiset[Resource],
-    evolutions: Set[Card],
+    override val name: String,
+    override val cost: Multiset[Resource],
+    override val evolutions: Set[Card],
     category: ScienceCategory
   ) extends Card( name, cost, evolutions )
 
   case class MilitaryCard(
-    name: String,
-    cost: Multiset[Resource],
-    evolutions: Set[Card],
+    override val name: String,
+    override val cost: Multiset[Resource],
+    override val evolutions: Set[Card],
     value: Int
   ) extends Card( name, cost, evolutions )
 
@@ -48,24 +52,24 @@ object SevenWonders
   ) extends Card( name, cost, evolutions )
 
   case class RebateCommercialCard(
-    name: String,
-    cost: Multiset[Resource],
-    evolutions: Set[Card],
+    override val name: String,
+    override val cost: Multiset[Resource],
+    override val evolutions: Set[Card],
     affectedResources: Set[Resource],
     fromWho: Set[NeighboorReference]
   ) extends CommercialCard( name, cost, evolutions )
 
   case class ProductionCommercialCard(
-    name: String,
-    cost: Multiset[Resource],
-    evolutions: Set[Card],
+    override val name: String,
+    override val cost: Multiset[Resource],
+    override val evolutions: Set[Card],
     prod: Production
-  ) extends CommercialCard( name, cost, evolutions )
+  ) extends CommercialCard( name, cost, evolutions ) with ProductionCard
 
   case class RewardCommercialCard(
-    name: String, 
-    cost: Multiset[Resource],
-    evolutions: Set[Card],
+    override val name: String,
+    override val cost: Multiset[Resource],
+    override val evolutions: Set[Card],
     coinReward: Option[CoinReward],
     victoryReward: Option[VictoryPointReward]
   ) extends CommercialCard( name, cost, evolutions )
@@ -73,37 +77,37 @@ object SevenWonders
   class ResourceCard(
     name: String,
     cost: Multiset[Resource],
-    production: Production
-  ) extends Card(name, cost, Set() )
+    val prod: Production
+  ) extends Card(name, cost, Set() ) with ProductionCard
 
   case class RawMaterialCard(
-    name: String,
-    cost: Multiset[Resource],
+    override val name: String,
+    override val cost: Multiset[Resource],
     production: Production
   ) extends ResourceCard(name, cost, production) {
     def this(name: String, production: Production) = this(name, Multiset(), production)
   }
 
   case class ManufacturedGoodCard(
-    name: String,
-    cost: Multiset[Resource],
+    override val name: String,
+    override val cost: Multiset[Resource],
     production: Production
   ) extends ResourceCard(name, cost, production) {
     def this(name: String, production: Production) = this(name, Multiset(), production)
   }
   
   case class CivilianCard(
-    name: String,
-    cost: Multiset[Resource],
-    evolutions: Set[Card],
+    override val name: String,
+    override val cost: Multiset[Resource],
+    override val evolutions: Set[Card],
     amount: Int
   ) extends Card( name, cost, evolutions )
 
   class GuildCard(name: String, cost: Multiset[Resource]) extends Card(name, cost, Set())
 
   case class VictoryPointsGuildCard(
-    name: String,
-    cost: Multiset[Resource],
+    override val name: String,
+    override val cost: Multiset[Resource],
     vicPointReward: VictoryPointReward
   ) extends GuildCard(name, cost)
 
@@ -140,11 +144,15 @@ object SevenWonders
 
   trait Production {
     def consume(resources: Multiset[Resource]): Set[Multiset[Resource]]
+    def consume(resource: Resource): Boolean
+    def -(resource: Resource): Production
     def +(other: Production): Production
     def |(other: Production): Production
   }
   case class OptionalProduction(possibilities: Set[CumulativeProduction]) extends Production {
     def consume(resources: Multiset[Resource]): Set[Multiset[Resource]] = possibilities.map(_.consume(resources).head)
+    def consume(resource: Resource) = possibilities.exists(_.consume(resource))
+    def -(resource: Resource) = OptionalProduction(possibilities.map(_ - resource))
     def +(other: Production): Production = other match {
       case OptionalProduction(otherPossibilities) => OptionalProduction(possibilities.map( poss1 => otherPossibilities.map( poss2 => poss1 + poss2)).flatten)
       case cumProd: CumulativeProduction => OptionalProduction(possibilities.map(_ + cumProd))
@@ -157,6 +165,8 @@ object SevenWonders
   case class CumulativeProduction(resources: Multiset[Resource]) extends Production {
     def this(resource: Resource) = this(Multiset(resource))
     def consume(resources: Multiset[Resource]): Set[Multiset[Resource]] = Set(this.resources.diff(resources))
+    def consume(resource: Resource) = resources.contains(resource)
+    def -(resource: Resource) = CumulativeProduction(resources.removed(resource))
     def +(other: Production) = throw new Error
     def +(other: OptionalProduction) = other + this
     def +(other: CumulativeProduction) = CumulativeProduction(resources ++ other.resources)
@@ -168,12 +178,112 @@ object SevenWonders
   implicit def ResourceToProduction(value: Resource) = new CumulativeProduction(value)
 
   case class Player(hand: Multiset[Card], coins: Int, battleMarkers: Multiset[BattleMarker], played: Set[Card], civilization: Civilization) {
-    def discard(card: Card): Player = ???
-    def play(card: Card, tradedResources: Map[Resource, Multiset[NeighboorReference]]): Player = ???
-    def playableCards(availableThroughTrade: Map[NeighboorReference, Production]): Set[Card] = ???
-    def totalProduction: Production = ???
-    def tradableProduction: Production = ???
-    def score(neightboorCards: Map[NeighboorReference, Multiset[Card]]): Int = ???
+    def discard(card: Card): Player = Player(hand.removed(card), coins + 3, battleMarkers, played, civilization)
+
+    /**
+     * Handles all state changing relative to this player when he plays a card.
+     * @param card The card to play
+     * @param trade The trade used to play this card. Can be an empty trade
+     * @return The updated Player state along with the amount of coins given to the left and right players
+     */
+    def play(card: Card, trade: Trade): (Player, Map[NeighboorReference, Int]) = {
+      val coinsMap = trade.values.toSet.map(ref => (ref, cost(trade, ref))).toMap
+      val player = Player(hand.removed(card), coins - cost(trade),battleMarkers, played + card, civilization)
+      (player, coinsMap)
+    }
+    def playableCards(availableThroughTrade: Map[NeighboorReference, Production]): Set[Card] =
+      hand.toSet.filter( card => canPlayCard(card, availableThroughTrade))
+    def totalProduction: Production = {
+      val productionCards = played.filter(_.isInstanceOf[ProductionCard]).map(_.asInstanceOf[ProductionCard])
+      productionCards.foldLeft(civilization.base)((prod, card) => prod + card.prod)
+    }
+    def tradableProduction: Production = {
+      val productionCards = played.filter(_.isInstanceOf[ResourceCard]).map(_.asInstanceOf[ResourceCard])
+      productionCards.foldLeft(civilization.base)((prod, card) => prod + card.prod)
+    }
+    def score(neightboorCards: Map[NeighboorReference, Multiset[Card]]): Int =
+      scienceScore + militaryScore + civilianScore + commerceScore + guildScore
+
+    def scienceScore: Int = {
+      val scienceCards = played.filter(_.isInstanceOf[ScienceCard]).map(_.asInstanceOf[ScienceCard])
+      val scienceCounts = scienceCards.groupBy(_.category).values.map(_.size)
+      val scienceSetPoints: Int = if (scienceCounts.size == 3) scienceCounts.min else 0
+      val scienceStackPoints: Int = scienceCounts.map(Math.pow(_, 2)).sum.toInt
+      scienceSetPoints + scienceStackPoints
+    }
+
+    def militaryScore = battleMarkers.map(_.vicPoints).sum
+
+    def civilianScore = {
+      val civilianCards = played.filter(_.isInstanceOf[CivilianCard]).map(_.asInstanceOf[CivilianCard])
+      civilianCards.map(_.amount).sum
+    }
+
+    def commerceScore: Int = ???
+
+    def guildScore: Int = ???
+
+    def canPlayCard(card: Card, availableThroughTrade: Map[NeighboorReference, Production]): Boolean = {
+      !played.contains(card) && // You cannot play a card you already own
+      availableEvolutions.contains(card) || // You can play an evolution whether you have the production or not
+      possibleTrades(card, availableThroughTrade).nonEmpty
+    }
+
+    type Trade = MultiMap[Resource, NeighboorReference]
+
+    def possibleTrades(card: Card, tradableProduction: Map[NeighboorReference, Production]): Set[Trade] =
+      possibleTradesWithoutConsideringCoins(card, tradableProduction).filter(cost(_) <= coins)
+
+    def possibleTradesWithoutConsideringCoins(card: Card, tradableProduction: Map[NeighboorReference, Production]): Set[Trade] =
+      totalProduction.consume(card.cost).map(possibleTrades(_, tradableProduction)).flatten
+
+    def possibleTrades(resources: Multiset[Resource],
+                       tradableResources: Map[NeighboorReference, Production]
+                      ): Set[Trade] = {
+      if (resources isEmpty) Set.empty[Trade]
+      else
+        (
+          for ((neighboorRef, production) <- tradableResources) yield
+            if (production.consume(resources.head))
+              possibleTrades(resources.tail, tradableResources.updated(neighboorRef, production - resources.head)).map(_.add(resources.head -> neighboorRef))
+            else
+              Set.empty[Trade]
+        ).flatten.toSet
+    }
+
+    /**
+     * @param trade
+     * @return The cost in coins of this trade
+     */
+    def cost(trade: Trade): Int =
+      if (trade.isEmpty) 0
+      else {
+        val (resource, from) = trade.head
+        cost(resource, from) + cost(trade.tail)
+      }
+
+    /**
+     *
+     * @param trade
+     * @param from
+     * @return The cost in coins of this trade related to the specified neighboor
+     */
+    def cost(trade: Trade, from: NeighboorReference): Int =
+      if (trade.isEmpty) 0
+      else {
+        val (resource, from1) = trade.head
+        if (from1 == from) cost(resource, from) else 0 + cost(trade.tail, from)
+      }
+
+    def cost(resource: Resource, from: NeighboorReference): Int = {
+      val rebateCards: Set[RebateCommercialCard] = played.filter(_.isInstanceOf[RebateCommercialCard]).map(_.asInstanceOf[RebateCommercialCard])
+      rebateCards.find(_.fromWho == from) match {
+        case Some(rebateCard) => if (rebateCard.affectedResources.contains(resource)) 1 else 2
+        case None => 2
+      }
+    }
+
+    def availableEvolutions: Set[Card] = played.map(_.evolutions).flatten
   }
 
   type Age = Int
@@ -190,9 +300,9 @@ object SevenWonders
   case class PlayAction(card: Card, consume: Map[Resource, Multiset[NeighboorReference]]) extends Action(card)
   case class DiscardAction(card: Card) extends Action(card)
 
-  sealed trait BattleMarker
-  class DefeatBattleMarker extends BattleMarker
-  case class VictoryBattleMarker(vicPoints: Int) extends BattleMarker
+  class BattleMarker(val vicPoints: Int)
+  class DefeatBattleMarker extends BattleMarker(-1)
+  case class VictoryBattleMarker(override val vicPoints: Int) extends BattleMarker(vicPoints)
 
   type PlayerAmount = Int
 
