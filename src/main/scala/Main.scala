@@ -2,18 +2,20 @@ package com.github.jedesah
 
 import com.sidewayscoding.Multiset
 import util.Random
+import Utils._
+import com.github.jedesah.SevenWonders
+import com.sidewayscoding
 
 object SevenWonders 
 {
   def beginGame( nbPlayers: Int ): Game = {
     val cards = classicSevenWonders.generateCards(nbPlayers)
-    val shuffledAgeOneCards = Random.shuffle(cards(1).toList)
     val chosenCivilizations = Random.shuffle(civilizations.toList)
-    val players = shuffledAgeOneCards.grouped(7).toList.zip(chosenCivilizations).map{
-      case (hand, civ) =>
-        Player(hand.to[Multiset], 3, Multiset(), Set(), civ)
+    val players = chosenCivilizations.map{
+      civ =>
+        Player(Multiset(), 3, Multiset(), Set(), civ)
     }
-    Game(players, cards.updated(1, Multiset()), Multiset())
+    Game(players, cards, Multiset()).beginAge()
   }
 
   class Card( 
@@ -177,6 +179,8 @@ object SevenWonders
 
   implicit def ResourceToProduction(value: Resource) = new CumulativeProduction(value)
 
+  type Trade = MultiMap[Resource, NeighboorReference]
+
   case class Player(hand: Multiset[Card], coins: Int, battleMarkers: Multiset[BattleMarker], played: Set[Card], civilization: Civilization) {
     def discard(card: Card): Player = Player(hand.removed(card), coins + 3, battleMarkers, played, civilization)
 
@@ -194,18 +198,20 @@ object SevenWonders
     def playableCards(availableThroughTrade: Map[NeighboorReference, Production]): Set[Card] =
       hand.toSet.filter( card => canPlayCard(card, availableThroughTrade))
     def totalProduction: Production = {
-      val productionCards = played.filter(_.isInstanceOf[ProductionCard]).map(_.asInstanceOf[ProductionCard])
+      val productionCards = played.filterType[ProductionCard]
       productionCards.foldLeft(civilization.base)((prod, card) => prod + card.prod)
     }
     def tradableProduction: Production = {
-      val productionCards = played.filter(_.isInstanceOf[ResourceCard]).map(_.asInstanceOf[ResourceCard])
+      val productionCards = played.filterType[ResourceCard]
       productionCards.foldLeft(civilization.base)((prod, card) => prod + card.prod)
     }
+
+    def militaryStrength: Int = played.filterType[MilitaryCard].map(_.value).sum
     def score(neightboorCards: Map[NeighboorReference, Multiset[Card]]): Int =
       scienceScore + militaryScore + civilianScore + commerceScore + guildScore
 
     def scienceScore: Int = {
-      val scienceCards = played.filter(_.isInstanceOf[ScienceCard]).map(_.asInstanceOf[ScienceCard])
+      val scienceCards = played.filterType[ScienceCard]
       val scienceCounts = scienceCards.groupBy(_.category).values.map(_.size)
       val scienceSetPoints: Int = if (scienceCounts.size == 3) scienceCounts.min else 0
       val scienceStackPoints: Int = scienceCounts.map(Math.pow(_, 2)).sum.toInt
@@ -215,7 +221,7 @@ object SevenWonders
     def militaryScore = battleMarkers.map(_.vicPoints).sum
 
     def civilianScore = {
-      val civilianCards = played.filter(_.isInstanceOf[CivilianCard]).map(_.asInstanceOf[CivilianCard])
+      val civilianCards = played.filterType[CivilianCard]
       civilianCards.map(_.amount).sum
     }
 
@@ -228,8 +234,6 @@ object SevenWonders
       availableEvolutions.contains(card) || // You can play an evolution whether you have the production or not
       possibleTrades(card, availableThroughTrade).nonEmpty
     }
-
-    type Trade = MultiMap[Resource, NeighboorReference]
 
     def possibleTrades(card: Card, tradableProduction: Map[NeighboorReference, Production]): Set[Trade] =
       possibleTradesWithoutConsideringCoins(card, tradableProduction).filter(cost(_) <= coins)
@@ -276,7 +280,7 @@ object SevenWonders
       }
 
     def cost(resource: Resource, from: NeighboorReference): Int = {
-      val rebateCards: Set[RebateCommercialCard] = played.filter(_.isInstanceOf[RebateCommercialCard]).map(_.asInstanceOf[RebateCommercialCard])
+      val rebateCards: Traversable[RebateCommercialCard] = played.filterType[RebateCommercialCard]
       rebateCards.find(_.fromWho == from) match {
         case Some(rebateCard) => if (rebateCard.affectedResources.contains(resource)) 1 else 2
         case None => 2
@@ -284,21 +288,118 @@ object SevenWonders
     }
 
     def availableEvolutions: Set[Card] = played.map(_.evolutions).flatten
+    def +(delta: PlayerDelta) =
+      this.copy(coins = coins + delta.coinDelta, played = played ++ delta.newCards, battleMarkers = battleMarkers ++ delta.newBattleMarkers)
+    def -(previous: Player): PlayerDelta = PlayerDelta(played -- previous.played, coins - previous.coins, battleMarkers.diff(previous.battleMarkers))
   }
 
   type Age = Int
 
   case class Game(players: List[Player], cards: Map[Age, Multiset[Card]], discarded: Multiset[Card]) {
-    def getNeighboors(player: Player): Set[Player] = ???
-    def getLeftNeighboor(player: Player): Player = ???
-    def getRightNeighboor(player: Player): Player = ???
-    def playTurn(actions: Map[Player, Action]): Game = ???
-    def currentAge = cards.keys.toList.reverse.find(cards(_).isEmpty).get
+    def getNeighboors(player: Player): Set[Player] = Set(getLeftNeighboor(player), getRightNeighboor(player))
+    def getLeftNeighboor(player: Player): Player = {
+      val index = players.indexOf(player)
+      players.shiftRight(index)
+    }
+    def getRightNeighboor(player: Player): Player = {
+      val index = players.indexOf(player)
+      players.shiftLeft(index)
+    }
+    def playTurn(actions: Map[Player, Action]): Game = {
+      // A list containning everyone's hand without the currently played card
+      val hands = players.map(player => player.hand.removed(actions(player).card))
+      // A list of players with their upcomming hand
+      val players1 = players.zip(if (currentAge == 1 || currentAge == 3) hands.shiftLeft else hands.shiftRight).map{
+        case (player, hand) =>
+          player.copy(hand = hand)
+      }
+      val deltas = for ( (player, action) <- actions) yield {
+        action match {
+          case DiscardAction(card) =>
+            GameDelta(Map(player -> player.discard(card).-(player)), Multiset(card))
+          case PlayAction(card, trade) => {
+            val (newPlayer, coinsToGive) = player.play(card, trade)
+            val left = getLeftNeighboor(player)
+            val right = getLeftNeighboor(player)
+            val leftDelta = PlayerDelta(Set(), coinsToGive.getOrElse(Left, 0), Multiset())
+            val rightDelta = PlayerDelta(Set(), coinsToGive.getOrElse(Right, 0), Multiset())
+            GameDelta(Map(player -> newPlayer.-(player), left -> leftDelta, right -> rightDelta), Multiset())
+          }
+
+        }
+      }
+      val newGameState = Game(players1, cards, discarded) + deltas.sum
+      if (newGameState.players.head.hand.size == 1){
+        if (currentAge == 3)
+          newGameState.endAge()
+        else
+          newGameState.endAge().beginAge()
+      }
+      else
+        newGameState
+    }
+    def currentAge = cards.keys.toList.reverse.find(cards(_).isEmpty).getOrElse(0)
+    def beginAge(): Game = {
+      val shuffledNextAgeCards = Random.shuffle(cards(currentAge + 1).toList)
+      val hands: List[Multiset[Card]] = shuffledNextAgeCards.grouped(7).toList.map(_.to[Multiset])
+      val updatedPlayers: List[Player] = players.zip(hands).map{ case (player, hand) => player.copy(hand = hand) }
+      Game(updatedPlayers, cards.updated(currentAge, Multiset.empty[Card]), discarded)
+    }
+    def endAge(): Game = {
+      val winMarker = currentAge match { case 1 => VictoryBattleMarker(1) case 2 => VictoryBattleMarker(3) case 3 => VictoryBattleMarker(5)}
+      val deltas = players.map{
+        player =>
+          val leftPlayer = getLeftNeighboor(player)
+          val wonLeft = player.militaryStrength > leftPlayer.militaryScore
+          val tieLeft = player.militaryStrength == leftPlayer.militaryStrength
+          val leftBattleMarker =
+            if (tieLeft) Multiset.empty[BattleMarker]
+            else if (wonLeft) Multiset(winMarker)
+            else Multiset(new DefeatBattleMarker)
+
+          val rightPlayer = getLeftNeighboor(player)
+          val wonRight = player.militaryStrength > rightPlayer.militaryStrength
+          val tieRight = player.militaryStrength == rightPlayer.militaryStrength
+          val rightBattleMarker =
+            if (tieRight) Multiset.empty[BattleMarker]
+            else if (wonRight) Multiset(winMarker)
+            else Multiset(new DefeatBattleMarker)
+
+          PlayerDelta(Set(), 0, leftBattleMarker ++ rightBattleMarker)
+      }
+      // TODO: make a map with these playerdeltas
+      // TODO: discard hand
+      //this + deltas.sum
+      ???
+    }
+    def +(delta: GameDelta): Game = {
+      val updatedPlayers = players.map{
+        player =>
+          val playerDelta = delta.playerDeltas(player)
+          player.copy(coins = player.coins + playerDelta.coinDelta, played = player.played ++ playerDelta.newCards)
+      }
+      Game(updatedPlayers, cards, discarded ++ delta.additionalDiscards)
+    }
   }
 
-  class Action(card: Card)
-  case class PlayAction(card: Card, consume: Map[Resource, Multiset[NeighboorReference]]) extends Action(card)
-  case class DiscardAction(card: Card) extends Action(card)
+  case class GameDelta(playerDeltas: Map[Player, PlayerDelta], additionalDiscards: Multiset[Card]) {
+    def +(other: GameDelta): GameDelta = {
+      val newPlayerDeltas: Map[Player, PlayerDelta] = playerDeltas.map{case (player, delta) => (player, other.playerDeltas(player) + delta)}
+      val totalDiscards = additionalDiscards ++ other.additionalDiscards
+      GameDelta(newPlayerDeltas, totalDiscards)
+    }
+    def +(player: Player, other: PlayerDelta): GameDelta =
+      GameDelta(playerDeltas.updated(player, playerDeltas(player) + other), additionalDiscards)
+  }
+
+  case class PlayerDelta(newCards: Set[Card], coinDelta: Int, newBattleMarkers: Multiset[BattleMarker]) {
+    def +(other: PlayerDelta): PlayerDelta =
+      PlayerDelta(newCards ++ other.newCards, coinDelta + other.coinDelta, newBattleMarkers ++ other.newBattleMarkers)
+  }
+
+  class Action(val card: Card)
+  case class PlayAction(override val card: Card, trade: Trade) extends Action(card)
+  case class DiscardAction(override val card: Card) extends Action(card)
 
   class BattleMarker(val vicPoints: Int)
   class DefeatBattleMarker extends BattleMarker(-1)
