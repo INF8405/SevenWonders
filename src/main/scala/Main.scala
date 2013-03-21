@@ -3,8 +3,6 @@ package com.github.jedesah
 import com.sidewayscoding.Multiset
 import util.Random
 import Utils._
-import com.github.jedesah.SevenWonders
-import com.sidewayscoding
 
 object SevenWonders 
 {
@@ -74,8 +72,8 @@ object SevenWonders
     override val name: String,
     override val cost: Multiset[Resource],
     override val evolutions: Set[Card],
-    coinReward: Option[CoinReward],
-    victoryReward: Option[VictoryPointReward]
+    coinReward: Option[Reward],
+    victoryPointReward: Option[ComplexReward]
   ) extends CommercialCard( name, cost, evolutions )
 
   class ResourceCard(
@@ -112,22 +110,16 @@ object SevenWonders
   case class VictoryPointsGuildCard(
     override val name: String,
     override val cost: Multiset[Resource],
-    vicPointReward: VictoryPointReward
+    victoryPoint:ComplexReward
   ) extends GuildCard(name, cost)
 
-  trait CoinReward
-  case class SimpleCoinReward(amount: Int) extends CoinReward
-  case class ComplexCoinReward(
+  trait Reward
+  case class SimpleReward(amount: Int) extends Reward
+  case class ComplexReward(
     amount: Int,
-    forEach: Class,
+    forEach: Class[_ <: Card],
     from: Set[PlayerReference]
-  ) extends CoinReward
-
-  case class VictoryPointReward(
-    amount: Int,
-    forEach: Class,
-    from: Set[PlayerReference]
-  )
+  ) extends Reward
 
   sealed trait Resource
   sealed trait RawMaterial extends Resource
@@ -232,7 +224,7 @@ object SevenWonders
       val commerceVicPointCards = played.filterType[RewardCommercialCard]
       commerceVicPointCards.map {
         card =>
-          card.victoryReward match {
+          card.victoryPointReward match {
             case None => 0
             case Some(vicPointReward) => calculateVictoryPoints(vicPointReward, neightboorCards)
           }
@@ -240,13 +232,13 @@ object SevenWonders
     }
 
     def guildScore(neightboorCards: Map[NeighboorReference, Set[Card]]): Int =
-      played.filterType[VictoryPointsGuildCard].map{ card => calculateVictoryPoints(card.vicPointReward, neightboorCards)}.sum
+      played.filterType[VictoryPointsGuildCard].map{ card => calculateVictoryPoints(card.victoryPoint, neightboorCards)}.sum
 
-    def calculateVictoryPoints(reward: VictoryPointReward, neightboorCards: Map[NeighboorReference, Set[Card]]) = {
-      val cardsToConsider: Multiset[Card] =
-        reward.from.filterType[NeighboorReference].map(neightboorCards(_).to[Multiset]).sum ++
-        (if (reward.from.contains(Self)) played.to[Multiset] else Multiset.empty[Card])
-      cardsToConsider.map( card => if (card.getClass() == reward.forEach) reward.amount else 0).sum
+    def calculateVictoryPoints(reward: ComplexReward, neightboorCards: Map[NeighboorReference, Set[Card]]) = {
+      val referencedNeighboorCards: Multiset[Card] = reward.from.filterType[NeighboorReference].map(neightboorCards(_).to[Multiset]).reduce(_ ++ _)
+      val referencedMyCards = if (reward.from.contains(Self)) played.to[Multiset] else Multiset.empty[Card]
+      val cards = referencedNeighboorCards ++ referencedMyCards
+      cards.map( card => if (card.getClass == reward.forEach) reward.amount else 0).sum
     }
 
     def canPlayCard(card: Card, availableThroughTrade: Map[NeighboorReference, Production]): Boolean = {
@@ -264,7 +256,7 @@ object SevenWonders
     def possibleTrades(resources: Multiset[Resource],
                        tradableResources: Map[NeighboorReference, Production]
                       ): Set[Trade] = {
-      if (resources isEmpty) Set.empty[Trade]
+      if (resources.isEmpty) Set.empty[Trade]
       else
         (
           for ((neighboorRef, production) <- tradableResources) yield
@@ -348,7 +340,7 @@ object SevenWonders
 
         }
       }
-      val newGameState = Game(players1, cards, discarded) + deltas.sum
+      val newGameState = Game(players1, cards, discarded) + deltas.reduce(_ + _)
       if (newGameState.players.head.hand.size == 1){
         if (currentAge == 3)
           newGameState.endAge()
@@ -448,7 +440,7 @@ object SevenWonders
   ////
 
   // Commercial Cards
-  val TAVERN = RewardCommercialCard("TAVERN", Multiset(), Set(), Some(SimpleCoinReward(5)), None)
+  val TAVERN = RewardCommercialCard("TAVERN", Multiset(), Set(), Some(SimpleReward(5)), None)
   val WEST_TRADING_POST = RebateCommercialCard("WEST TRADING POST", Multiset(), Set(FORUM), Set(Clay, Stone, Wood, Ore), Set(Left))
   val MARKETPLACE = RebateCommercialCard("MARKETPLACE", Multiset(), Set(CARAVANSERY), Set(Glass, Tapestry, Paper), Set(Left, Right))
   val EAST_TRADING_POST = RebateCommercialCard("EAST TRADING POST", Multiset(), Set(FORUM), Set(Clay, Stone, Wood, Ore), Set(Right))
@@ -495,8 +487,8 @@ object SevenWonders
   // Commercial Cards
   val CARAVANSERY = ProductionCommercialCard("CARAVANSERY", Multiset(Wood, Wood), Set(LIGHTHOUSE), Wood | Stone | Ore | Clay)
   val FORUM = ProductionCommercialCard("FORUM", Multiset(Clay, Clay), Set(HAVEN), Glass | Tapestry | Paper)
-  val BAZAR = RewardCommercialCard("BAZAR", Multiset(), Set(), Some(ComplexCoinReward(2, ClassValue[ManufacturedGoodCard], Set(Left, Self, Right))), None)
-  val VINEYARD = RewardCommercialCard("VINEYARD", Multiset(), Set(), Some(ComplexCoinReward(1, ClassValue[RawMaterialCard], Set(Left, Self, Right))), None)
+  val BAZAR = RewardCommercialCard("BAZAR", Multiset(), Set(), Some(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Left, Self, Right))), None)
+  val VINEYARD = RewardCommercialCard("VINEYARD", Multiset(), Set(), Some(ComplexReward(1, classOf[RawMaterialCard], Set(Left, Self, Right))), None)
 
   // Military Cards
   val WALLS = MilitaryCard("WALLS", Multiset(Stone, Stone, Stone), Set(FORTIFICATIONS), 2)
@@ -529,10 +521,10 @@ object SevenWonders
 
   // Commercial Cards
   // TODO: Change Arena to give points for built stages of a wonder
-  val ARENA = RewardCommercialCard("ARENA", Multiset(Stone, Stone, Ore), Set(), Some(ComplexCoinReward(3, ClassValue[CommercialCard], Set(Self))), Some(VictoryPointReward(1, ClassValue[CommercialCard], Set(Self))))
-  val CHAMBER_OF_COMMERCE = RewardCommercialCard("CHAMBER OF COMMERCE", Multiset(Clay, Clay, Paper), Set(), Some(ComplexCoinReward(2, ClassValue[ManufacturedGoodCard], Set(Self))), Some(VictoryPointReward(2, ClassValue[ManufacturedGoodCard], Set(Self))))
-  val LIGHTHOUSE = RewardCommercialCard("LIGHTHOUSE", Multiset(Stone, Glass), Set(), Some(ComplexCoinReward(1, ClassValue[CommercialCard], Set(Self))), Some(VictoryPointReward(1, ClassValue[CommercialCard], Set(Self))))
-  val HAVEN = RewardCommercialCard("HAVEN", Multiset(Wood, Ore, Tapestry), Set(), Some(ComplexCoinReward(1, ClassValue[RawMaterialCard], Set(Self))), Some(VictoryPointReward(1, ClassValue[RawMaterialCard], Set(Self))))
+  val ARENA = RewardCommercialCard("ARENA", Multiset(Stone, Stone, Ore), Set(), Some(ComplexReward(3, classOf[CommercialCard], Set(Self))), Some(ComplexReward(1, classOf[CommercialCard], Set(Self))))
+  val CHAMBER_OF_COMMERCE = RewardCommercialCard("CHAMBER OF COMMERCE", Multiset(Clay, Clay, Paper), Set(), Some(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Self))), Some(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Self))))
+  val LIGHTHOUSE = RewardCommercialCard("LIGHTHOUSE", Multiset(Stone, Glass), Set(), Some(ComplexReward(1, classOf[CommercialCard], Set(Self))), Some(ComplexReward(1, classOf[CommercialCard], Set(Self))))
+  val HAVEN = RewardCommercialCard("HAVEN", Multiset(Wood, Ore, Tapestry), Set(), Some(ComplexReward(1, classOf[RawMaterialCard], Set(Self))), Some(ComplexReward(1, classOf[RawMaterialCard], Set(Self))))
 
   // Military Cards
   val CIRCUS = MilitaryCard("CIRCUS", Multiset(Stone, Stone, Stone, Ore), Set(), 3)
@@ -556,16 +548,16 @@ object SevenWonders
 
   // Guilds
   // TODO: Update victory point rewards for guilds
-  val STRATEGISTS_GUILD = VictoryPointsGuildCard("STARTEGISTS GUILD", Multiset(Ore, Ore, Stone, Tapestry), VictoryPointReward(1, ClassValue[RawMaterialCard], Set(Left, Right)))
-  val TRADERS_GUILD = VictoryPointsGuildCard("TRADERS GUILD", Multiset(Glass, Tapestry, Paper), VictoryPointReward(1, ClassValue[RawMaterialCard], Set(Left, Right)))
-  val MAGISTRATES_GUILD = VictoryPointsGuildCard("MAGISTRATES GUILD", Multiset(Wood, Wood, Wood, Stone, Tapestry), VictoryPointReward(1, ClassValue[RawMaterialCard], Set(Left, Right)))
-  val SHOPOWNERS_GUILD = VictoryPointsGuildCard("SHOPOWNERS GUILD", Multiset(Wood, Wood, Wood, Glass, Paper), VictoryPointReward(1, ClassValue[RawMaterialCard], Set(Self)))
-  val CRAFTMENS_GUILD = VictoryPointsGuildCard("CRAFTSMENS GUILD", Multiset(Ore, Ore, Stone, Stone), VictoryPointReward(2, ClassValue[RawMaterialCard], Set(Left, Right)))
-  val WORKERS_GUILD = VictoryPointsGuildCard("WORKERS GUILD", Multiset(Ore, Ore, Clay, Stone, Wood), VictoryPointReward(1, ClassValue[RawMaterialCard], Set(Left, Right)))
-  val PHILOSOPHERS_GUILD = VictoryPointsGuildCard("PHILOSOPHERS GUILD", Multiset(Clay, Clay, Clay, Paper, Tapestry), VictoryPointReward(1, ClassValue[RawMaterialCard], Set(Left, Right)))
+  val STRATEGISTS_GUILD = VictoryPointsGuildCard("STARTEGISTS GUILD", Multiset(Ore, Ore, Stone, Tapestry), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
+  val TRADERS_GUILD = VictoryPointsGuildCard("TRADERS GUILD", Multiset(Glass, Tapestry, Paper), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
+  val MAGISTRATES_GUILD = VictoryPointsGuildCard("MAGISTRATES GUILD", Multiset(Wood, Wood, Wood, Stone, Tapestry), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
+  val SHOPOWNERS_GUILD = VictoryPointsGuildCard("SHOPOWNERS GUILD", Multiset(Wood, Wood, Wood, Glass, Paper), ComplexReward(1, classOf[RawMaterialCard], Set(Self)))
+  val CRAFTMENS_GUILD = VictoryPointsGuildCard("CRAFTSMENS GUILD", Multiset(Ore, Ore, Stone, Stone), ComplexReward(2, classOf[RawMaterialCard], Set(Left, Right)))
+  val WORKERS_GUILD = VictoryPointsGuildCard("WORKERS GUILD", Multiset(Ore, Ore, Clay, Stone, Wood), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
+  val PHILOSOPHERS_GUILD = VictoryPointsGuildCard("PHILOSOPHERS GUILD", Multiset(Clay, Clay, Clay, Paper, Tapestry), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
   object SCIENTISTS_GUILD extends GuildCard("SCIENTISTS GUILD", Multiset(Wood, Wood, Ore, Ore, Paper))
-  val SPIES_GUILD = VictoryPointsGuildCard("SPIES GUILD", Multiset(Clay, Clay, Clay, Glass), VictoryPointReward(1, ClassValue[RawMaterialCard], Set(Left, Right)))
-  val BUILDERS_GUILD = VictoryPointsGuildCard("BUILDERS GUILD", Multiset(Stone, Stone, Clay, Clay, Glass), VictoryPointReward(1, ClassValue[RawMaterialCard], Set(Left, Self, Right)))
+  val SPIES_GUILD = VictoryPointsGuildCard("SPIES GUILD", Multiset(Clay, Clay, Clay, Glass), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
+  val BUILDERS_GUILD = VictoryPointsGuildCard("BUILDERS GUILD", Multiset(Stone, Stone, Clay, Clay, Glass), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Self, Right)))
 
   // Civilizations
   val RHODOS = Civilization("RHODOS", Ore)
