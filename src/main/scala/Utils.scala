@@ -14,12 +14,12 @@ object Utils {
         Nil
     else
         value.drop(1) :+ value.head
-
-    def createMap[B](fun: A => B): Map[A, B] =
-      value.map( elem => (elem, fun(elem))).toMap
   }
 
   implicit class AugmentedTraversable[A](value: Traversable[A]) {
     def filterType[C]: Traversable[C] = value.filter(_.isInstanceOf[C]).map(_.asInstanceOf[C])
+
+    def createMap[B](fun: A => B): Map[A, B] =
+      value.map( elem => (elem, fun(elem))).toMap
   }
 }
