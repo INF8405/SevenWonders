@@ -7,7 +7,6 @@ import Utils._
 object SevenWonders 
 {
 
-  // TODO: Add logic that gives players coins when they play certain cards
   def beginGame( nbPlayers: Int ): Game = {
     val cards = classicSevenWonders.generateCards(nbPlayers)
     val chosenCivilizations = Random.shuffle(civilizations.toList)
@@ -23,6 +22,19 @@ object SevenWonders
     val cost: Multiset[Resource],
     val evolutions: Set[Card]
   )
+  {
+    /**
+     * Implements the effect of the card on the game.
+     * Default implementation: the card has no effect.
+     * Most cards should have no effect like a resource card, military card, etc.
+     * But commerce reward coins and maybe one day city cards have an immediate effect on the game
+     * which should be implemented in this method that will be called after a card has been played
+     * @param game The current state of the game
+     * @param playedBy The player who played this card
+     * @return The new game after resolving the card
+     */
+    def resolve(game: Game, playedBy: Player): Game = game
+  }
 
   sealed trait ScienceCategory
   object ScienceCompass extends ScienceCategory
@@ -75,6 +87,20 @@ object SevenWonders
     coinReward: Option[Reward],
     victoryPointReward: Option[ComplexReward]
   ) extends CommercialCard( name, cost, evolutions )
+  {
+    override def resolve(game: Game, playedBy: Player): Game = {
+      coinReward match {
+        case None => game
+        case Some(reward) =>
+          val rewardAmount = reward match {
+            case SimpleReward(amount) => amount
+            case reward: ComplexReward => playedBy.calculateRewardAmount(reward, game.getNeighboorsCards(playedBy))
+          }
+          val newCoinsAmount = playedBy.coins + rewardAmount
+          game.copy(players = game.players.updated(game.players.indexOf(playedBy), playedBy.copy(coins = newCoinsAmount)))
+      }
+    }
+  }
 
   class ResourceCard(
     name: String,
@@ -186,21 +212,25 @@ object SevenWonders
      */
     def play(card: Card, trade: Trade): (Player, Map[NeighboorReference, Int]) = {
       val coinsMap = trade.values.toSet.map(ref => (ref, cost(trade, ref))).toMap
-      val player = Player(hand.removed(card), coins - cost(trade),battleMarkers, played + card, civilization)
+      val player = Player(hand.removed(card), coins - cost(trade), battleMarkers, played + card, civilization)
       (player, coinsMap)
     }
+
     def playableCards(availableThroughTrade: Map[NeighboorReference, Production]): Set[Card] =
       hand.toSet.filter( card => canPlayCard(card, availableThroughTrade))
+
     def totalProduction: Production = {
       val productionCards = played.filterType[ProductionCard]
       productionCards.foldLeft(civilization.base)((prod, card) => prod + card.prod)
     }
+
     def tradableProduction: Production = {
       val productionCards = played.filterType[ResourceCard]
       productionCards.foldLeft(civilization.base)((prod, card) => prod + card.prod)
     }
 
     def militaryStrength: Int = played.filterType[MilitaryCard].map(_.value).sum
+
     def score(neightboorCards: Map[NeighboorReference, Set[Card]]): Int =
       scienceScore + militaryScore + civilianScore + commerceScore(neightboorCards) + guildScore(neightboorCards)
 
@@ -226,15 +256,15 @@ object SevenWonders
         card =>
           card.victoryPointReward match {
             case None => 0
-            case Some(vicPointReward) => calculateVictoryPoints(vicPointReward, neightboorCards)
+            case Some(vicPointReward) => calculateRewardAmount(vicPointReward, neightboorCards)
           }
       }.sum
     }
 
     def guildScore(neightboorCards: Map[NeighboorReference, Set[Card]]): Int =
-      played.filterType[VictoryPointsGuildCard].map{ card => calculateVictoryPoints(card.victoryPoint, neightboorCards)}.sum
+      played.filterType[VictoryPointsGuildCard].map{ card => calculateRewardAmount(card.victoryPoint, neightboorCards)}.sum
 
-    def calculateVictoryPoints(reward: ComplexReward, neightboorCards: Map[NeighboorReference, Set[Card]]) = {
+    def calculateRewardAmount(reward: ComplexReward, neightboorCards: Map[NeighboorReference, Set[Card]]): Int = {
       val referencedNeighboorCards: Multiset[Card] = reward.from.filterType[NeighboorReference].map(neightboorCards(_).to[Multiset]).reduce(_ ++ _)
       val referencedMyCards = if (reward.from.contains(Self)) played.to[Multiset] else Multiset.empty[Card]
       val cards = referencedNeighboorCards ++ referencedMyCards
@@ -300,31 +330,35 @@ object SevenWonders
     }
 
     def availableEvolutions: Set[Card] = played.map(_.evolutions).flatten
+
     def +(delta: PlayerDelta) =
       this.copy(coins = coins + delta.coinDelta, played = played ++ delta.newCards, battleMarkers = battleMarkers ++ delta.newBattleMarkers)
-    def -(previous: Player): PlayerDelta = PlayerDelta(played -- previous.played, coins - previous.coins, battleMarkers.diff(previous.battleMarkers))
+
+    def -(previous: Player): PlayerDelta =
+      PlayerDelta(played -- previous.played, coins - previous.coins, battleMarkers.diff(previous.battleMarkers))
   }
 
   type Age = Int
 
   case class Game(players: List[Player], cards: Map[Age, Multiset[Card]], discarded: Multiset[Card]) {
-    def getNeighboors(player: Player): Set[Player] = Set(getLeftNeighboor(player), getRightNeighboor(player))
+    def getNeighboors(player: Player): Set[Player] =
+      Set(getLeftNeighboor(player), getRightNeighboor(player))
+
     def getLeftNeighboor(player: Player): Player = {
       val index = players.indexOf(player)
       players.shiftRight(index)
     }
+
     def getRightNeighboor(player: Player): Player = {
       val index = players.indexOf(player)
       players.shiftLeft(index)
     }
+
+    def getNeighboorsCards(player: Player): Map[NeighboorReference, Set[Card]] = {
+      Map(Left -> getLeftNeighboor(player).played, Right -> getRightNeighboor(player).played)
+    }
+
     def playTurn(actions: Map[Player, Action]): Game = {
-      // A list containning everyone's hand without the currently played card
-      val hands = players.map(player => player.hand.removed(actions(player).card))
-      // A list of players with their upcomming hand
-      val players1 = players.zip(if (currentAge == 1 || currentAge == 3) hands.shiftLeft else hands.shiftRight).map{
-        case (player, hand) =>
-          player.copy(hand = hand)
-      }
       val deltas = for ( (player, action) <- actions) yield {
         action match {
           case DiscardAction(card) =>
@@ -340,23 +374,48 @@ object SevenWonders
 
         }
       }
-      val newGameState = Game(players1, cards, discarded) + deltas.reduce(_ + _)
-      if (newGameState.players.head.hand.size == 1){
+      val newGameState = this + deltas.reduce(_ + _)
+
+      // We go through every played card and resolve it's effect (add coins to players who played a card that rewards in coins)
+      val gameStateAfterResolvingCards = actions.foldLeft(newGameState) {
+        (gameState, keyValue) =>
+          keyValue match {
+            case (player, PlayAction(card, trade)) => card.resolve(gameState, player)
+            case _ => gameState
+          }
+      }
+
+      // A list containning everyone's hand without the currently played card
+      val hands = players.map(player => player.hand.removed(actions(player).card))
+      // A list of players with their upcomming hand
+      val nextTurnPlayers = players.zip(if (currentAge == 1 || currentAge == 3) hands.shiftLeft else hands.shiftRight).map{
+        case (player, hand) =>
+          player.copy(hand = hand)
+      }
+
+      val finalGameState = gameStateAfterResolvingCards.copy(players = nextTurnPlayers)
+
+      // Was this the last turn of this age?
+      if (finalGameState.players.head.hand.size == 1){
+        // Was this the last age?
         if (currentAge == 3)
-          newGameState.endAge()
+          finalGameState.endAge()
         else
-          newGameState.endAge().beginAge()
+          finalGameState.endAge().beginAge()
       }
       else
-        newGameState
+        finalGameState
     }
+
     def currentAge = cards.keys.toList.reverse.find(cards(_).isEmpty).getOrElse(0)
+
     def beginAge(): Game = {
       val shuffledNextAgeCards = Random.shuffle(cards(currentAge + 1).toList)
       val hands: List[Multiset[Card]] = shuffledNextAgeCards.grouped(7).toList.map(_.to[Multiset])
       val updatedPlayers: List[Player] = players.zip(hands).map{ case (player, hand) => player.copy(hand = hand) }
       Game(updatedPlayers, cards.updated(currentAge, Multiset.empty[Card]), discarded)
     }
+
     def endAge(): Game = {
       val winMarker = currentAge match { case 1 => VictoryBattleMarker(1) case 2 => VictoryBattleMarker(3) case 3 => VictoryBattleMarker(5)}
       val playerDeltas = players.createMap{
@@ -382,6 +441,7 @@ object SevenWonders
       val discards = players.map(_.hand).to[Multiset].flatten
       this + GameDelta(playerDeltas, discards)
     }
+
     def +(delta: GameDelta): Game = {
       val updatedPlayers = players.map{
         player =>
