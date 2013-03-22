@@ -359,7 +359,7 @@ object SevenWonders
     }
     def endAge(): Game = {
       val winMarker = currentAge match { case 1 => VictoryBattleMarker(1) case 2 => VictoryBattleMarker(3) case 3 => VictoryBattleMarker(5)}
-      val deltas = players.map{
+      val playerDeltas = players.createMap{
         player =>
           val leftPlayer = getLeftNeighboor(player)
           val wonLeft = player.militaryStrength > leftPlayer.militaryScore
@@ -379,10 +379,8 @@ object SevenWonders
 
           PlayerDelta(Set(), 0, leftBattleMarker ++ rightBattleMarker)
       }
-      // TODO: make a map with these playerdeltas
-      // TODO: discard hand
-      //this + deltas.sum
-      ???
+      val discards = players.map(_.hand).to[Multiset].flatten
+      this + GameDelta(playerDeltas, discards)
     }
     def +(delta: GameDelta): Game = {
       val updatedPlayers = players.map{
