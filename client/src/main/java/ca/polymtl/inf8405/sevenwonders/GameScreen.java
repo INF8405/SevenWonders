@@ -138,9 +138,10 @@ public class GameScreen extends Activity {
 		return flingGesture_.onTouch(topView, ev);
 	}
 	
-	public static void showZoomPopup(View view, List<String> cardNames, Context context){
+	public static void showZoomPopup(View view, List<String> cardNames, Context context,
+			boolean withButtonPanel){
 		PopupWindow popup = new PopupWindow(view);
-		popup.setContentView(new ZoomCardView(context, cardNames, 0)); 
+		popup.setContentView(new ZoomCardView(context, cardNames, 0, withButtonPanel));
 		popup.showAtLocation(view, Gravity.CENTER, 0, 0);
 		popup.update(0, 0, GameScreen.SCREEN_WIDTH*2/3, GameScreen.SCREEN_HEIGTH/2);
 	}

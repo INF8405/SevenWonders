@@ -14,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.RelativeLayout.LayoutParams;
 
 import java.util.*;
 
@@ -23,7 +24,7 @@ public class ZoomCardView extends RelativeLayout{
 	private OnFlingGestureListener flingGesture_;
 	private List<String> allCardNames_;
 	private int current_;
-	
+
 	// Test - TO REMOVE
 	private TextView text;
 	private void changeText(){
@@ -32,14 +33,21 @@ public class ZoomCardView extends RelativeLayout{
 		int random = min + (int)(Math.random() * ((max - min) + 1));
 		text.setText("ab= " + random);
 	}
-	
-	private void init(Context context, List<String> cardNames, int current){
+
+	/**
+	 * Build the zoom view
+	 * @param context
+	 * @param cardNames: list of all cards will be displayed in the zoom view
+	 * @param current: the id of the current card
+	 * @param withButtonPanel: if we want to display the button panel inside of the zoom view
+	 */
+	private void init(Context context, List<String> cardNames, int current, boolean withButtonPanel){
 		current_ = current;
 		allCardNames_ = cardNames;
-		
+
 		setBackgroundColor(Color.DKGRAY);
 		setGravity(Gravity.RIGHT);
-		
+
 		// Image
 		ImageView img = new ImageView(context);
 		LinearLayout.LayoutParams imgLayout = new LinearLayout.LayoutParams
@@ -50,14 +58,14 @@ public class ZoomCardView extends RelativeLayout{
 				.getBitmap(context, allCardNames_.get(current_)));
 		img.setTag("imageView");
 		addView(img);
-		
+
 		// Test textview - TO REMOVE
 		text = new TextView(context);
 		text.setLayoutParams(imgLayout);
 		text.setTextSize(40);
 		changeText();
 		addView(text);
-		
+
 		// Button close
 		Button closeButton = new Button(context);
 		RelativeLayout.LayoutParams buttonLayout = new RelativeLayout.LayoutParams(
@@ -74,7 +82,35 @@ public class ZoomCardView extends RelativeLayout{
 			}
 		});
 		addView(closeButton);
-		
+
+		// Button panel
+		if (withButtonPanel){
+			Button play = new Button(context);
+			RelativeLayout.LayoutParams bl = new RelativeLayout.LayoutParams(
+					LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+			bl.addRule(RelativeLayout.CENTER_IN_PARENT);
+			play.setLayoutParams(bl);
+			play.setText("Play");
+
+			Button discard = new Button(context);
+			discard.setLayoutParams(bl);
+			discard.setText("Discard");
+
+			Button wonders = new Button(context);
+			wonders.setLayoutParams(bl);
+			wonders.setText("Wonders");
+
+			LinearLayout ln = new LinearLayout(context);
+			ln.setOrientation(LinearLayout.VERTICAL);
+			ln.setGravity(Gravity.CENTER_VERTICAL);
+			//ln.setBackgroundColor(Color.RED);
+			ln.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.FILL_PARENT));
+			ln.addView(play);
+			ln.addView(wonders);
+			ln.addView(discard);
+			addView(ln);
+		}
+
 		flingGesture_ = new OnFlingGestureListener(){
 			@Override
 			public void onRightToLeft() {
@@ -100,9 +136,10 @@ public class ZoomCardView extends RelativeLayout{
 		sefl_.setOnTouchListener(flingGesture_);
 	}
 
-	public ZoomCardView(Context context, List<String> cardNames, int current){
+	public ZoomCardView(Context context, List<String> cardNames, int current, 
+			boolean withButtonPanel){
 		super(context);
-		init(context, cardNames, current);
+		init(context, cardNames, current, withButtonPanel);
 	}
 
 	public ZoomCardView(Context context, AttributeSet attrs) {
@@ -117,17 +154,17 @@ public class ZoomCardView extends RelativeLayout{
 			current_--;
 			ImageView img = (ImageView)findViewWithTag("imageView");
 			img.setImageBitmap(CardLoader.getInstance()
-				.getBitmap(sefl_.getContext(), allCardNames_.get(current_)));
+					.getBitmap(sefl_.getContext(), allCardNames_.get(current_)));
 		}
 	}
-	
+
 	private void right(){
 		if (current_+1 < allCardNames_.size()){
 			changeText();
 			current_++;
 			ImageView img = (ImageView)findViewWithTag("imageView");
 			img.setImageBitmap(CardLoader.getInstance()
-				.getBitmap(sefl_.getContext(), allCardNames_.get(current_)));
+					.getBitmap(sefl_.getContext(), allCardNames_.get(current_)));
 		}
 	}
 }
