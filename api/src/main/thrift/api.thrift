@@ -55,7 +55,8 @@ struct Player {
 
 struct GameState {
 	1: Hand hand,
-	2: list<Player> player
+	2: list<Trade> trades
+	3: list<Player> player
 }
 
 service SevenWondersApi {
