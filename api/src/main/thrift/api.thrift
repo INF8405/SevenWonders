@@ -1,11 +1,27 @@
 namespace java ca.polymtl.inf8405.sevenwonders.api
 
+enum Resource {
+    Clay = 0,
+    Wood = 1,
+    Ore = 2,
+    Stone = 3,
+    Glass = 4,
+    Paper = 5,
+    Tapestry = 6
+}
+
+enum NeighborReference {
+    Left = 0,
+    Right = 1
+}
+
 typedef i32 GameId
 typedef string Username
 typedef string Card
 typedef list<map<string,i32>> ScoreDetail
 typedef i32 BattleMarker
 typedef string CardCategory
+typedef map<Resource,list<NeighborReference>> Trade
 
 struct GeoLocation {
 	1: string longitude,
@@ -33,7 +49,8 @@ struct Player {
 	3: list<BattleMarker> battleMarkers,
 	4: i32 coins,
 	5: i32 score,
-	6: i32 wonderStaged
+	6: i32 wonderStaged,
+	7: bool canPlayWonder
 }
 
 struct GameState {
@@ -43,17 +60,20 @@ struct GameState {
 
 service SevenWondersApi {
 
-	list<GameRoom> s_listGames( 1: GeoLocation geo )
-	oneway void s_create( 1: GameRoomDef definition );
-	oneway void s_join( 1: GameId id );
-	oneway void c_joined( 1: Username user );
-	oneway void s_start( );
+	list<GameRoom> s_listGames( 1: GeoLocation geo ),
+	oneway void s_create( 1: GameRoomDef definition ),
+	oneway void s_join( 1: GameId id ),
+	oneway void c_joined( 1: Username user ),
+	oneway void s_start( ),
 
-	oneway void c_sendState( 1: GameState state );
+	oneway void c_sendState( 1: GameState state ),
 
-	oneway void s_playCard( 1: Card card );
-	oneway void s_playWonder( );
-	oneway void s_discard( 1: Card card );
+	oneway void s_playCard( 1: Card card, 2: Trade trade ),
+	oneway void s_playWonder( 1: Trade trade ),
+	oneway void s_discard( 1: Card card ),
 
 	oneway void c_sendEndState( 1: GameState state, 2: ScoreDetail detail )
+
+	oneway void s_pong( );
+	oneway void c_ping( );
 }
