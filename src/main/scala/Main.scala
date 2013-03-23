@@ -42,10 +42,47 @@ object SevenWonders
     def resolve(game: Game, playedBy: Player): Game = game
   }
 
-  sealed trait ScienceCategory
-  object ScienceCompass extends ScienceCategory
-  object ScienceGear extends ScienceCategory
-  object ScienceStone extends ScienceCategory
+  trait ScienceValue {
+    def +(other: ScienceValue): ScienceValue
+    def |(other: ScienceValue): OptionalScienceValue
+    def victoryPointValue: Int
+  }
+  case class SimpleScienceValue(compass: Int, gear: Int, tablet: Int) extends ScienceValue {
+    def +(other: ScienceValue) = throw new Error
+    def +(other: SimpleScienceValue) = SimpleScienceValue(compass + other.compass, gear + other.gear, tablet + other.tablet)
+    def +(other: OptionalScienceValue) = other + this
+    def |(other: ScienceValue) = throw new Error
+    def |(other: SimpleScienceValue) = OptionalScienceValue(Set(this, other))
+    def |(other: OptionalScienceValue) = other | this
+    def victoryPointValue = {
+      val setValue = List(compass, gear, tablet).min
+      val stackValue = List(compass, gear, tablet).map(Math.pow(_, 2)).sum
+      setValue + stackValue
+    }
+  }
+  case class OptionalScienceValue(alternatives: Set[ScienceValue]) extends ScienceValue {
+    def +(other: ScienceValue) = throw new Error
+    def +(other: SimpleScienceValue) = alternatives.map(_ + other)
+    def +(other: OptionalScienceValue) = {
+      val newAlternatives = for {
+        alt1 <- alternatives;
+        alt2 <- other.alternatives
+      } yield alt1 + alt2
+      OptionalScienceValue(newAlternatives.toSet)
+    }
+    def |(other: ScienceValue) = throw new Error
+    def |(other: SimpleScienceValue) = OptionalScienceValue(alternatives + other)
+    def |(other: OptionalScienceValue) = OptionalScienceValue(Set(this, other))
+    def victoryPointValue = alternatives.map(_.victoryPointValue).max
+  }
+
+  trait HasScience {
+    val value: ScienceValue
+  }
+
+  val compass = SimpleScienceValue(1, 0, 0)
+  val gear = SimpleScienceValue(0, 1, 0)
+  val tablet = SimpleScienceValue(0, 0, 1)
 
   trait ProductionCard {
     val prod: Production
@@ -55,8 +92,8 @@ object SevenWonders
     override val name: String,
     override val cost: Cost,
     override val evolutions: Set[Card],
-    category: ScienceCategory
-  ) extends Card( name, cost, evolutions )
+    override val value: ScienceValue
+  ) extends Card( name, cost, evolutions ) with HasScience
 
   case class MilitaryCard(
     override val name: String,
@@ -239,12 +276,9 @@ object SevenWonders
       scienceScore + militaryScore + civilianScore + commerceScore(neightboorCards) + guildScore(neightboorCards)
 
     def scienceScore: Int = {
-      // TODO: Include the guild science card in this calculation
-      val scienceCards = played.filterType[ScienceCard]
-      val scienceCounts = scienceCards.groupBy(_.category).values.map(_.size)
-      val scienceSetPoints: Int = if (scienceCounts.size == 3) scienceCounts.min else 0
-      val scienceStackPoints: Int = scienceCounts.map(Math.pow(_, 2)).sum.toInt
-      scienceSetPoints + scienceStackPoints
+      val cardsWithScience: Traversable[HasScience] = played.filterType[HasScience]
+      val scienceValue = cardsWithScience.foldLeft(SimpleScienceValue(0, 0, 0)){(scienceValue, card) => scienceValue + card.value}
+      scienceValue.victoryPointValue
     }
 
     def militaryScore = battleMarkers.map(_.vicPoints).sum
@@ -513,9 +547,9 @@ object SevenWonders
   val GUARD_TOWER = MilitaryCard("GUARD TOWER", Cost(0, Multiset(Clay)), Set(), 1)
 
   // Science Cards
-  val WORKSHOP = ScienceCard("WORKSHOP", Cost(0, Multiset(Glass)), Set(LABORATORY, ARCHERY_RANGE), ScienceGear)
-  val SCRIPTORIUM = ScienceCard("SCRIPTORIUM", Cost(0, Multiset(Paper)), Set(COURTHOUSE, LIBRARY), ScienceStone)
-  val APOTHECARY = ScienceCard("APOTHECARY", Cost(0, Multiset(Tapestry)), Set(STABLES, DISPENSARY), ScienceCompass)
+  val WORKSHOP = ScienceCard("WORKSHOP", Cost(0, Multiset(Glass)), Set(LABORATORY, ARCHERY_RANGE), gear)
+  val SCRIPTORIUM = ScienceCard("SCRIPTORIUM", Cost(0, Multiset(Paper)), Set(COURTHOUSE, LIBRARY), tablet)
+  val APOTHECARY = ScienceCard("APOTHECARY", Cost(0, Multiset(Tapestry)), Set(STABLES, DISPENSARY), compass)
 
 
   // Civilian Cards
@@ -558,10 +592,10 @@ object SevenWonders
   val STABLES = MilitaryCard("STABLES", Cost(0, Multiset(Clay, Wood, Ore)), Set(), 2)
 
   // Science Cards
-  val SCHOOL = ScienceCard("SCHOOL", Cost(0, Multiset(Wood, Paper)), Set(ACADEMY, STUDY), ScienceStone)
-  val LIBRARY = ScienceCard("LIBRARY", Cost(0, Multiset(Stone, Stone, Tapestry)), Set(SENATE, UNIVERSITY), ScienceStone)
-  val LABORATORY = ScienceCard("LABORATORY", Cost(0, Multiset(Clay, Clay, Paper)), Set(OBSERVATORY, SIEGE_WORKSHOP), ScienceGear)
-  val DISPENSARY = ScienceCard("DISPENSARY", Cost(0, Multiset(Ore, Ore, Glass)), Set(LODGE, ARENA), ScienceCompass)
+  val SCHOOL = ScienceCard("SCHOOL", Cost(0, Multiset(Wood, Paper)), Set(ACADEMY, STUDY), tablet)
+  val LIBRARY = ScienceCard("LIBRARY", Cost(0, Multiset(Stone, Stone, Tapestry)), Set(SENATE, UNIVERSITY), tablet)
+  val LABORATORY = ScienceCard("LABORATORY", Cost(0, Multiset(Clay, Clay, Paper)), Set(OBSERVATORY, SIEGE_WORKSHOP),gear)
+  val DISPENSARY = ScienceCard("DISPENSARY", Cost(0, Multiset(Ore, Ore, Glass)), Set(LODGE, ARENA), compass)
 
   // Civilian Cards
   val AQUEDUCT = CivilianCard("AQUEDUC", Cost(0, Multiset(Stone, Stone, Stone)), Set(), 5)
@@ -593,11 +627,11 @@ object SevenWonders
   val SIEGE_WORKSHOP = MilitaryCard("SIEGE WORKSHOP", Cost(0, Multiset(Clay, Clay, Clay, Wood)), Set(), 3)
 
   // Science Cards
-  val OBSERVATORY = ScienceCard("OBSERVATORY", Cost(0, Multiset(Ore, Ore, Glass, Tapestry)), Set(), ScienceGear)
-  val ACADEMY = ScienceCard("ACADEMY", Cost(0, Multiset(Stone, Stone, Stone)), Set(), ScienceCompass)
-  val LODGE = ScienceCard("LODGE", Cost(0, Multiset(Clay, Clay, Paper, Tapestry)), Set(), ScienceCompass)
-  val UNIVERSITY = ScienceCard("UNIVERSITY", Cost(0, Multiset(Wood, Wood, Paper, Glass)), Set(), ScienceStone)
-  val STUDY = ScienceCard("STUDY", Cost(0, Multiset(Wood, Paper, Tapestry)), Set(), ScienceGear)
+  val OBSERVATORY = ScienceCard("OBSERVATORY", Cost(0, Multiset(Ore, Ore, Glass, Tapestry)), Set(), gear)
+  val ACADEMY = ScienceCard("ACADEMY", Cost(0, Multiset(Stone, Stone, Stone)), Set(), compass)
+  val LODGE = ScienceCard("LODGE", Cost(0, Multiset(Clay, Clay, Paper, Tapestry)), Set(), compass)
+  val UNIVERSITY = ScienceCard("UNIVERSITY", Cost(0, Multiset(Wood, Wood, Paper, Glass)), Set(), tablet)
+  val STUDY = ScienceCard("STUDY", Cost(0, Multiset(Wood, Paper, Tapestry)), Set(), gear)
 
   // Civilian Cards
   val TOWN_HALL = CivilianCard("TOWN HALL", Cost(0, Multiset(Stone, Stone, Ore, Glass)), Set(), 6)
@@ -615,7 +649,9 @@ object SevenWonders
   val CRAFTMENS_GUILD = VictoryPointsGuildCard("CRAFTSMENS GUILD", Cost(0, Multiset(Ore, Ore, Stone, Stone)), ComplexReward(2, classOf[RawMaterialCard], Set(Left, Right)))
   val WORKERS_GUILD = VictoryPointsGuildCard("WORKERS GUILD", Cost(0, Multiset(Ore, Ore, Clay, Stone, Wood)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
   val PHILOSOPHERS_GUILD = VictoryPointsGuildCard("PHILOSOPHERS GUILD", Cost(0, Multiset(Clay, Clay, Clay, Paper, Tapestry)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
-  object SCIENTISTS_GUILD extends GuildCard("SCIENTISTS GUILD", Cost(0, Multiset(Wood, Wood, Ore, Ore, Paper)))
+  object SCIENTISTS_GUILD extends GuildCard("SCIENTISTS GUILD", Cost(0, Multiset(Wood, Wood, Ore, Ore, Paper))) with HasScience {
+    val value = gear | tablet | compass
+  }
   val SPIES_GUILD = VictoryPointsGuildCard("SPIES GUILD", Cost(0, Multiset(Clay, Clay, Clay, Glass)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
   val BUILDERS_GUILD = VictoryPointsGuildCard("BUILDERS GUILD", Cost(0, Multiset(Stone, Stone, Clay, Clay, Glass)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Self, Right)))
 
