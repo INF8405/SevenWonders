@@ -1,4 +1,4 @@
-package com.github.jedesah
+package ca.polymtl.inf8405.sevenwonders.model
 
 import com.sidewayscoding.Multiset
 import util.Random

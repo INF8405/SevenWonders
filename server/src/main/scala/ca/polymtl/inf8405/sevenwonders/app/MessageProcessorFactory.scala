@@ -1,34 +1,23 @@
-package ca.polymtl.inf8405.sevenwonders
-package app
+package ca.polymtl.inf8405.sevenwonders.app
 
-import api.HelloService
+import org.apache.thrift.TProcessorFactory
+import org.apache.thrift.transport.TTransport
+import akka.actor.ActorRef
+import concurrent.Await
+import scala.concurrent.duration._
 
-import org.apache.thrift._
-import transport.{TSocket, TTransport}
+import ca.polymtl.inf8405.sevenwonders.api.SevenWondersApi
+import akka.util.Timeout
 
-import java.net.InetAddress
 
-import collection.mutable.{Map => MMap}
+class MessageProcessorFactory( dispatcher: ActorRef ) extends TProcessorFactory( null ) {
 
-class MessageProcessorFactory extends TProcessorFactory( null )
-{
-  private val clients = MMap.empty[InetAddress, GameClient]
+  override def getProcessor( transport: TTransport ) = {
 
-  override def getProcessor( transport: TTransport ) =
-  {
-    val socket = transport.asInstanceOf[TSocket]
-    val ip = socket.getSocket.getInetAddress
+    import akka.pattern.ask
+    implicit val timeout = Timeout( 5 seconds )
 
-    // reuse client if exist
-    val client = if ( clients.contains( ip ) ) clients( ip )
-    else
-    {
-      val newClient = new GameClient( transport )
-      clients( ip ) = newClient
-
-      newClient
-    }
-
-    new HelloService.Processor( client )
+    val future = dispatcher ? ProcessorRequest( transport )
+    Await.result( future, timeout.duration ).asInstanceOf[SevenWondersApi.Processor[GameClient]]
   }
 }
