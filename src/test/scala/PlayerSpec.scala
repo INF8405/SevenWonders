@@ -16,10 +16,10 @@ class PlayerSpec extends Specification with defaults {
       defaultPlayer.discard(PRESS) === Player(defaultHand.removed(PRESS), 6, Multiset(), Set(BATHS, PAWNSHOP), OLYMPIA)
     }
 
-    "playing a card should:" +
-      "- remove the card from their hand," +
-      "- add the card to their playedCards, +" +
-      "- substract the coin cost and" +
+    "playing a card should:\n" +
+      "- remove the card from their hand\n" +
+      "- add the card to their playedCards\n" +
+      "- substract the coin cost and\n" +
       "- add any coin value supplied by the played card" in {
       defaultPlayer.play(TAVERN, MultiMap()) === Player(defaultHand.removed(TAVERN), 7, Multiset(), Set(BATHS, ALTAR, TAVERN), OLYMPIA)
     }
