@@ -43,26 +43,37 @@ object SevenWonders
   }
 
   trait ScienceValue {
-    def +(other: ScienceValue): ScienceValue
-    def |(other: ScienceValue): OptionalScienceValue
+    def +(other: ScienceValue): ScienceValue = other match {
+      case other: SimpleScienceValue => this + other
+      case other: OptionalScienceValue => this + other
+    }
+    def +(other: SimpleScienceValue): ScienceValue
+    def +(other: OptionalScienceValue): OptionalScienceValue
+    def |(other: ScienceValue): ScienceValue = other match {
+      case other: SimpleScienceValue => this | other
+      case other: OptionalScienceValue => this | other
+    }
+    def |(other: SimpleScienceValue): ScienceValue
+    def |(other: OptionalScienceValue): OptionalScienceValue
     def victoryPointValue: Int
   }
   case class SimpleScienceValue(compass: Int, gear: Int, tablet: Int) extends ScienceValue {
-    def +(other: ScienceValue) = throw new Error
     def +(other: SimpleScienceValue) = SimpleScienceValue(compass + other.compass, gear + other.gear, tablet + other.tablet)
     def +(other: OptionalScienceValue) = other + this
-    def |(other: ScienceValue) = throw new Error
-    def |(other: SimpleScienceValue) = OptionalScienceValue(Set(this, other))
+    def |(other: SimpleScienceValue) =
+      if (other != this)
+        OptionalScienceValue(Set(this, other))
+      else
+        this
     def |(other: OptionalScienceValue) = other | this
     def victoryPointValue = {
-      val setValue = List(compass, gear, tablet).min
+      val setValue = List(compass, gear, tablet).min * 7
       val stackValue = List(compass, gear, tablet).map(Math.pow(_, 2)).sum
       setValue + stackValue
     }
   }
   case class OptionalScienceValue(alternatives: Set[ScienceValue]) extends ScienceValue {
-    def +(other: ScienceValue) = throw new Error
-    def +(other: SimpleScienceValue) = alternatives.map(_ + other)
+    def +(other: SimpleScienceValue) = OptionalScienceValue(alternatives.map(_ + other))
     def +(other: OptionalScienceValue) = {
       val newAlternatives = for {
         alt1 <- alternatives;
@@ -70,9 +81,13 @@ object SevenWonders
       } yield alt1 + alt2
       OptionalScienceValue(newAlternatives.toSet)
     }
-    def |(other: ScienceValue) = throw new Error
-    def |(other: SimpleScienceValue) = OptionalScienceValue(alternatives + other)
-    def |(other: OptionalScienceValue) = OptionalScienceValue(Set(this, other))
+    override def |(other: ScienceValue): OptionalScienceValue = other match {
+      case other: SimpleScienceValue => this | other
+      case other: OptionalScienceValue => this | other
+    }
+    def |(other: SimpleScienceValue): OptionalScienceValue = OptionalScienceValue(alternatives + other)
+    def |(other: OptionalScienceValue) =
+      alternatives.foldLeft[OptionalScienceValue](other){(other, alternative) => other | alternative}
     def victoryPointValue = alternatives.map(_.victoryPointValue).max
   }
 
@@ -277,7 +292,7 @@ object SevenWonders
 
     def scienceScore: Int = {
       val cardsWithScience: Traversable[HasScience] = played.filterType[HasScience]
-      val scienceValue = cardsWithScience.foldLeft(SimpleScienceValue(0, 0, 0)){(scienceValue, card) => scienceValue + card.value}
+      val scienceValue = cardsWithScience.foldLeft[ScienceValue](SimpleScienceValue(0, 0, 0)){(scienceValue, card) => scienceValue + card.value}
       scienceValue.victoryPointValue
     }
 
