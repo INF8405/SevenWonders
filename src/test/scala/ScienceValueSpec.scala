@@ -36,7 +36,7 @@ class ScienceValueSpec extends Specification {
     }
   }
 
-  "A OptionalScienceValue" should {
+  "An OptionalScienceValue" should {
     "support adding a SimpleScienceValue" in {
       (compass | tablet) + compass === ((compass + compass) | (compass + tablet))
     }
