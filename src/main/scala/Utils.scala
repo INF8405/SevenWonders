@@ -7,12 +7,12 @@ object Utils {
       if (value == Nil)
         Nil
       else
-        value.last :: value.drop(1)
+        value.last :: value.dropRight(1)
 
     def shiftLeft: List[A] =
       if (value == Nil)
         Nil
-    else
+      else
         value.drop(1) :+ value.head
   }
 
