@@ -9,7 +9,7 @@ object SevenWonders
 
   def beginGame( nbPlayers: Int ): Game = {
     val cards = classicSevenWonders.generateCards(nbPlayers)
-    val chosenCivilizations = Random.shuffle(civilizations.toList)
+    val chosenCivilizations = Random.shuffle(civilizations.toList).take(nbPlayers)
     val players = chosenCivilizations.map{
       civ =>
         Player(Multiset(), 3, Multiset(), Set(), civ)
