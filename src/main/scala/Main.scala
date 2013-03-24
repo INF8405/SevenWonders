@@ -276,22 +276,22 @@ object SevenWonders
       hand.toSet.filter( card => canPlayCard(card, availableThroughTrade))
 
     def totalProduction: Production = {
-      val productionCards = played.filterType[ProductionCard]
+      val productionCards = played.filter(_.isInstanceOf[ProductionCard]).map(_.asInstanceOf[ProductionCard])
       productionCards.foldLeft(civilization.base)((prod, card) => prod + card.prod)
     }
 
     def tradableProduction: Production = {
-      val productionCards = played.filterType[ResourceCard]
+      val productionCards = played.filter(_.isInstanceOf[ResourceCard]).map(_.asInstanceOf[ResourceCard])
       productionCards.foldLeft(civilization.base)((prod, card) => prod + card.prod)
     }
 
-    def militaryStrength: Int = played.filterType[MilitaryCard].map(_.value).sum
+    def militaryStrength: Int = played.filter(_.isInstanceOf[MilitaryCard]).map(_.asInstanceOf[MilitaryCard]).map(_.value).sum
 
     def score(neightboorCards: Map[NeighboorReference, Set[Card]]): Int =
       scienceScore + militaryScore + civilianScore + commerceScore(neightboorCards) + guildScore(neightboorCards)
 
     def scienceScore: Int = {
-      val cardsWithScience: Traversable[HasScience] = played.filterType[HasScience]
+      val cardsWithScience: Traversable[HasScience] = played.filter(_.isInstanceOf[HasScience]).map(_.asInstanceOf[HasScience])
       val scienceValue = cardsWithScience.foldLeft[ScienceValue](SimpleScienceValue(0, 0, 0)){(scienceValue, card) => scienceValue + card.value}
       scienceValue.victoryPointValue
     }
@@ -299,12 +299,12 @@ object SevenWonders
     def militaryScore = battleMarkers.map(_.vicPoints).sum
 
     def civilianScore = {
-      val civilianCards = played.filterType[CivilianCard]
+      val civilianCards = played.filter(_.isInstanceOf[CivilianCard]).map(_.asInstanceOf[CivilianCard])
       civilianCards.map(_.amount).sum
     }
 
     def commerceScore(neightboorCards: Map[NeighboorReference, Set[Card]]): Int = {
-      val commerceVicPointCards = played.filterType[RewardCommercialCard]
+      val commerceVicPointCards = played.filter(_.isInstanceOf[RewardCommercialCard]).map(_.asInstanceOf[RewardCommercialCard])
       commerceVicPointCards.map {
         card =>
           card.victoryPointReward match {
@@ -314,11 +314,14 @@ object SevenWonders
       }.sum
     }
 
-    def guildScore(neightboorCards: Map[NeighboorReference, Set[Card]]): Int =
-      played.filterType[VictoryPointsGuildCard].map{ card => calculateRewardAmount(card.victoryPoint, neightboorCards)}.sum
+    def guildScore(neightboorCards: Map[NeighboorReference, Set[Card]]): Int = {
+      val guildCards = played.filter(_.isInstanceOf[VictoryPointsGuildCard]).map(_.asInstanceOf[VictoryPointsGuildCard])
+      guildCards.map{ card => calculateRewardAmount(card.victoryPoint, neightboorCards)}.sum
+    }
 
     def calculateRewardAmount(reward: ComplexReward, neightboorCards: Map[NeighboorReference, Set[Card]]): Int = {
-      val referencedNeighboorCards: Multiset[Card] = reward.from.filterType[NeighboorReference].map(neightboorCards(_).to[Multiset]).reduce(_ ++ _)
+      val fromNeighboors = reward.from.filter(_.isInstanceOf[NeighboorReference]).map(_.asInstanceOf[NeighboorReference])
+      val referencedNeighboorCards: Multiset[Card] = fromNeighboors.map(neightboorCards(_).to[Multiset]).reduce(_ ++ _)
       val referencedMyCards = if (reward.from.contains(Self)) played.to[Multiset] else Multiset.empty[Card]
       val cards = referencedNeighboorCards ++ referencedMyCards
       cards.map( card => if (card.getClass == reward.forEach) reward.amount else 0).sum
@@ -375,7 +378,8 @@ object SevenWonders
       }
 
     def cost(resource: Resource, from: NeighboorReference): Int = {
-      val rebateCards: Traversable[RebateCommercialCard] = played.filterType[RebateCommercialCard]
+      val rebateCards: Traversable[RebateCommercialCard] =
+        played.filter(_.isInstanceOf[RebateCommercialCard]).map(_.asInstanceOf[RebateCommercialCard])
       rebateCards.find(_.fromWho == from) match {
         case Some(rebateCard) => if (rebateCard.affectedResources.contains(resource)) 1 else 2
         case None => 2
