@@ -49,7 +49,7 @@ public class PlayedCards extends View {
 					for (Object o: cards_.keySet().toArray())
 						cardNames.add((String)o);
 
-					GameScreen.showZoomPopup(sefl_, cardNames, getContext());
+					GameScreen.showZoomPopup(sefl_, cardNames, getContext(),false);
 				}
 
 				return false;

@@ -37,7 +37,7 @@ public class PlayerStateView extends View{
 				for (Object o: cardsInHand_.keySet().toArray())
 					cardNames.add((String)o);
 				
-				GameScreen.showZoomPopup(seft_, cardNames, getContext());
+				GameScreen.showZoomPopup(seft_, cardNames, getContext(), true);
 				return false;
 			}
 		});
