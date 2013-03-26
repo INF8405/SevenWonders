@@ -7,4 +7,10 @@ class Assumptions extends Specification{
       actual === List("hello", "sddf")
     }
   }
+
+  "2" should {
+    "Map return a normal set for keys" in {
+      Map("allo" -> 1, "byebye" -> 1).keySet === Set("allo", "byebye")
+    }
+  }
 }
