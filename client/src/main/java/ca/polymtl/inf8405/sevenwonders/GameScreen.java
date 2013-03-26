@@ -87,13 +87,11 @@ public class GameScreen extends Activity {
 		PlayedCards blue = (PlayedCards) findViewById(R.id.BlueCard);
 		PlayedCards yellow = (PlayedCards) findViewById(R.id.YellowCard);
 		PlayedCards gill = (PlayedCards) findViewById(R.id.GillCard);
-		for (Card c: currentPlayer.getPlayed()){
-			if (c.getClass() == MilitaryCard.class){
-				red.addCard(c);
-			}
-			else 
-				green.addCard(c);
-		}
+		green.setCards(currentPlayer.getPlayedCards("science"));
+		red.setCards(currentPlayer.getPlayedCards("military"));
+		blue.setCards(currentPlayer.getPlayedCards("culture"));
+		yellow.setCards(currentPlayer.getPlayedCards("trade"));
+		gill.setCards(currentPlayer.getPlayedCards("gill"));
 
 		// Set onFling Listener - TEMP - TO REFACTOR
 		flingGesture_ = new OnFlingGestureListener(){
@@ -138,12 +136,18 @@ public class GameScreen extends Activity {
 		return flingGesture_.onTouch(topView, ev);
 	}
 	
-	public static void showZoomPopup(View view, List<String> cardNames, Context context,
-			boolean withButtonPanel){
+	public static void showZoomPopup(View view, int selectedCardId, List<String> cardNames, 
+			Context context, boolean withButtonPanel){
 		PopupWindow popup = new PopupWindow(view);
-		popup.setContentView(new ZoomCardView(context, cardNames, 0, withButtonPanel));
+		popup.setContentView(new ZoomCardView(context, cardNames, selectedCardId, withButtonPanel));
 		popup.showAtLocation(view, Gravity.CENTER, 0, 0);
 		popup.update(0, 0, GameScreen.SCREEN_WIDTH*2/3, GameScreen.SCREEN_HEIGTH/2);
+	}
+	
+	public void play(String cardName){
+		manager_.play(cardName);
+		PlayerStateView handView = (PlayerStateView)findViewById(R.id.PlayerStateView);
+		handView.play(cardName);
 	}
 
 }

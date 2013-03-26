@@ -39,7 +39,6 @@ public class PlayedCards extends View {
 		MARGIN_TOP = (int)CARD_HEIGHT / 6;
 
 		setOnTouchListener(new OnTouchListener() {
-
 			@Override
 			public boolean onTouch(View arg0, MotionEvent arg1) {
 				// TODO Auto-generated method stub
@@ -49,9 +48,8 @@ public class PlayedCards extends View {
 					for (Object o: cards_.keySet().toArray())
 						cardNames.add((String)o);
 
-					GameScreen.showZoomPopup(sefl_, cardNames, getContext(),false);
+					GameScreen.showZoomPopup(sefl_,0 , cardNames, getContext(),false);
 				}
-
 				return false;
 			}
 		});
@@ -80,14 +78,22 @@ public class PlayedCards extends View {
 		}
 	}
 
-	public void addCard( Card card ){
+	public void addCard( String card ){
 		if (cards_ == null)
 			cards_ = new HashMap<String, Bitmap>();
 		Bitmap resizedBitmap = Bitmap.createScaledBitmap(
-				CardLoader.getInstance().getBitmap(getContext(), card.getName()), 
+				CardLoader.getInstance().getBitmap(getContext(), card), 
 				(int)CARD_WIDTH, 
 				(int)CARD_HEIGHT, 
 				false);
-		cards_.put(card.getName(), resizedBitmap);
+		cards_.put(card, resizedBitmap);
+	}
+
+	public void setCards( List<String> cards){
+		if (cards != null){
+			for (String card: cards){
+				addCard(card);
+			}
+		}
 	}
 }

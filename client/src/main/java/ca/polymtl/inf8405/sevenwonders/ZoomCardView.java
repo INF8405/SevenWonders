@@ -23,15 +23,12 @@ public class ZoomCardView extends RelativeLayout{
 	private View sefl_ = this;
 	private OnFlingGestureListener flingGesture_;
 	private List<String> allCardNames_;
-	private int current_;
+	private int current_; // current card id
 
 	// Test - TO REMOVE
 	private TextView text;
 	private void changeText(){
-		int max = 100;
-		int min = 0;
-		int random = min + (int)(Math.random() * ((max - min) + 1));
-		text.setText("ab= " + random);
+		text.setText("name = " + allCardNames_.get(current_) + " - index=" + current_);
 	}
 
 	/**
@@ -77,7 +74,7 @@ public class ZoomCardView extends RelativeLayout{
 		closeButton.setOnTouchListener(new OnTouchListener() {
 			@Override
 			public boolean onTouch(View arg0, MotionEvent arg1) {
-				sefl_.setVisibility(INVISIBLE);
+				closeMe();
 				return false;
 			}
 		});
@@ -91,6 +88,16 @@ public class ZoomCardView extends RelativeLayout{
 			bl.addRule(RelativeLayout.CENTER_IN_PARENT);
 			play.setLayoutParams(bl);
 			play.setText("Play");
+			play.setOnTouchListener(new OnTouchListener() {
+				
+				@Override
+				public boolean onTouch(View arg0, MotionEvent arg1) {
+					GameScreen screen = (GameScreen)sefl_.getContext();
+					screen.play(allCardNames_.get(current_));
+					closeMe();
+					return false;
+				}
+			});
 
 			Button discard = new Button(context);
 			discard.setLayoutParams(bl);
@@ -150,21 +157,26 @@ public class ZoomCardView extends RelativeLayout{
 
 	private void left(){
 		if (current_ > 0){
-			changeText();
 			current_--;
 			ImageView img = (ImageView)findViewWithTag("imageView");
 			img.setImageBitmap(CardLoader.getInstance()
 					.getBitmap(sefl_.getContext(), allCardNames_.get(current_)));
+			changeText();
 		}
 	}
 
 	private void right(){
 		if (current_+1 < allCardNames_.size()){
-			changeText();
 			current_++;
 			ImageView img = (ImageView)findViewWithTag("imageView");
 			img.setImageBitmap(CardLoader.getInstance()
 					.getBitmap(sefl_.getContext(), allCardNames_.get(current_)));
+			changeText();
 		}
 	}
+	
+	private void closeMe(){
+		sefl_.setVisibility(INVISIBLE);
+	}
+	
 }

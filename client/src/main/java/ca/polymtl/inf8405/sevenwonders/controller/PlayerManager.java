@@ -20,37 +20,40 @@ public class PlayerManager {
 	
 	private void testStub(){
 		//Create list of cards
-		List<Card> cards = new ArrayList<Card>();
+		List<String> cards = new ArrayList<String>();
 		for (int i = 0; i < 7; i++){
-			Card card = new Card(i+"");
-			cards.add(card);
+			cards.add(i+"");
 		}
 		
 		// Create militaryCard
-		List<MilitaryCard> miliCards = new ArrayList<MilitaryCard>();
+		List<String> miliCards = new ArrayList<String>();
 		for (int i = 0 ; i < 3; i++){
-			miliCards.add(new MilitaryCard(i+""));
+			miliCards.add(i+"");
 		}
 		
 		// Create science card
-		List<ScienceCard> scienceCards = new ArrayList<ScienceCard>();
+		List<String> scienceCards = new ArrayList<String>();
 		for (int i = 0 ; i < 5; i++){
-			scienceCards.add(new ScienceCard(i+""));
+			scienceCards.add(i+"");
 		}
 		
 		// Create played cards
-		List<Card> played1 = new ArrayList<Card>(miliCards);
-		played1.add(scienceCards.get(0));
-		played1.add(scienceCards.get(1));
+		HashMap<String, List<String>> cardsOnBoard1 = new HashMap<String, List<String>>();
+		cardsOnBoard1.put("military", miliCards);
+		cardsOnBoard1.put("science", scienceCards);
 		
-		List<Card> played2 = new ArrayList<Card>(scienceCards);
-		played2.add(miliCards.get(1));
-		played2.add(miliCards.get(2));
+		HashMap<String, List<String>> cardsOnBoard2 = new HashMap<String, List<String>>();
+		cardsOnBoard2.put("culture", miliCards);
+		cardsOnBoard2.put("trade", miliCards);
+		
+		HashMap<String, List<String>> cardsOnBoard3 = new HashMap<String, List<String>>();
+		cardsOnBoard3.put("culture", miliCards);
+		cardsOnBoard3.put("gill", miliCards);
 		
 		// Create players
-		Player p1 = new Player(null, 3, played1, "civi1");
-		Player p2 = new Player(null, 3, played2, "civi2");
-		me_ = new Player(cards, 3, played2, "civi3");
+		Player p1 = new Player(null, 3, cardsOnBoard1, "civi1");
+		Player p2 = new Player(null, 3, cardsOnBoard2, "civi2");
+		me_ = new Player(cards, 3, cardsOnBoard3, "civi3");
 		
 		allPlayers_ = new ArrayList<Player>();
 		allPlayers_.add(p1);
@@ -92,5 +95,9 @@ public class PlayerManager {
 			currentId_ = getMyId();
 		}
 		return currentId_;
+	}
+	
+	public void play(String cardName){
+		me_.play(cardName);
 	}
 }
