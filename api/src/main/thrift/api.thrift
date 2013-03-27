@@ -15,7 +15,7 @@ enum NeighborReference {
     Right = 1
 }
 
-typedef i32 GameId
+typedef string GameId
 typedef string Username
 typedef string Card
 typedef list<map<string,i32>> ScoreDetail
@@ -65,6 +65,7 @@ service SevenWondersApi {
 	oneway void s_create( 1: GameRoomDef definition ),
 	oneway void s_join( 1: GameId id ),
 	oneway void c_joined( 1: Username user ),
+	oneway void c_left( 1: Username user ),
 	oneway void s_start( ),
 
 	oneway void c_sendState( 1: GameState state ),

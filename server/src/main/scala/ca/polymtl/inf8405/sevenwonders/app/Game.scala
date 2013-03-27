@@ -1,32 +1,44 @@
-//package ca.polymtl.inf8405.sevenwonders
-//package app
-//
-////import model.SevenWonders._
-//
-//import akka.actor.Actor
-//
-//case class PlayerDef( userName: String )
-//
-////sealed abstract class Action( player: PlayerDef )
-////case class CardPlayed( card: Card, trade: Trade, player: PlayerDef ) extends Action( player )
-////case class WonderPlayed( trade: Trade, player: PlayerDef ) extends Action( player )
-////case class CardDiscarded( card: Card, player: PlayerDef ) extends Action( player )
-////case class Disconnected( player: PlayerDef ) extends Action( player )
-//
-//class Game extends Actor {
-//
-//  def receive = {
-////    case CardPlayed( card, trade, player ) => {
-////
-////    }
-////    case WonderPlayed( trade, player ) => {
-////
-////    }
-////    case CardDiscarded( card, player ) => {
-////
-////    }
-////    case Disconnected( player ) => {
-////
-////    }
-//  }
-//}
+package ca.polymtl.inf8405.sevenwonders
+package app
+
+import ApiHelper._
+
+import collection.mutable.{ Set => MSet }
+
+trait Game {
+
+  def join( player: GameClient )
+  def disconnect( player: GameClient )
+  def start()
+
+  def playCard( card: Card, trade: Trade )
+  def playWonder( trade: Trade )
+  def discard( card: Card )
+}
+
+class GameImpl extends Game {
+
+  def join( player: GameClient ){
+    players.add( player )
+  }
+
+  def disconnect( player: GameClient ){
+    players.remove( player )
+
+  }
+
+  def start(){
+
+  }
+
+  def playCard(card: Card, trade: Trade ) {}
+  def playWonder( trade: Trade ) {}
+  def discard(card: Card) {}
+
+  def broadcast( f: GameClient => Unit ) {
+    players.foreach( f(_) )
+  }
+
+
+  private val players = MSet.empty[GameClient]
+}
