@@ -18,6 +18,8 @@ class PlayerSpec extends Specification with defaults {
       defaultPlayer.discard(PRESS) === Player(defaultHand - PRESS, 6, MultiSet(), Set(BATHS, PAWNSHOP), OLYMPIA)
     }
 
+    // n.b. We don't resolve the effect of the card (usually receiving coins or something like that here)
+    // because we do it in game. This is due to the fact that we must resolve cards after everyone has played
     "playing a card" should {
       "remove the card from their hand" in {
         defaultPlayer.play(TAVERN, MultiMap())._1.hand === (defaultHand - TAVERN)
@@ -27,9 +29,6 @@ class PlayerSpec extends Specification with defaults {
       }
       "substract the coin cost" in {
         defaultPlayer.play(MINE, MultiMap())._1.coins === 2
-      }
-      "add any coin value supplied by the played card" in {
-        defaultPlayer.play(TAVERN, MultiMap())._1.coins === 7
       }
     }
 
