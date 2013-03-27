@@ -32,17 +32,27 @@ class PlayerSpec extends Specification with defaults {
       }
     }
 
-    "playableCards should return the Set of Cards it is possible for the player to play for his next turn" in {
-      defaultPlayer.playableCards(Map()) === Set(TAVERN, MINE, LOOM, PRESS)
-    }
+    "playableCards should return the Set of Cards it is possible for the player to play for his next turn" should {
+      "be able to play all cards if he has all the required resources" in {
+        defaultPlayer.playableCards(Map()) === defaultHand.toSet
+      }
+      "be unable to play all cards if he does not have all the required resources" in {
+        val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR), GIZAH)
+        player.playableCards(Map()) === Set(MINE, LOOM, PRESS, TAVERN)
+      }
+      "be unable to play a card requiring coins if he does not have any coins" in {
+        val player = Player(defaultHand, 0, MultiSet(), Set(BATHS, ALTAR), GIZAH)
+        player.playableCards(Map()) === Set(LOOM, PRESS, TAVERN)
+      }
+      "cannot play a card he already has" in {
+        val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR, TAVERN), GIZAH)
+        player.playableCards(Map()) === Set(MINE, LOOM, PRESS)
+      }
 
-    "cannot play a card he already has" in {
-      val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR, TAVERN), GIZAH)
-      player.playableCards(Map()) === Set(MINE, LOOM, PRESS)
-    }
-
-    "can play a card by trading a resource with a neighboor" in {
-      defaultPlayer.playableCards(Map(Left -> Wood)) === defaultHand
+      "can play a card by trading a resource with a neighboor" in {
+        val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR), GIZAH)
+        player.playableCards(Map(Left -> Wood)) === defaultHand.toSet
+      }
     }
 
     "canPlayCard" in {
