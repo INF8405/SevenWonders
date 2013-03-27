@@ -1,3 +1,5 @@
+package sevenwonders
+
 import org.specs2.mutable._
 import com.github.jedesah.SevenWonders._
 

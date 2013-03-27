@@ -1,5 +1,6 @@
 import org.specs2.mutable._
-import com.github.jedesah.Utils._
+import utils.Utils
+import Utils._
 
 class UtilsSpec extends Specification {
   "shifLeft" should {

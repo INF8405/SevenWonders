@@ -1,4 +1,6 @@
+import collection.MultiSet
 import org.specs2.mutable._
+import com.github.jedesah.SevenWonders._
 
 class Assumptions extends Specification{
   "1" should {
@@ -11,6 +13,13 @@ class Assumptions extends Specification{
   "2" should {
     "Map return a normal set for keys" in {
       Map("allo" -> 1, "byebye" -> 1).keySet === Set("allo", "byebye")
+    }
+  }
+
+  "3" should {
+    "filter(_.isInstanceOf[].map(_.asInsanceOf) works with a Set or Cards" in {
+      val actual = Set(PAWNSHOP, BATHS).filter(_.isInstanceOf[CivilianCard]).map(_.asInstanceOf[CivilianCard])
+      actual === Set(PAWNSHOP, BATHS)
     }
   }
 }

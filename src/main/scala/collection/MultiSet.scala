@@ -1,5 +1,13 @@
 package collection
 
+import scala.util.Random
+import utils.Utils._
+
+object conversions {
+  implicit def setToMultiSet[A](from: Set[A]): MultiSet[A] =
+    from.foldLeft(MultiSet[A]())((multiset, elem) => multiset + elem)
+}
+
 trait MultiSet[A] extends Collection[A] {
   def toSet: Set[A]
   override def equals(other: Any) = {
@@ -9,10 +17,17 @@ trait MultiSet[A] extends Collection[A] {
       case _ => false
     }
   }
+  override def --(other: Collection[Any]): MultiSet[A] = super.--(other).asInstanceOf[MultiSet[A]]
+  def -(elem: Any): MultiSet[A]
+  def tail: MultiSet[A]
+  override def ++[A1 >: A](other: Collection[A1]): MultiSet[A1] = super.++(other).asInstanceOf[MultiSet[A1]]
+  def +[A1 >: A](elem: A1): MultiSet[A1]
+  override def takeRandom(nb: Int): MultiSet[A] = Random.shuffle(toList).take(nb).toMultiSet
+  override def toString = "MultiSet(" + mkString(", ") + ")"
 }
 
 object MultiSet {
-  def apply[A](elements: A*) = DefaultMultiSet(elements : _*)
+  def apply[A](elements: A*): MultiSet[A] = DefaultMultiSet(elements : _*)
 }
 
 class DefaultMultiSet[A](private val content: Map[A, Int]) extends MultiSet[A] {
@@ -29,11 +44,11 @@ class DefaultMultiSet[A](private val content: Map[A, Int]) extends MultiSet[A] {
     new DefaultMultiSet[A](newContent)
   }
   def isEmpty: Boolean = content.isEmpty
-  def +(elem: A): DefaultMultiSet[A] = {
-    val newContent =
-      if (contains(elem)) content.updated(elem, content(elem) + 1)
-      else content + (elem -> 1)
-    new DefaultMultiSet[A](newContent)
+  def +[A1 >: A](elem: A1): DefaultMultiSet[A1] = {
+    val newContent: Map[A1, Int] =
+      if (contains(elem)) content.updated(elem.asInstanceOf[A], content(elem.asInstanceOf[A]) + 1).asInstanceOf[Map[A1, Int]]
+      else Map(elem -> 1) ++ content
+    new DefaultMultiSet[A1](newContent)
   }
   def -(elem: Any): DefaultMultiSet[A] = {
     elem match {
@@ -55,7 +70,7 @@ class DefaultMultiSet[A](private val content: Map[A, Int]) extends MultiSet[A] {
       case _ => false
     }
   }
-  override def toString = "MultiSet(" + this.mkString(", ") + ")"
+  override def hashCode = content.hashCode
 }
 
 object DefaultMultiSet {

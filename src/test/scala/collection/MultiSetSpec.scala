@@ -1,6 +1,7 @@
 package collection
 
 import org.specs2.mutable._
+import com.github.jedesah.SevenWonders._
 
 class MultiSetSpec extends Specification {
   "MultiSet" should {
@@ -15,9 +16,9 @@ class MultiSetSpec extends Specification {
 
     "toString" should {
       "without repetition" in {
-        /*MultiSet("allo", "byebye", "kile").toString === "MultiSet(allo, byebye, kile)" or*/
-        MultiSet("allo", "byebye", "kile").toString === "MultiSet(allo, kile, bybye)" or
-          MultiSet("allo", "byebye", "kile").toString === "MultiSet(kile, byebye, allo)" /*or
+        (MultiSet("allo", "byebye", "kile").toString === "MultiSet(allo, byebye, kile)") or
+        (MultiSet("allo", "byebye", "kile").toString === "MultiSet(allo, kile, bybye)") or
+          (MultiSet("allo", "byebye", "kile").toString === "MultiSet(kile, byebye, allo)") /*or
         MultiSet("allo", "byebye", "kile").toString === "MultiSet(kile, allo, bybye)" or
         MultiSet("allo", "byebye", "kile").toString === "MultiSet(bybye, allo, kile)" or
         MultiSet("allo", "byebye", "kile").toString === "MultiSet(byebye, kile, allo)"*/
@@ -57,6 +58,26 @@ class MultiSetSpec extends Specification {
       }
       "out of order" in {
         MultiSet(4,5,6) === MultiSet(6,5,4)
+      }
+      "bug #1" in {
+        MultiSet(Wood, Wood, Clay) === MultiSet(Clay, Wood, Wood)
+      }
+    }
+
+    "--" should {
+      "without repition" in {
+        val actual = MultiSet("allo", "byebye", "ddd") -- MultiSet("allo", "byebye")
+        val expected = MultiSet("ddd")
+        actual === expected
+      }
+      "with repitition" in {
+        val actual = MultiSet("allo", "byebye", "allo", "byebye", "ddd") -- MultiSet("allo", "byebye")
+        val expected = MultiSet("allo", "byebye", "ddd")
+        actual === expected
+
+        val actual1 = MultiSet[Resource](Ore, Ore, Stone, Stone, Wood) -- MultiSet(Ore, Stone)
+        val expected1 = MultiSet(Ore, Stone, Wood)
+        actual1 === expected1
       }
     }
 

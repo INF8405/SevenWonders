@@ -1,18 +1,20 @@
+package sevenwonders
+
 import org.specs2.mutable._
 import com.github.jedesah.SevenWonders._
 
-import com.sidewayscoding.Multiset
+import collection.MultiSet
 
 class GameSpec extends Specification {
 
-  val defaultHand1: Multiset[Card] = Multiset(TAVERN, STOCKADE, MINE, LOOM, PRESS)
-  val defaultPlayer1 = Player(defaultHand1, 3, Multiset(), Set(BATHS, PAWNSHOP), RHODOS)
+  val defaultHand1: MultiSet[Card] = MultiSet(TAVERN, STOCKADE, MINE, LOOM, PRESS)
+  val defaultPlayer1 = Player(defaultHand1, 3, MultiSet(), Set(BATHS, PAWNSHOP), RHODOS)
 
-  val defaultHand2: Multiset[Card] = Multiset(WEST_TRADING_POST, MARKETPLACE, EAST_TRADING_POST, BARRACKS, GUARD_TOWER)
-  val defaultPlayer2 = Player(defaultHand2, 9, Multiset(), Set(), ALEXANDRIA)
+  val defaultHand2: MultiSet[Card] = MultiSet(WEST_TRADING_POST, MARKETPLACE, EAST_TRADING_POST, BARRACKS, GUARD_TOWER)
+  val defaultPlayer2 = Player(defaultHand2, 9, MultiSet(), Set(), ALEXANDRIA)
 
-  val defaultHand3: Multiset[Card] = Multiset(WORKSHOP, SCRIPTORIUM, THEATER, ORE_VEIN, EXCAVATION)
-  val defaultPlayer3 = Player(defaultHand3, 6, Multiset(), Set(TREE_FARM), OLYMPIA)
+  val defaultHand3: MultiSet[Card] = MultiSet(WORKSHOP, SCRIPTORIUM, THEATER, ORE_VEIN, EXCAVATION)
+  val defaultPlayer3 = Player(defaultHand3, 6, MultiSet(), Set(TREE_FARM), OLYMPIA)
 
   "A Game" should {
     "getNeighboors should return the appropriate neighboring players of any player" in {
@@ -41,7 +43,7 @@ class GameSpec extends Specification {
 
     "currentAge" in {
       val cards = classicSevenWonders.generateCards(3)
-      val game = Game(List(defaultPlayer1, defaultPlayer2, defaultPlayer3), cards.updated(1, Multiset()), Multiset())
+      val game = Game(List(defaultPlayer1, defaultPlayer2, defaultPlayer3), cards.updated(1, MultiSet()), MultiSet())
       game.currentAge === 1
     }
 

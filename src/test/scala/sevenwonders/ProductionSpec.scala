@@ -1,37 +1,39 @@
+package sevenwonders
+
 import org.specs2.mutable._
 import com.github.jedesah.SevenWonders._
 
-import com.sidewayscoding.Multiset
+import collection.MultiSet
 
 class ProductionSpec extends Specification {
 
   "A CumulativeProduction" should {
     "support adding another CumulativeProduction" in {
       val first = new CumulativeProduction(Clay)
-      val second = CumulativeProduction(Multiset(Wood, Wood))
+      val second = CumulativeProduction(MultiSet(Wood, Wood))
       val actual = first + second
-      val expected = CumulativeProduction(Multiset(Clay, Wood, Wood))
+      val expected = CumulativeProduction(MultiSet(Clay, Wood, Wood))
       actual === expected
     }
 
     "support adding an OptionalProduction" in {
-      val first = CumulativeProduction(Multiset(Clay))
+      val first = CumulativeProduction(MultiSet(Clay))
       val second = OptionalProduction(Set(new CumulativeProduction(Wood), new CumulativeProduction(Stone)))
       val actual = first + second
-      val expected = OptionalProduction(Set(CumulativeProduction(Multiset(Clay, Wood)), CumulativeProduction(Multiset(Clay, Stone))))
+      val expected = OptionalProduction(Set(CumulativeProduction(MultiSet(Clay, Wood)), CumulativeProduction(MultiSet(Clay, Stone))))
       actual === expected
     }
 
     "support the == oprator to compare resources without attention to order" in {
-      val first = CumulativeProduction(Multiset(Clay, Wood))
-      val second = CumulativeProduction(Multiset(Wood, Clay))
+      val first = CumulativeProduction(MultiSet(Clay, Wood))
+      val second = CumulativeProduction(MultiSet(Wood, Clay))
       first === second
     }
 
-    "support the consume opreration that returns the amount of resources left unpaid" in {
-      val prod = CumulativeProduction(Multiset(Ore, Stone))
-      val actual = prod.consume(Multiset[Resource](Ore, Ore, Stone, Stone, Wood))
-      val expected = Set(Multiset(Ore, Stone, Wood))
+    "support the consumes opreration that returns the amount of resources left unpaid" in {
+      val prod = CumulativeProduction(MultiSet(Ore, Stone))
+      val actual = prod.consume(MultiSet[Resource](Ore, Ore, Stone, Stone, Wood))
+      val expected = Set(MultiSet(Ore, Stone, Wood))
       actual === expected
     }
 
@@ -53,9 +55,9 @@ class ProductionSpec extends Specification {
   "An OptionalProduction" should {
     "support adding a CumulativeProduction" in {
       val first = OptionalProduction(Set(new CumulativeProduction(Wood), new CumulativeProduction(Stone)))
-      val second = CumulativeProduction(Multiset(Clay))
+      val second = CumulativeProduction(MultiSet(Clay))
       val actual = first + second
-      val expected = OptionalProduction(Set(CumulativeProduction(Multiset(Clay, Wood)), CumulativeProduction(Multiset(Clay, Stone))))
+      val expected = OptionalProduction(Set(CumulativeProduction(MultiSet(Clay, Wood)), CumulativeProduction(MultiSet(Clay, Stone))))
       actual === expected
     }
 
@@ -63,24 +65,23 @@ class ProductionSpec extends Specification {
       val first = OptionalProduction(Set(new CumulativeProduction(Clay), new CumulativeProduction(Ore)))
       val second = OptionalProduction(Set(new CumulativeProduction(Wood), new CumulativeProduction(Stone)))
       val actual = first + second
-      val expected = OptionalProduction(Set(CumulativeProduction(Multiset(Clay, Wood)),
-					    CumulativeProduction(Multiset(Clay, Stone)),
-					    CumulativeProduction(Multiset(Ore, Wood)),
-					    CumulativeProduction(Multiset(Ore, Stone))))
+      val expected = OptionalProduction(Set(CumulativeProduction(MultiSet(Clay, Wood)),
+					    CumulativeProduction(MultiSet(Clay, Stone)),
+					    CumulativeProduction(MultiSet(Ore, Wood)),
+					    CumulativeProduction(MultiSet(Ore, Stone))))
       actual === expected
     }
 
     "support the == oprator to compare resources without attention to order" in {
       val first = OptionalProduction(Set(new CumulativeProduction(Clay), new CumulativeProduction(Ore)))
       val second = OptionalProduction(Set(new CumulativeProduction(Ore), new CumulativeProduction(Clay)))
-      //assert(first == second)
-      Multiset(2,2) === Multiset(2,2)
+      assert(first == second)
     }
 
-    "support the consume opreration that returns the amount of resources left unpaid" in {
+    "support the consumes opreration that returns the amount of resources left unpaid" in {
       val prod = OptionalProduction(Set(new CumulativeProduction(Clay), new CumulativeProduction(Ore)))
-      val actual = prod.consume(Multiset[Resource](Ore, Ore, Stone, Stone, Wood))
-      val expected = Set(Multiset(Ore, Ore, Stone, Stone, Wood), Multiset(Ore, Stone, Stone, Wood))
+      val actual = prod.consume(MultiSet[Resource](Ore, Ore, Stone, Stone, Wood))
+      val expected = Set(MultiSet(Ore, Ore, Stone, Stone, Wood), MultiSet(Ore, Stone, Stone, Wood))
       actual === expected
     }
   }

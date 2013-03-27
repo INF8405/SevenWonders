@@ -1,4 +1,7 @@
-package com.github.jedesah
+package utils
+
+import scala.util.Random
+import collection.MultiSet
 
 object Utils {
   implicit class AugmentedList[A](value: List[A]) {
@@ -19,6 +22,11 @@ object Utils {
   implicit class AugmentedTraversable[A](value: Traversable[A]) {
     def createMap[B](fun: A => B): Map[A, B] =
       value.map( elem => (elem, fun(elem))).toMap
+    def toMultiSet: MultiSet[A] = value.foldLeft(MultiSet[A]())((multiset, elem) => multiset + elem)
+  }
+
+  implicit class AugmentedSet[A](value: Set[A]) {
+    def takeRandom(nb: Int): Set[A] = Random.shuffle(value.to[List]).take(nb).to[Set]
   }
 
   implicit class AugmentedTuple3[A](value: (A, A, A)) {
