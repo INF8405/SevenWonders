@@ -9,6 +9,7 @@ object conversions {
 }
 
 trait MultiSet[A] extends Collection[A] {
+  def map[B](mapFun: A => B): MultiSet[B]
   def toSet: Set[A]
   override def equals(other: Any) = {
     other match {
@@ -24,6 +25,10 @@ trait MultiSet[A] extends Collection[A] {
   def +[A1 >: A](elem: A1): MultiSet[A1]
   override def takeRandom(nb: Int): MultiSet[A] = Random.shuffle(toList).take(nb).toMultiSet
   override def toString = "MultiSet(" + mkString(", ") + ")"
+  def reduce(fun: (A, A) => A):A = if (size == 1) head else fun(head, tail.reduce(fun))
+  def filter(pred: A => Boolean): MultiSet[A]
+  def headOption: Option[A] = if (isEmpty) None else Some(head)
+  def find(pred: A => Boolean):Option[A] = filter(pred).headOption
 }
 
 object MultiSet {
@@ -43,6 +48,8 @@ class DefaultMultiSet[A](private val content: Map[A, Int]) extends MultiSet[A] {
       else content - head
     new DefaultMultiSet[A](newContent)
   }
+  def filter(pred: A => Boolean): DefaultMultiSet[A] =
+    foldLeft(DefaultMultiSet[A]())((multiset, elem) => if (pred(elem)) multiset + elem else multiset)
   def isEmpty: Boolean = content.isEmpty
   def +[A1 >: A](elem: A1): DefaultMultiSet[A1] = {
     val newContent: Map[A1, Int] =
@@ -64,13 +71,14 @@ class DefaultMultiSet[A](private val content: Map[A, Int]) extends MultiSet[A] {
       case _ => this
     }
   }
+
   def contains(elem: Any) = {
     elem match {
       case elem: A => content.contains(elem)
       case _ => false
     }
   }
-  override def hashCode = content.hashCode
+  override def hashCode = content.hashCode()
 }
 
 object DefaultMultiSet {

@@ -15,7 +15,7 @@ object SevenWonders
     val chosenCivilizations = Random.shuffle(civilizations.toList).take(nbPlayers)
     val players = chosenCivilizations.map{
       civ =>
-        Player(MultiSet(), 3, MultiSet(), Set(), civ)
+        Player(MultiSet(), 3, MultiSet(), Set(), 0, civ)
     }
     Game(players, cards, MultiSet()).beginAge()
   }
@@ -26,15 +26,114 @@ object SevenWonders
   }
   object Free extends Cost(0)
 
-  class Card( 
-    val name: String,
-    val cost: Cost,
-    val evolutions: Set[Card]
-  )
-  {
+  sealed trait Symbol
+
+  trait ScienceSymbol extends Symbol {
+    def +(other: ScienceSymbol): ScienceSymbol = other match {
+      case other: SimpleScienceSymbol => this + other
+      case other: OptionalScienceSymbol => this + other
+    }
+    def +(other: SimpleScienceSymbol): ScienceSymbol
+    def +(other: OptionalScienceSymbol): OptionalScienceSymbol
+    def |(other: ScienceSymbol): ScienceSymbol = other match {
+      case other: SimpleScienceSymbol => this | other
+      case other: OptionalScienceSymbol => this | other
+    }
+    def |(other: SimpleScienceSymbol): ScienceSymbol
+    def |(other: OptionalScienceSymbol): OptionalScienceSymbol
+    def victoryPointValue: Int
+  }
+  case class SimpleScienceSymbol(compass: Int, gear: Int, tablet: Int) extends ScienceSymbol {
+    def +(other: SimpleScienceSymbol) = SimpleScienceSymbol(compass + other.compass, gear + other.gear, tablet + other.tablet)
+    def +(other: OptionalScienceSymbol) = other + this
+    def |(other: SimpleScienceSymbol) =
+      if (other != this)
+        OptionalScienceSymbol(Set(this, other))
+      else
+        this
+    def |(other: OptionalScienceSymbol) = other | this
+    def victoryPointValue = {
+      val setValue = List(compass, gear, tablet).min * 7
+      val stackValue = List(compass, gear, tablet).map(Math.pow(_, 2)).sum
+      setValue + stackValue
+    }
+  }
+  case class OptionalScienceSymbol(alternatives: Set[ScienceSymbol]) extends ScienceSymbol {
+    def +(other: SimpleScienceSymbol) = OptionalScienceSymbol(alternatives.map(_ + other))
+    def +(other: OptionalScienceSymbol) = {
+      val newAlternatives = for {
+        alt1 <- alternatives;
+        alt2 <- other.alternatives
+      } yield alt1 + alt2
+      OptionalScienceSymbol(newAlternatives.toSet)
+    }
+    override def |(other: ScienceSymbol): OptionalScienceSymbol = other match {
+      case other: SimpleScienceSymbol => this | other
+      case other: OptionalScienceSymbol => this | other
+    }
+    def |(other: SimpleScienceSymbol): OptionalScienceSymbol = OptionalScienceSymbol(alternatives + other)
+    def |(other: OptionalScienceSymbol) =
+      alternatives.foldLeft[OptionalScienceSymbol](other){(other, alternative) => other | alternative}
+    def victoryPointValue = alternatives.map(_.victoryPointValue).max
+  }
+
+  trait Production extends Symbol {
+    def consume(resources: MultiSet[Resource]): Set[MultiSet[Resource]]
+    def consumes(resource: Resource): Boolean
+    def -(resource: Resource): Production
+    def +(other: Production): Production = other match {
+      case other: OptionalProduction => this + other
+      case other: CumulativeProduction => this + other
+    }
+    def +(other: CumulativeProduction): Production
+    def +(other: OptionalProduction): OptionalProduction
+    def |(other: Production): Production = other match {
+      case other: OptionalProduction => this | other
+      case other: CumulativeProduction => this | other
+    }
+    def |(other: CumulativeProduction): Production
+    def |(other: OptionalProduction): OptionalProduction
+  }
+
+  case class OptionalProduction(possibilities: Set[CumulativeProduction]) extends Production {
+    def consume(resources: MultiSet[Resource]): Set[MultiSet[Resource]] = possibilities.map(_.consume(resources).head)
+    def consumes(resource: Resource) = possibilities.exists(_.consumes(resource))
+    def -(resource: Resource) = OptionalProduction(possibilities.map(_ - resource))
+    def +(other: OptionalProduction): OptionalProduction =
+      OptionalProduction(possibilities.map( poss1 => other.possibilities.map( poss2 => poss1 + poss2)).flatten)
+    def +(other: CumulativeProduction): OptionalProduction = OptionalProduction(possibilities.map(_ + other))
+    def |(other: OptionalProduction): OptionalProduction =
+      OptionalProduction(possibilities ++ other.possibilities)
+    def |(other: CumulativeProduction): OptionalProduction = OptionalProduction(possibilities + other)
+  }
+  case class CumulativeProduction(produces: MultiSet[Resource]) extends Production {
+    def this(resource: Resource) = this(MultiSet(resource))
+    def consume(resources: MultiSet[Resource]): Set[MultiSet[Resource]] = Set(resources -- produces)
+    def consumes(resource: Resource) = produces.contains(resource)
+    def -(resource: Resource) = CumulativeProduction(produces - resource)
+    def +(other: OptionalProduction) = other + this
+    def +(other: CumulativeProduction) = CumulativeProduction(produces ++ other.produces)
+    def |(other: OptionalProduction) = other | this
+    def |(other: CumulativeProduction) = OptionalProduction(Set(this, other))
+  }
+
+  case class MilitarySymbol(strength: Int) extends Symbol
+  case class VictoryPointSymbol(reward: Reward) extends Symbol
+  case class CoinSymbol(reward: Reward) extends Symbol
+  case class RebateSymbol(affectedResources: Set[Resource], fromWho: Set[NeighboorReference]) extends Symbol
+  object FreeBuildEachAge extends Symbol
+  object GrabFromDiscardPile extends Symbol
+  object CopyGuildCard extends Symbol
+  object PlayLastCardEachAge extends Symbol
+
+  trait GameElement
+
+  trait PlayableElement extends GameElement {
+    val cost: Cost
+    val symbols: MultiSet[Symbol]
     /**
-     * Implements the effect of the card on the game.
-     * Default implementation: the card has no effect.
+     * Implements the immediate effect of this playable on the game.
+     * Default implementation: the playable has no immediate effect.
      * Most cards should have no effect like a resource card, military card, etc.
      * But commerce reward coins and maybe one day city cards have an immediate effect on the game
      * which should be implemented in this method that will be called after a card has been played
@@ -42,132 +141,53 @@ object SevenWonders
      * @param playedBy The player who played this card
      * @return The new game after resolving the card
      */
-    def resolve(game: Game, playedBy: Player): Game = game
+    def resolve(game: Game, playedBy: Player): Game = {
+      val coinSymbols = symbols.filter(_.isInstanceOf[CoinSymbol]).map(_.asInstanceOf[CoinSymbol])
+      val coinsToAdd = coinSymbols.map(symbol => playedBy.calculateRewardAmount(symbol.reward, game.getNeighboorsStuff(playedBy))).sum
+      val newCoinsAmount = playedBy.coins + coinsToAdd
+      game.copy(players = game.players.updated(game.players.indexOf(playedBy), playedBy.copy(coins = newCoinsAmount)))
+    }
   }
 
-  trait ScienceValue {
-    def +(other: ScienceValue): ScienceValue = other match {
-      case other: SimpleScienceValue => this + other
-      case other: OptionalScienceValue => this + other
-    }
-    def +(other: SimpleScienceValue): ScienceValue
-    def +(other: OptionalScienceValue): OptionalScienceValue
-    def |(other: ScienceValue): ScienceValue = other match {
-      case other: SimpleScienceValue => this | other
-      case other: OptionalScienceValue => this | other
-    }
-    def |(other: SimpleScienceValue): ScienceValue
-    def |(other: OptionalScienceValue): OptionalScienceValue
-    def victoryPointValue: Int
-  }
-  case class SimpleScienceValue(compass: Int, gear: Int, tablet: Int) extends ScienceValue {
-    def +(other: SimpleScienceValue) = SimpleScienceValue(compass + other.compass, gear + other.gear, tablet + other.tablet)
-    def +(other: OptionalScienceValue) = other + this
-    def |(other: SimpleScienceValue) =
-      if (other != this)
-        OptionalScienceValue(Set(this, other))
-      else
-        this
-    def |(other: OptionalScienceValue) = other | this
-    def victoryPointValue = {
-      val setValue = List(compass, gear, tablet).min * 7
-      val stackValue = List(compass, gear, tablet).map(Math.pow(_, 2)).sum
-      setValue + stackValue
-    }
-  }
-  case class OptionalScienceValue(alternatives: Set[ScienceValue]) extends ScienceValue {
-    def +(other: SimpleScienceValue) = OptionalScienceValue(alternatives.map(_ + other))
-    def +(other: OptionalScienceValue) = {
-      val newAlternatives = for {
-        alt1 <- alternatives;
-        alt2 <- other.alternatives
-      } yield alt1 + alt2
-      OptionalScienceValue(newAlternatives.toSet)
-    }
-    override def |(other: ScienceValue): OptionalScienceValue = other match {
-      case other: SimpleScienceValue => this | other
-      case other: OptionalScienceValue => this | other
-    }
-    def |(other: SimpleScienceValue): OptionalScienceValue = OptionalScienceValue(alternatives + other)
-    def |(other: OptionalScienceValue) =
-      alternatives.foldLeft[OptionalScienceValue](other){(other, alternative) => other | alternative}
-    def victoryPointValue = alternatives.map(_.victoryPointValue).max
-  }
+  class Card( 
+    val name: String,
+    val cost: Cost,
+    val evolutions: Set[Card],
+    val symbols:  MultiSet[Symbol]
+  ) extends PlayableElement
 
-  trait HasScience {
-    val value: ScienceValue
-  }
+  case class WonderStage(cost: Cost, symbols: MultiSet[Symbol]) extends PlayableElement
 
-  val compass = SimpleScienceValue(1, 0, 0)
-  val gear = SimpleScienceValue(0, 1, 0)
-  val tablet = SimpleScienceValue(0, 0, 1)
-
-  trait ProductionCard {
-    val prod: Production
-  }
+  val compass = SimpleScienceSymbol(1, 0, 0)
+  val gear = SimpleScienceSymbol(0, 1, 0)
+  val tablet = SimpleScienceSymbol(0, 0, 1)
 
   case class ScienceCard(
     override val name: String,
     override val cost: Cost,
     override val evolutions: Set[Card],
-    override val value: ScienceValue
-  ) extends Card( name, cost, evolutions ) with HasScience
+    scienceSymbol: ScienceSymbol
+  ) extends Card( name, cost, evolutions, MultiSet(scienceSymbol) )
 
   case class MilitaryCard(
     override val name: String,
     override val cost: Cost,
     override val evolutions: Set[Card],
-    value: Int
-  ) extends Card( name, cost, evolutions )
+    strength: Int
+  ) extends Card( name, cost, evolutions, MultiSet(MilitarySymbol(strength)))
 
-  class CommercialCard(
-    name: String,
-    cost: Cost,
-    evolutions: Set[Card]
-  ) extends Card( name, cost, evolutions )
-
-  case class RebateCommercialCard(
+  case class CommercialCard(
     override val name: String,
     override val cost: Cost,
     override val evolutions: Set[Card],
-    affectedResources: Set[Resource],
-    fromWho: Set[NeighboorReference]
-  ) extends CommercialCard( name, cost, evolutions )
-
-  case class ProductionCommercialCard(
-    override val name: String,
-    override val cost: Cost,
-    override val evolutions: Set[Card],
-    prod: Production
-  ) extends CommercialCard( name, cost, evolutions ) with ProductionCard
-
-  case class RewardCommercialCard(
-    override val name: String,
-    override val cost: Cost,
-    override val evolutions: Set[Card],
-    coinReward: Option[Reward],
-    victoryPointReward: Option[ComplexReward]
-  ) extends CommercialCard( name, cost, evolutions )
-  {
-    override def resolve(game: Game, playedBy: Player): Game = {
-      coinReward match {
-        case None => game
-        case Some(reward) =>
-          val rewardAmount = reward match {
-            case SimpleReward(amount) => amount
-            case reward: ComplexReward => playedBy.calculateRewardAmount(reward, game.getNeighboorsCards(playedBy))
-          }
-          val newCoinsAmount = playedBy.coins + rewardAmount
-          game.copy(players = game.players.updated(game.players.indexOf(playedBy), playedBy.copy(coins = newCoinsAmount)))
-      }
-    }
-  }
+    override val symbols: MultiSet[Symbol]
+  ) extends Card( name, cost, evolutions, symbols )
 
   class ResourceCard(
     name: String,
     cost: Cost,
     val prod: Production
-  ) extends Card(name, cost, Set() ) with ProductionCard
+  ) extends Card(name, cost, Set(), MultiSet(prod) )
 
   case class RawMaterialCard(
     override val name: String,
@@ -187,22 +207,22 @@ object SevenWonders
     override val name: String,
     override val cost: Cost,
     override val evolutions: Set[Card],
-    amount: Int
-  ) extends Card( name, cost, evolutions )
+    value: Int
+  ) extends Card(name, cost, evolutions, MultiSet(VictoryPointSymbol(SimpleReward(value))))
 
-  class GuildCard(name: String, cost: Cost) extends Card(name, cost, Set())
+  class GuildCard(name: String, cost: Cost, symbols: MultiSet[Symbol]) extends Card(name, cost, Set(), symbols)
 
   case class VictoryPointsGuildCard(
     override val name: String,
     override val cost: Cost,
     victoryPoint:ComplexReward
-  ) extends GuildCard(name, cost)
+  ) extends GuildCard(name, cost, MultiSet(VictoryPointSymbol(victoryPoint)))
 
   trait Reward
   case class SimpleReward(amount: Int) extends Reward
   case class ComplexReward(
     amount: Int,
-    forEach: Class[_ <: Card],
+    forEach: Class[_ <: GameElement],
     from: Set[PlayerReference]
   ) extends Reward
 
@@ -237,51 +257,14 @@ object SevenWonders
   object Right extends NeighboorReference
   object Self extends PlayerReference
 
-  trait Production {
-    def consume(resources: MultiSet[Resource]): Set[MultiSet[Resource]]
-    def consumes(resource: Resource): Boolean
-    def -(resource: Resource): Production
-    def +(other: Production): Production = other match {
-      case other: OptionalProduction => this + other
-      case other: CumulativeProduction => this + other
-    }
-    def +(other: CumulativeProduction): Production
-    def +(other: OptionalProduction): OptionalProduction
-    def |(other: Production): Production = other match {
-      case other: OptionalProduction => this | other
-      case other: CumulativeProduction => this | other
-    }
-    def |(other: CumulativeProduction): Production
-    def |(other: OptionalProduction): OptionalProduction
-  }
-  case class OptionalProduction(possibilities: Set[CumulativeProduction]) extends Production {
-    def consume(resources: MultiSet[Resource]): Set[MultiSet[Resource]] = possibilities.map(_.consume(resources).head)
-    def consumes(resource: Resource) = possibilities.exists(_.consumes(resource))
-    def -(resource: Resource) = OptionalProduction(possibilities.map(_ - resource))
-    def +(other: OptionalProduction): OptionalProduction =
-      OptionalProduction(possibilities.map( poss1 => other.possibilities.map( poss2 => poss1 + poss2)).flatten)
-    def +(other: CumulativeProduction): OptionalProduction = OptionalProduction(possibilities.map(_ + other))
-    def |(other: OptionalProduction): OptionalProduction =
-      OptionalProduction(possibilities ++ other.possibilities)
-    def |(other: CumulativeProduction): OptionalProduction = OptionalProduction(possibilities + other)
-  }
-  case class CumulativeProduction(produces: MultiSet[Resource]) extends Production {
-    def this(resource: Resource) = this(MultiSet(resource))
-    def consume(resources: MultiSet[Resource]): Set[MultiSet[Resource]] = Set(resources -- produces)
-    def consumes(resource: Resource) = produces.contains(resource)
-    def -(resource: Resource) = CumulativeProduction(produces - resource)
-    def +(other: OptionalProduction) = other + this
-    def +(other: CumulativeProduction) = CumulativeProduction(produces ++ other.produces)
-    def |(other: OptionalProduction) = other | this
-    def |(other: CumulativeProduction) = OptionalProduction(Set(this, other))
-  }
+
 
   implicit def ResourceToProduction(value: Resource) = new CumulativeProduction(value)
 
   type Trade = MultiMap[Resource, NeighboorReference]
 
-  case class Player(hand: MultiSet[Card], coins: Int, battleMarkers: MultiSet[BattleMarker], played: Set[Card], civilization: Civilization) {
-    def discard(card: Card): Player = Player(hand - card, coins + 3, battleMarkers, played, civilization)
+  case class Player(hand: MultiSet[Card], coins: Int, battleMarkers: MultiSet[BattleMarker], played: Set[Card], nbWonders: Int, civilization: Civilization) {
+    def discard(card: Card): Player = this.copy(hand = hand - card, coins = coins + 3)
 
     /**
      * Handles all state changing relative to this player when he plays a card.
@@ -291,7 +274,7 @@ object SevenWonders
      */
     def play(card: Card, trade: Trade): (Player, Map[NeighboorReference, Int]) = {
       val coinsMap = trade.values.toSet.map(ref => (ref, cost(trade, ref))).toMap
-      val player = Player(hand - card, coins - cost(trade) - card.cost.coins, battleMarkers, played + card, civilization)
+      val player = Player(hand - card, coins - cost(trade) - card.cost.coins, battleMarkers, played + card, nbWonders, civilization)
       (player, coinsMap)
     }
 
@@ -299,23 +282,31 @@ object SevenWonders
       hand.toSet.filter( card => canPlayCard(card, availableThroughTrade))
 
     def totalProduction: Production = {
-      val productionCards = played.filter(_.isInstanceOf[ProductionCard]).map(_.asInstanceOf[ProductionCard])
-      productionCards.foldLeft(civilization.base)((prod, card) => prod + card.prod)
+      val productionSymbols = allSymbols.filter(_.isInstanceOf[Production]).map(_.asInstanceOf[Production])
+      productionSymbols.foldLeft(civilization.base)(_ + _)
     }
 
     def tradableProduction: Production = {
       val productionCards = played.filter(_.isInstanceOf[ResourceCard]).map(_.asInstanceOf[ResourceCard])
-      productionCards.foldLeft(civilization.base)((prod, card) => prod + card.prod)
+      productionCards.foldLeft(civilization.base)(_ + _.prod)
     }
 
-    def militaryStrength: Int = played.filter(_.isInstanceOf[MilitaryCard]).map(_.asInstanceOf[MilitaryCard]).map(_.value).sum
+    def wonderStagesBuilt: MultiSet[WonderStage] = civilization.stagesOfWonder.take(nbWonders).toMultiSet
 
-    def score(neightboorCards: Map[NeighboorReference, Set[Card]]): Int =
-      scienceScore + militaryScore + civilianScore + commerceScore(neightboorCards) + guildScore(neightboorCards)
+    def allSymbols: MultiSet[Symbol] = allPlayables.map(_.symbols).reduce(_ ++ _)
+
+    def allPlayables: MultiSet[PlayableElement] = played.toMultiSet ++ wonderStagesBuilt
+
+    def allGameElements: MultiSet[GameElement] = allPlayables ++ battleMarkers
+
+    def militaryStrength: Int = allSymbols.filter(_.isInstanceOf[MilitarySymbol]).map(_.asInstanceOf[MilitarySymbol]).map(_.strength).sum
+
+    def score(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int =
+      scienceScore + militaryScore + civilianScore + commerceScore(neightboorStuff) + guildScore(neightboorStuff) + wondersScore(neightboorStuff)
 
     def scienceScore: Int = {
-      val cardsWithScience: Traversable[HasScience] = played.filter(_.isInstanceOf[HasScience]).map(_.asInstanceOf[HasScience])
-      val scienceValue = cardsWithScience.foldLeft[ScienceValue](SimpleScienceValue(0, 0, 0)){(scienceValue, card) => scienceValue + card.value}
+      val scienceSymbols = allSymbols.filter(_.isInstanceOf[ScienceSymbol]).map(_.asInstanceOf[ScienceSymbol])
+      val scienceValue = scienceSymbols.foldLeft[ScienceSymbol](SimpleScienceSymbol(0, 0, 0))(_ + _)
       scienceValue.victoryPointValue
     }
 
@@ -325,31 +316,41 @@ object SevenWonders
       val civilianCards = played.filter(_.isInstanceOf[CivilianCard]).map(_.asInstanceOf[CivilianCard])
       // n.b. We need to convert the set to a multiset or else we would lose some information as some
       // cards can have the same victory point value
-      civilianCards.toMultiSet.map(_.amount).sum
+      civilianCards.toMultiSet.map(_.value).sum
     }
 
-    def commerceScore(neightboorCards: Map[NeighboorReference, Set[Card]]): Int = {
-      val commerceVicPointCards = played.filter(_.isInstanceOf[RewardCommercialCard]).map(_.asInstanceOf[RewardCommercialCard])
-      commerceVicPointCards.map {
-        card =>
-          card.victoryPointReward match {
-            case None => 0
-            case Some(vicPointReward) => calculateRewardAmount(vicPointReward, neightboorCards)
-          }
-      }.sum
+    def commerceScore(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
+      val commerceCards = played.filter(_.isInstanceOf[CommercialCard]).map(_.asInstanceOf[CommercialCard])
+      calculateVictoryPoints(commerceCards.toMultiSet.asInstanceOf[MultiSet[PlayableElement]], neightboorStuff)
     }
 
-    def guildScore(neightboorCards: Map[NeighboorReference, Set[Card]]): Int = {
+    def guildScore(neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
       val guildCards = played.filter(_.isInstanceOf[VictoryPointsGuildCard]).map(_.asInstanceOf[VictoryPointsGuildCard])
       guildCards.map{ card => calculateRewardAmount(card.victoryPoint, neightboorCards)}.sum
     }
 
-    def calculateRewardAmount(reward: ComplexReward, neightboorCards: Map[NeighboorReference, Set[Card]]): Int = {
-      val fromNeighboors = reward.from.filter(_.isInstanceOf[NeighboorReference]).map(_.asInstanceOf[NeighboorReference])
-      val referencedNeighboorCards: MultiSet[Card] = fromNeighboors.map(neightboorCards(_).toMultiSet).reduce(_ ++ _)
-      val referencedMyCards = if (reward.from.contains(Self)) played.toMultiSet else MultiSet()
-      val cards = referencedNeighboorCards ++ referencedMyCards
-      cards.map( card => if (card.getClass == reward.forEach) reward.amount else 0).sum
+    def wondersScore(neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
+      calculateVictoryPoints(wonderStagesBuilt.asInstanceOf[MultiSet[PlayableElement]], neightboorCards)
+      // TODO: Add copy guild score
+    }
+
+    def calculateVictoryPoints(of: MultiSet[PlayableElement], neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
+      val symbols: MultiSet[Symbol] = of.map(_.symbols).reduce(_ ++ _)
+      val vicSymbols: MultiSet[VictoryPointSymbol] = symbols.filter(_.isInstanceOf[VictoryPointSymbol]).map(_.asInstanceOf[VictoryPointSymbol])
+      vicSymbols.map(symbol => calculateRewardAmount(symbol.reward, neightboorCards)).sum
+    }
+
+    def calculateRewardAmount(reward: Reward, neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
+      reward match {
+        case reward: ComplexReward => {
+          val fromNeighboors = reward.from.filter(_.isInstanceOf[NeighboorReference]).map(_.asInstanceOf[NeighboorReference])
+          val referencedNeighboorCards: MultiSet[GameElement] = fromNeighboors.map(neightboorCards(_)).reduce(_ ++ _)
+          val referencedMyCards = if (reward.from.contains(Self)) played.toMultiSet else MultiSet()
+          val cards = referencedNeighboorCards ++ referencedMyCards
+          cards.map( card => if (card.getClass == reward.forEach) reward.amount else 0).sum
+        }
+        case SimpleReward(amount) => amount
+      }
     }
 
     def canPlayCard(card: Card, availableThroughTrade: Map[NeighboorReference, Production]): Boolean = {
@@ -405,10 +406,9 @@ object SevenWonders
       }
 
     def cost(resource: Resource, from: NeighboorReference): Int = {
-      val rebateCards: Traversable[RebateCommercialCard] =
-        played.filter(_.isInstanceOf[RebateCommercialCard]).map(_.asInstanceOf[RebateCommercialCard])
-      rebateCards.find(_.fromWho == from) match {
-        case Some(rebateCard) => if (rebateCard.affectedResources.contains(resource)) 1 else 2
+      val rebateSymbols = allSymbols.filter(_.isInstanceOf[RebateSymbol]).map(_.asInstanceOf[RebateSymbol])
+      rebateSymbols.find(_.fromWho == from) match {
+        case Some(rebateSymbol) => if (rebateSymbol.affectedResources.contains(resource)) 1 else 2
         case None => 2
       }
     }
@@ -438,8 +438,8 @@ object SevenWonders
       players.shiftLeft(index)
     }
 
-    def getNeighboorsCards(player: Player): Map[NeighboorReference, Set[Card]] = {
-      Map(Left -> getLeftNeighboor(player).played, Right -> getRightNeighboor(player).played)
+    def getNeighboorsStuff(player: Player): Map[NeighboorReference, MultiSet[GameElement]] = {
+      Map(Left -> getLeftNeighboor(player).allGameElements, Right -> getRightNeighboor(player).allGameElements)
     }
 
     def playTurn(actions: Map[Player, Action]): Game = {
@@ -555,7 +555,7 @@ object SevenWonders
   case class PlayAction(override val card: Card, trade: Trade) extends Action(card)
   case class DiscardAction(override val card: Card) extends Action(card)
 
-  class BattleMarker(val vicPoints: Int)
+  class BattleMarker(val vicPoints: Int) extends GameElement
   class DefeatBattleMarker extends BattleMarker(-1)
   case class VictoryBattleMarker(override val vicPoints: Int) extends BattleMarker(vicPoints)
 
@@ -574,17 +574,17 @@ object SevenWonders
     }
   }
 
-  case class Civilization(name: String, base:Production)
+  case class Civilization(name: String, base:Production, stagesOfWonder: List[WonderStage])
 
   ////
   // AGE I
   ////
 
   // Commercial Cards
-  val TAVERN = RewardCommercialCard("TAVERN", Free, Set(), Some(SimpleReward(5)), None)
-  val WEST_TRADING_POST = RebateCommercialCard("WEST TRADING POST", Free, Set(FORUM), Set(Clay, Stone, Wood, Ore), Set(Left))
-  val MARKETPLACE = RebateCommercialCard("MARKETPLACE", Free, Set(CARAVANSERY), Set(Glass, Tapestry, Paper), Set(Left, Right))
-  val EAST_TRADING_POST = RebateCommercialCard("EAST TRADING POST", Free, Set(FORUM), Set(Clay, Stone, Wood, Ore), Set(Right))
+  val TAVERN = CommercialCard("TAVERN", Free, Set(), MultiSet(CoinSymbol(SimpleReward(5))))
+  val WEST_TRADING_POST = CommercialCard("WEST TRADING POST", Free, Set(FORUM), MultiSet(RebateSymbol(Set(Clay, Stone, Wood, Ore), Set(Left))))
+  val MARKETPLACE = CommercialCard("MARKETPLACE", Free, Set(CARAVANSERY), MultiSet(RebateSymbol(Set(Glass, Tapestry, Paper), Set(Left, Right))))
+  val EAST_TRADING_POST = CommercialCard("EAST TRADING POST", Free, Set(FORUM), MultiSet(RebateSymbol(Set(Clay, Stone, Wood, Ore), Set(Right))))
 
   // Military Cards
   val STOCKADE = MilitaryCard("STOCKADE", Cost(0, MultiSet(Wood)), Set(), 1)
@@ -625,10 +625,10 @@ object SevenWonders
   ////
 
   // Commercial Cards
-  val CARAVANSERY = ProductionCommercialCard("CARAVANSERY", Cost(0, MultiSet(Wood, Wood)), Set(LIGHTHOUSE), Wood | Stone | Ore | Clay)
-  val FORUM = ProductionCommercialCard("FORUM", Cost(0, MultiSet(Clay, Clay)), Set(HAVEN), Glass | Tapestry | Paper)
-  val BAZAR = RewardCommercialCard("BAZAR", Free, Set(), Some(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Left, Self, Right))), None)
-  val VINEYARD = RewardCommercialCard("VINEYARD", Free, Set(), Some(ComplexReward(1, classOf[RawMaterialCard], Set(Left, Self, Right))), None)
+  val CARAVANSERY = CommercialCard("CARAVANSERY", Cost(0, MultiSet(Wood, Wood)), Set(LIGHTHOUSE), MultiSet(Wood | Stone | Ore | Clay))
+  val FORUM = CommercialCard("FORUM", Cost(0, MultiSet(Clay, Clay)), Set(HAVEN), MultiSet(Glass | Tapestry | Paper))
+  val BAZAR = CommercialCard("BAZAR", Free, Set(), MultiSet(CoinSymbol(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Left, Self, Right)))))
+  val VINEYARD = CommercialCard("VINEYARD", Free, Set(), MultiSet(CoinSymbol(ComplexReward(1, classOf[RawMaterialCard], Set(Left, Self, Right)))))
 
   // Military Cards
   val WALLS = MilitaryCard("WALLS", Cost(0, MultiSet(Stone, Stone, Stone)), Set(FORTIFICATIONS), 2)
@@ -659,11 +659,10 @@ object SevenWonders
   ////
 
   // Commercial Cards
-  // TODO: Change Arena to give points for built stages of a wonder
-  val ARENA = RewardCommercialCard("ARENA", Cost(0, MultiSet(Stone, Stone, Ore)), Set(), Some(ComplexReward(3, classOf[CommercialCard], Set(Self))), Some(ComplexReward(1, classOf[CommercialCard], Set(Self))))
-  val CHAMBER_OF_COMMERCE = RewardCommercialCard("CHAMBER OF COMMERCE", Cost(0, MultiSet(Clay, Clay, Paper)), Set(), Some(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Self))), Some(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Self))))
-  val LIGHTHOUSE = RewardCommercialCard("LIGHTHOUSE", Cost(0, MultiSet(Stone, Glass)), Set(), Some(ComplexReward(1, classOf[CommercialCard], Set(Self))), Some(ComplexReward(1, classOf[CommercialCard], Set(Self))))
-  val HAVEN = RewardCommercialCard("HAVEN", Cost(0, MultiSet(Wood, Ore, Tapestry)), Set(), Some(ComplexReward(1, classOf[RawMaterialCard], Set(Self))), Some(ComplexReward(1, classOf[RawMaterialCard], Set(Self))))
+  val ARENA = CommercialCard("ARENA", Cost(0, MultiSet(Stone, Stone, Ore)), Set(), MultiSet(CoinSymbol(ComplexReward(3, classOf[WonderStage], Set(Self))), VictoryPointSymbol(ComplexReward(1, classOf[WonderStage], Set(Self)))))
+  val CHAMBER_OF_COMMERCE = CommercialCard("CHAMBER OF COMMERCE", Cost(0, MultiSet(Clay, Clay, Paper)), Set(), MultiSet(VictoryPointSymbol(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Self))), CoinSymbol(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Self)))))
+  val LIGHTHOUSE = CommercialCard("LIGHTHOUSE", Cost(0, MultiSet(Stone, Glass)), Set(), MultiSet(CoinSymbol(ComplexReward(1, classOf[CommercialCard], Set(Self))), VictoryPointSymbol(ComplexReward(1, classOf[CommercialCard], Set(Self)))))
+  val HAVEN = CommercialCard("HAVEN", Cost(0, MultiSet(Wood, Ore, Tapestry)), Set(), MultiSet(CoinSymbol(ComplexReward(1, classOf[RawMaterialCard], Set(Self))), VictoryPointSymbol(ComplexReward(1, classOf[RawMaterialCard], Set(Self)))))
 
   // Military Cards
   val CIRCUS = MilitaryCard("CIRCUS", Cost(0, MultiSet(Stone, Stone, Stone, Ore)), Set(), 3)
@@ -694,22 +693,85 @@ object SevenWonders
   val CRAFTMENS_GUILD = VictoryPointsGuildCard("CRAFTSMENS GUILD", Cost(0, MultiSet(Ore, Ore, Stone, Stone)), ComplexReward(2, classOf[RawMaterialCard], Set(Left, Right)))
   val WORKERS_GUILD = VictoryPointsGuildCard("WORKERS GUILD", Cost(0, MultiSet(Ore, Ore, Clay, Stone, Wood)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
   val PHILOSOPHERS_GUILD = VictoryPointsGuildCard("PHILOSOPHERS GUILD", Cost(0, MultiSet(Clay, Clay, Clay, Paper, Tapestry)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
-  object SCIENTISTS_GUILD extends GuildCard("SCIENTISTS GUILD", Cost(0, MultiSet(Wood, Wood, Ore, Ore, Paper))) with HasScience {
-    val value = gear | tablet | compass
+  object SCIENTISTS_GUILD extends GuildCard("SCIENTISTS GUILD", Cost(0, MultiSet(Wood, Wood, Ore, Ore, Paper)), MultiSet(gear | tablet | compass)) {
+    val scienceSymbol = gear | tablet | compass
   }
   val SPIES_GUILD = VictoryPointsGuildCard("SPIES GUILD", Cost(0, MultiSet(Clay, Clay, Clay, Glass)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
   val BUILDERS_GUILD = VictoryPointsGuildCard("BUILDERS GUILD", Cost(0, MultiSet(Stone, Stone, Clay, Clay, Glass)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Self, Right)))
 
   // Civilizations
-  val RHODOS = Civilization("RHODOS", Ore)
-  val ALEXANDRIA = Civilization("ALEXANDRIA", Glass)
-  val HALIKARNASSOS = Civilization("HALIKARNASSOS", Tapestry)
-  val OLYMPIA = Civilization("OLYMPIA", Wood)
-  val GIZAH = Civilization("GIZAH", Stone)
-  val EPHESOS = Civilization("EPHESOS", Paper)
-  val BABYLON = Civilization("BABYLON", Clay)
+  val RHODOS_A = Civilization("RHODOS", Ore, List(
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Clay, Clay, Clay)), MultiSet(MilitarySymbol(2))),
+    WonderStage(Cost(0, MultiSet(Ore, Ore, Ore, Ore)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+  ))
+  val RHODOS_B = Civilization("RHODOS", Ore, List(
+    WonderStage(Cost(0, MultiSet(Stone, Stone, Stone)), MultiSet(MilitarySymbol(1), VictoryPointSymbol(SimpleReward(3)), CoinSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Ore, Ore, Ore, Ore)), MultiSet(MilitarySymbol(1), VictoryPointSymbol(SimpleReward(4)), CoinSymbol(SimpleReward(4))))
+  ))
+  val ALEXANDRIA_A = Civilization("ALEXANDRIA", Glass, List(
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Ore, Ore)), MultiSet(Clay | Ore | Wood | Stone)),
+    WonderStage(Cost(0, MultiSet(Glass, Glass)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+  ))
+  val ALEXANDRIA_B = Civilization("ALEXANDRIA", Glass, List(
+    WonderStage(Cost(0, MultiSet(Clay, Clay)), MultiSet(Wood | Stone | Ore | Clay)),
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(Glass | Tapestry | Paper)),
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+  ))
+  val HALIKARNASSOS_A = Civilization("HALIKARNASSOS", Tapestry, List(
+    WonderStage(Cost(0, MultiSet(Clay, Clay)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Ore, Ore, Ore)), MultiSet(GrabFromDiscardPile)),
+    WonderStage(Cost(0, MultiSet(Tapestry, Tapestry)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+  ))
+  val HALIKARNASSOS_B = Civilization("HALIKARNASSOS", Tapestry, List(
+    WonderStage(Cost(0, MultiSet(Ore, Ore)), MultiSet(VictoryPointSymbol(SimpleReward(2)), GrabFromDiscardPile)),
+    WonderStage(Cost(0, MultiSet(Clay, Clay, Clay)), MultiSet(VictoryPointSymbol(SimpleReward(1)), GrabFromDiscardPile)),
+    WonderStage(Cost(0, MultiSet(Glass, Paper, Tapestry)), MultiSet(GrabFromDiscardPile))
+  ))
+  val OLYMPIA_A = Civilization("OLYMPIA", Wood, List(
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(FreeBuildEachAge)),
+    WonderStage(Cost(0, MultiSet(Ore, Ore)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+  ))
+  val OLYMPIA_B = Civilization("OLYMPIA", Wood, List(
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(RebateSymbol(Set(Clay, Stone, Wood, Ore), Set(Left, Right)))),
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(5)))),
+    WonderStage(Cost(0, MultiSet(Tapestry, Ore, Ore)), MultiSet(CopyGuildCard))
+  ))
+  val GIZAH_A = Civilization("GIZAH", Stone, List(
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Wood, Wood, Wood)), MultiSet(VictoryPointSymbol(SimpleReward(5)))),
+    WonderStage(Cost(0, MultiSet(Stone, Stone, Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+  ))
+  val GIZAH_B = Civilization("GIZAH", Stone, List(
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Stone, Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(5)))),
+    WonderStage(Cost(0, MultiSet(Clay, Clay, Clay)), MultiSet(VictoryPointSymbol(SimpleReward(5)))),
+    WonderStage(Cost(0, MultiSet(Tapestry, Stone, Stone, Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+  ))
+  val EPHESOS_A = Civilization("EPHESOS", Paper, List(
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(CoinSymbol(SimpleReward(9)))),
+    WonderStage(Cost(0, MultiSet(Paper, Paper)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+  ))
+  val EPHESOS_B = Civilization("EPHOSOS", Paper, List(
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(2)))),
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(VictoryPointSymbol(SimpleReward(3)), CoinSymbol(SimpleReward(4)))),
+    WonderStage(Cost(0, MultiSet(Paper, Tapestry, Glass)), MultiSet(VictoryPointSymbol(SimpleReward(5)), CoinSymbol(SimpleReward(4))))
+  ))
+  val BABYLON_A = Civilization("BABYLON", Clay, List(
+    WonderStage(Cost(0, MultiSet(Clay, Clay)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Wood, Wood, Wood)), MultiSet(tablet | compass | gear)),
+    WonderStage(Cost(0, MultiSet(Clay, Clay, Clay)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+  ))
+  val BABYLON_B = Civilization("BABYLON", Clay, List(
+    WonderStage(Cost(0, MultiSet(Tapestry, Clay)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Glass, Wood, Wood)), MultiSet(PlayLastCardEachAge)),
+    WonderStage(Cost(0, MultiSet(Paper, Clay, Clay, Clay)), MultiSet(tablet | compass | gear))
+  ))
 
-  val civilizations = Set(RHODOS, ALEXANDRIA, HALIKARNASSOS, OLYMPIA, GIZAH, EPHESOS, BABYLON)
+  val civilizations = Set(RHODOS_A, ALEXANDRIA_A, HALIKARNASSOS_A, OLYMPIA_A, GIZAH_A, EPHESOS_A, BABYLON_A)
 
   // Game Setup
   val classicSevenWonders = GameSetup(

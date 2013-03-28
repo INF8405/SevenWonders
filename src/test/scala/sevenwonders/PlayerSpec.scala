@@ -8,14 +8,14 @@ import collection.MultiSet
 
 trait defaults {
   val defaultHand: MultiSet[Card] = MultiSet(TAVERN, STOCKADE, MINE, LOOM, PRESS)
-  val defaultPlayer = Player(defaultHand, 3, MultiSet(), Set(BATHS, PAWNSHOP), OLYMPIA)
+  val defaultPlayer = Player(defaultHand, 3, MultiSet(), Set(BATHS, PAWNSHOP), 0, OLYMPIA_A)
 }
 
 class PlayerSpec extends Specification with defaults {
 
   "A Player" should {
     "receive 3 coins when they discard a card and it should be removed from their hand" in {
-      defaultPlayer.discard(PRESS) === Player(defaultHand - PRESS, 6, MultiSet(), Set(BATHS, PAWNSHOP), OLYMPIA)
+      defaultPlayer.discard(PRESS) === Player(defaultHand - PRESS, 6, MultiSet(), Set(BATHS, PAWNSHOP), 0, OLYMPIA_A)
     }
 
     // n.b. We don't resolve the effect of the card (usually receiving coins or something like that here)
@@ -37,27 +37,27 @@ class PlayerSpec extends Specification with defaults {
         defaultPlayer.playableCards(Map()) === defaultHand.toSet
       }
       "be unable to play all cards if he does not have all the required resources" in {
-        val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR), GIZAH)
+        val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR), 0, GIZAH_A)
         player.playableCards(Map()) === Set(MINE, LOOM, PRESS, TAVERN)
       }
       "be unable to play a card requiring coins if he does not have any coins" in {
-        val player = Player(defaultHand, 0, MultiSet(), Set(BATHS, ALTAR), GIZAH)
+        val player = Player(defaultHand, 0, MultiSet(), Set(BATHS, ALTAR), 0, GIZAH_A)
         player.playableCards(Map()) === Set(LOOM, PRESS, TAVERN)
       }
       "cannot play a card he already has" in {
-        val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR, TAVERN), GIZAH)
+        val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR, TAVERN), 0, GIZAH_A)
         player.playableCards(Map()) === Set(MINE, LOOM, PRESS)
       }
 
       "can play a card by trading a resource with a neighboor" in {
-        val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR), GIZAH)
+        val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR), 0, GIZAH_A)
         player.playableCards(Map(Left -> Wood)) === defaultHand.toSet
       }
     }
 
     "canPlayCard" in {
       defaultPlayer.canPlayCard(TAVERN, Map()) === true
-      val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR, TAVERN), GIZAH)
+      val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR, TAVERN), 0, GIZAH_A)
       player.canPlayCard(TAVERN, Map()) === false
     }
 
@@ -66,12 +66,12 @@ class PlayerSpec extends Specification with defaults {
     }
 
     "total production" in {
-      val player = Player(MultiSet(THEATER, BATHS, ALTAR, PAWNSHOP), 3, MultiSet(), Set(MINE, CLAY_PIT, GLASSWORKS), OLYMPIA)
+      val player = Player(MultiSet(THEATER, BATHS, ALTAR, PAWNSHOP), 3, MultiSet(), Set(MINE, CLAY_PIT, GLASSWORKS), 0, OLYMPIA_A)
       player.totalProduction === (Stone + Clay + Glass + Wood | Stone + Ore + Glass + Wood | Ore + Clay + Glass + Wood | Ore + Ore + Glass + Wood)
     }
 
     "tradableProductions; A player cannot trade a production that is granted from a Commerce Card" in {
-      val player = Player(MultiSet(AQUEDUCT), 3, MultiSet(), Set(CLAY_POOL, FORUM), GIZAH)
+      val player = Player(MultiSet(AQUEDUCT), 3, MultiSet(), Set(CLAY_POOL, FORUM), 0, GIZAH_A)
       player.totalProduction === (Stone + Clay + Paper | Stone + Clay + Tapestry | Stone + Clay + Glass)
       player.tradableProduction === (Stone + Clay)
 
@@ -79,7 +79,8 @@ class PlayerSpec extends Specification with defaults {
         3,
         MultiSet(VictoryBattleMarker(1), VictoryBattleMarker(1)),
         Set(STOCKADE, BARRACKS, GUARD_TOWER, TREE_FARM, CARAVANSERY),
-        OLYMPIA)
+        0,
+        OLYMPIA_A)
 
       player1.totalProduction === ((Wood + Wood + Wood) |
         (Wood + Stone + Wood) |
@@ -96,7 +97,8 @@ class PlayerSpec extends Specification with defaults {
         3,
         MultiSet(VictoryBattleMarker(1), VictoryBattleMarker(1)),
         Set(STOCKADE, BARRACKS, GUARD_TOWER, TREE_FARM, MINE, CLAY_POOL, CARAVANSERY),
-        OLYMPIA)
+        0,
+        OLYMPIA_A)
 
       player2.totalProduction === (Wood + Stone + Clay + Wood + Wood |
         Wood + Stone + Clay + Stone + Wood |
