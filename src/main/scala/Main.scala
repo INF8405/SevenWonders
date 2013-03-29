@@ -130,7 +130,7 @@ object SevenWonders
 
   trait PlayableElement extends GameElement {
     val cost: Cost
-    val symbols: MultiSet[Symbol]
+    val symbols: Set[Symbol]
     /**
      * Implements the immediate effect of this playable on the game.
      * Default implementation: the playable has no immediate effect.
@@ -153,10 +153,10 @@ object SevenWonders
     val name: String,
     val cost: Cost,
     val evolutions: Set[Card],
-    val symbols:  MultiSet[Symbol]
+    val symbols:  Set[Symbol]
   ) extends PlayableElement
 
-  case class WonderStage(cost: Cost, symbols: MultiSet[Symbol]) extends PlayableElement
+  case class WonderStage(cost: Cost, symbols: Set[Symbol]) extends PlayableElement
 
   val compass = SimpleScienceSymbol(1, 0, 0)
   val gear = SimpleScienceSymbol(0, 1, 0)
@@ -167,27 +167,27 @@ object SevenWonders
     override val cost: Cost,
     override val evolutions: Set[Card],
     scienceSymbol: ScienceSymbol
-  ) extends Card( name, cost, evolutions, MultiSet(scienceSymbol) )
+  ) extends Card( name, cost, evolutions, Set(scienceSymbol) )
 
   case class MilitaryCard(
     override val name: String,
     override val cost: Cost,
     override val evolutions: Set[Card],
     strength: Int
-  ) extends Card( name, cost, evolutions, MultiSet(MilitarySymbol(strength)))
+  ) extends Card( name, cost, evolutions, Set(MilitarySymbol(strength)))
 
   case class CommercialCard(
     override val name: String,
     override val cost: Cost,
     override val evolutions: Set[Card],
-    override val symbols: MultiSet[Symbol]
+    override val symbols: Set[Symbol]
   ) extends Card( name, cost, evolutions, symbols )
 
   class ResourceCard(
     name: String,
     cost: Cost,
     val prod: Production
-  ) extends Card(name, cost, Set(), MultiSet(prod) )
+  ) extends Card(name, cost, Set(), Set(prod) )
 
   case class RawMaterialCard(
     override val name: String,
@@ -208,15 +208,9 @@ object SevenWonders
     override val cost: Cost,
     override val evolutions: Set[Card],
     value: Int
-  ) extends Card(name, cost, evolutions, MultiSet(VictoryPointSymbol(SimpleReward(value))))
+  ) extends Card(name, cost, evolutions, Set(VictoryPointSymbol(SimpleReward(value))))
 
-  class GuildCard(name: String, cost: Cost, symbols: MultiSet[Symbol]) extends Card(name, cost, Set(), symbols)
-
-  case class VictoryPointsGuildCard(
-    override val name: String,
-    override val cost: Cost,
-    victoryPoint:ComplexReward
-  ) extends GuildCard(name, cost, MultiSet(VictoryPointSymbol(victoryPoint)))
+  case class GuildCard(override val name: String, override val cost: Cost, override val symbols: Set[Symbol]) extends Card(name, cost, Set(), symbols)
 
   trait Reward
   case class SimpleReward(amount: Int) extends Reward
@@ -256,7 +250,6 @@ object SevenWonders
   object Left extends NeighboorReference
   object Right extends NeighboorReference
   object Self extends PlayerReference
-
 
 
   implicit def ResourceToProduction(value: Resource) = new CumulativeProduction(value)
@@ -325,9 +318,17 @@ object SevenWonders
       calculateVictoryPoints(commerceCards.toMultiSet.asInstanceOf[MultiSet[PlayableElement]], neightboorStuff)
     }
 
-    def guildScore(neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
-      val guildCards = played.filter(_.isInstanceOf[VictoryPointsGuildCard]).map(_.asInstanceOf[VictoryPointsGuildCard])
-      guildCards.map{ card => calculateRewardAmount(card.victoryPoint, neightboorCards)}.sum
+    def guildScore(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
+      val guildCards = played.filter(_.isInstanceOf[GuildCard]).map(_.asInstanceOf[GuildCard])
+      if (guildCards.isEmpty) 0
+      else {
+        guildCards.map(score(_, neightboorStuff)).sum
+      }
+    }
+
+    def score(guildCard: GuildCard, neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
+      val vicSymbols = guildCard.symbols.filter(_.isInstanceOf[VictoryPointSymbol]).map(_.asInstanceOf[VictoryPointSymbol])
+      vicSymbols.map{ vicSymbol => calculateRewardAmount(vicSymbol.reward, neightboorStuff)}.sum
     }
 
     def wondersScore(neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
@@ -340,11 +341,11 @@ object SevenWonders
           if (!wonderStagesBuilt.map(_.symbols).reduce(_ ++ _).contains(CopyGuildCard))
             0
           else {
-            val neigboorGuildCards = neightboorCards.values.reduce(_ ++ _).filter(_.isInstanceOf[VictoryPointsGuildCard]).map(_.asInstanceOf[VictoryPointsGuildCard])
+            val neigboorGuildCards = neightboorCards.values.reduce(_ ++ _).filter(_.isInstanceOf[GuildCard]).map(_.asInstanceOf[GuildCard])
             if (neigboorGuildCards.isEmpty)
               0
             else
-              neigboorGuildCards.map(guildCard => calculateRewardAmount(guildCard.victoryPoint, neightboorCards)).max
+              neigboorGuildCards.map(guildCard => score(guildCard, neightboorCards)).max
         }
         standardPoints + pointsFromCopyGuildCard
       }
@@ -600,10 +601,10 @@ object SevenWonders
   ////
 
   // Commercial Cards
-  val TAVERN = CommercialCard("TAVERN", Free, Set(), MultiSet(CoinSymbol(SimpleReward(5))))
-  val WEST_TRADING_POST = CommercialCard("WEST TRADING POST", Free, Set(FORUM), MultiSet(RebateSymbol(Set(Clay, Stone, Wood, Ore), Set(Left))))
-  val MARKETPLACE = CommercialCard("MARKETPLACE", Free, Set(CARAVANSERY), MultiSet(RebateSymbol(Set(Glass, Tapestry, Paper), Set(Left, Right))))
-  val EAST_TRADING_POST = CommercialCard("EAST TRADING POST", Free, Set(FORUM), MultiSet(RebateSymbol(Set(Clay, Stone, Wood, Ore), Set(Right))))
+  val TAVERN = CommercialCard("TAVERN", Free, Set(), Set(CoinSymbol(SimpleReward(5))))
+  val WEST_TRADING_POST = CommercialCard("WEST TRADING POST", Free, Set(FORUM), Set(RebateSymbol(Set(Clay, Stone, Wood, Ore), Set(Left))))
+  val MARKETPLACE = CommercialCard("MARKETPLACE", Free, Set(CARAVANSERY), Set(RebateSymbol(Set(Glass, Tapestry, Paper), Set(Left, Right))))
+  val EAST_TRADING_POST = CommercialCard("EAST TRADING POST", Free, Set(FORUM), Set(RebateSymbol(Set(Clay, Stone, Wood, Ore), Set(Right))))
 
   // Military Cards
   val STOCKADE = MilitaryCard("STOCKADE", Cost(0, MultiSet(Wood)), Set(), 1)
@@ -644,10 +645,10 @@ object SevenWonders
   ////
 
   // Commercial Cards
-  val CARAVANSERY = CommercialCard("CARAVANSERY", Cost(0, MultiSet(Wood, Wood)), Set(LIGHTHOUSE), MultiSet(Wood | Stone | Ore | Clay))
-  val FORUM = CommercialCard("FORUM", Cost(0, MultiSet(Clay, Clay)), Set(HAVEN), MultiSet(Glass | Tapestry | Paper))
-  val BAZAR = CommercialCard("BAZAR", Free, Set(), MultiSet(CoinSymbol(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Left, Self, Right)))))
-  val VINEYARD = CommercialCard("VINEYARD", Free, Set(), MultiSet(CoinSymbol(ComplexReward(1, classOf[RawMaterialCard], Set(Left, Self, Right)))))
+  val CARAVANSERY = CommercialCard("CARAVANSERY", Cost(0, MultiSet(Wood, Wood)), Set(LIGHTHOUSE), Set(Wood | Stone | Ore | Clay))
+  val FORUM = CommercialCard("FORUM", Cost(0, MultiSet(Clay, Clay)), Set(HAVEN), Set(Glass | Tapestry | Paper))
+  val BAZAR = CommercialCard("BAZAR", Free, Set(), Set(CoinSymbol(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Left, Self, Right)))))
+  val VINEYARD = CommercialCard("VINEYARD", Free, Set(), Set(CoinSymbol(ComplexReward(1, classOf[RawMaterialCard], Set(Left, Self, Right)))))
 
   // Military Cards
   val WALLS = MilitaryCard("WALLS", Cost(0, MultiSet(Stone, Stone, Stone)), Set(FORTIFICATIONS), 2)
@@ -678,10 +679,10 @@ object SevenWonders
   ////
 
   // Commercial Cards
-  val ARENA = CommercialCard("ARENA", Cost(0, MultiSet(Stone, Stone, Ore)), Set(), MultiSet(CoinSymbol(ComplexReward(3, classOf[WonderStage], Set(Self))), VictoryPointSymbol(ComplexReward(1, classOf[WonderStage], Set(Self)))))
-  val CHAMBER_OF_COMMERCE = CommercialCard("CHAMBER OF COMMERCE", Cost(0, MultiSet(Clay, Clay, Paper)), Set(), MultiSet(VictoryPointSymbol(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Self))), CoinSymbol(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Self)))))
-  val LIGHTHOUSE = CommercialCard("LIGHTHOUSE", Cost(0, MultiSet(Stone, Glass)), Set(), MultiSet(CoinSymbol(ComplexReward(1, classOf[CommercialCard], Set(Self))), VictoryPointSymbol(ComplexReward(1, classOf[CommercialCard], Set(Self)))))
-  val HAVEN = CommercialCard("HAVEN", Cost(0, MultiSet(Wood, Ore, Tapestry)), Set(), MultiSet(CoinSymbol(ComplexReward(1, classOf[RawMaterialCard], Set(Self))), VictoryPointSymbol(ComplexReward(1, classOf[RawMaterialCard], Set(Self)))))
+  val ARENA = CommercialCard("ARENA", Cost(0, MultiSet(Stone, Stone, Ore)), Set(), Set(CoinSymbol(ComplexReward(3, classOf[WonderStage], Set(Self))), VictoryPointSymbol(ComplexReward(1, classOf[WonderStage], Set(Self)))))
+  val CHAMBER_OF_COMMERCE = CommercialCard("CHAMBER OF COMMERCE", Cost(0, MultiSet(Clay, Clay, Paper)), Set(), Set(VictoryPointSymbol(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Self))), CoinSymbol(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Self)))))
+  val LIGHTHOUSE = CommercialCard("LIGHTHOUSE", Cost(0, MultiSet(Stone, Glass)), Set(), Set(CoinSymbol(ComplexReward(1, classOf[CommercialCard], Set(Self))), VictoryPointSymbol(ComplexReward(1, classOf[CommercialCard], Set(Self)))))
+  val HAVEN = CommercialCard("HAVEN", Cost(0, MultiSet(Wood, Ore, Tapestry)), Set(), Set(CoinSymbol(ComplexReward(1, classOf[RawMaterialCard], Set(Self))), VictoryPointSymbol(ComplexReward(1, classOf[RawMaterialCard], Set(Self)))))
 
   // Military Cards
   val CIRCUS = MilitaryCard("CIRCUS", Cost(0, MultiSet(Stone, Stone, Stone, Ore)), Set(), 3)
@@ -705,89 +706,87 @@ object SevenWonders
 
   // Guilds
   // TODO: Update victory point rewards for guilds
-  val STRATEGISTS_GUILD = VictoryPointsGuildCard("STARTEGISTS GUILD", Cost(0, MultiSet(Ore, Ore, Stone, Tapestry)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
-  val TRADERS_GUILD = VictoryPointsGuildCard("TRADERS GUILD", Cost(0, MultiSet(Glass, Tapestry, Paper)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
-  val MAGISTRATES_GUILD = VictoryPointsGuildCard("MAGISTRATES GUILD", Cost(0, MultiSet(Wood, Wood, Wood, Stone, Tapestry)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
-  val SHOPOWNERS_GUILD = VictoryPointsGuildCard("SHOPOWNERS GUILD", Cost(0, MultiSet(Wood, Wood, Wood, Glass, Paper)), ComplexReward(1, classOf[RawMaterialCard], Set(Self)))
-  val CRAFTMENS_GUILD = VictoryPointsGuildCard("CRAFTSMENS GUILD", Cost(0, MultiSet(Ore, Ore, Stone, Stone)), ComplexReward(2, classOf[RawMaterialCard], Set(Left, Right)))
-  val WORKERS_GUILD = VictoryPointsGuildCard("WORKERS GUILD", Cost(0, MultiSet(Ore, Ore, Clay, Stone, Wood)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
-  val PHILOSOPHERS_GUILD = VictoryPointsGuildCard("PHILOSOPHERS GUILD", Cost(0, MultiSet(Clay, Clay, Clay, Paper, Tapestry)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
-  object SCIENTISTS_GUILD extends GuildCard("SCIENTISTS GUILD", Cost(0, MultiSet(Wood, Wood, Ore, Ore, Paper)), MultiSet(gear | tablet | compass)) {
-    val scienceSymbol = gear | tablet | compass
-  }
-  val SPIES_GUILD = VictoryPointsGuildCard("SPIES GUILD", Cost(0, MultiSet(Clay, Clay, Clay, Glass)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))
-  val BUILDERS_GUILD = VictoryPointsGuildCard("BUILDERS GUILD", Cost(0, MultiSet(Stone, Stone, Clay, Clay, Glass)), ComplexReward(1, classOf[RawMaterialCard], Set(Left, Self, Right)))
+  val STRATEGISTS_GUILD = GuildCard("STARTEGISTS GUILD", Cost(0, MultiSet(Ore, Ore, Stone, Tapestry)), Set(VictoryPointSymbol(ComplexReward(1, classOf[DefeatBattleMarker], Set(Left, Right)))))
+  val TRADERS_GUILD = GuildCard("TRADERS GUILD", Cost(0, MultiSet(Glass, Tapestry, Paper)), Set(VictoryPointSymbol(ComplexReward(1, classOf[CommercialCard], Set(Left, Right)))))
+  val MAGISTRATES_GUILD = GuildCard("MAGISTRATES GUILD", Cost(0, MultiSet(Wood, Wood, Wood, Stone, Tapestry)), Set(VictoryPointSymbol(ComplexReward(1, classOf[CivilianCard], Set(Left, Right)))))
+  val SHOPOWNERS_GUILD = GuildCard("SHOPOWNERS GUILD", Cost(0, MultiSet(Wood, Wood, Wood, Glass, Paper)), Set(VictoryPointSymbol(ComplexReward(1, classOf[RawMaterialCard], Set(Self))), VictoryPointSymbol(ComplexReward(1, classOf[ManufacturedGoodCard], Set(Self))), VictoryPointSymbol(ComplexReward(1, classOf[GuildCard], Set(Self)))))
+  val CRAFTMENS_GUILD = GuildCard("CRAFTSMENS GUILD", Cost(0, MultiSet(Ore, Ore, Stone, Stone)), Set(VictoryPointSymbol(ComplexReward(2, classOf[ManufacturedGoodCard], Set(Left, Right)))))
+  val WORKERS_GUILD = GuildCard("WORKERS GUILD", Cost(0, MultiSet(Ore, Ore, Clay, Stone, Wood)), Set(VictoryPointSymbol(ComplexReward(1, classOf[RawMaterialCard], Set(Left, Right)))))
+  val PHILOSOPHERS_GUILD = GuildCard("PHILOSOPHERS GUILD", Cost(0, MultiSet(Clay, Clay, Clay, Paper, Tapestry)), Set(VictoryPointSymbol(ComplexReward(1, classOf[ScienceCard], Set(Left, Right)))))
+  val SCIENTISTS_GUILD = GuildCard("SCIENTISTS GUILD", Cost(0, MultiSet(Wood, Wood, Ore, Ore, Paper)), Set(gear | tablet | compass))
+  val SPIES_GUILD = GuildCard("SPIES GUILD", Cost(0, MultiSet(Clay, Clay, Clay, Glass)), Set(VictoryPointSymbol(ComplexReward(1, classOf[MilitaryCard], Set(Left, Right)))))
+  val BUILDERS_GUILD = GuildCard("BUILDERS GUILD", Cost(0, MultiSet(Stone, Stone, Clay, Clay, Glass)), Set(VictoryPointSymbol(ComplexReward(1, classOf[WonderStage], Set(Left, Self, Right)))))
 
   // Civilizations
   val RHODOS_A = Civilization("RHODOS", Ore, List(
-    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
-    WonderStage(Cost(0, MultiSet(Clay, Clay, Clay)), MultiSet(MilitarySymbol(2))),
-    WonderStage(Cost(0, MultiSet(Ore, Ore, Ore, Ore)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), Set(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Clay, Clay, Clay)), Set(MilitarySymbol(2))),
+    WonderStage(Cost(0, MultiSet(Ore, Ore, Ore, Ore)), Set(VictoryPointSymbol(SimpleReward(7))))
   ))
   val RHODOS_B = Civilization("RHODOS", Ore, List(
-    WonderStage(Cost(0, MultiSet(Stone, Stone, Stone)), MultiSet(MilitarySymbol(1), VictoryPointSymbol(SimpleReward(3)), CoinSymbol(SimpleReward(3)))),
-    WonderStage(Cost(0, MultiSet(Ore, Ore, Ore, Ore)), MultiSet(MilitarySymbol(1), VictoryPointSymbol(SimpleReward(4)), CoinSymbol(SimpleReward(4))))
+    WonderStage(Cost(0, MultiSet(Stone, Stone, Stone)), Set(MilitarySymbol(1), VictoryPointSymbol(SimpleReward(3)), CoinSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Ore, Ore, Ore, Ore)), Set(MilitarySymbol(1), VictoryPointSymbol(SimpleReward(4)), CoinSymbol(SimpleReward(4))))
   ))
   val ALEXANDRIA_A = Civilization("ALEXANDRIA", Glass, List(
-    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
-    WonderStage(Cost(0, MultiSet(Ore, Ore)), MultiSet(Clay | Ore | Wood | Stone)),
-    WonderStage(Cost(0, MultiSet(Glass, Glass)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), Set(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Ore, Ore)), Set(Clay | Ore | Wood | Stone)),
+    WonderStage(Cost(0, MultiSet(Glass, Glass)), Set(VictoryPointSymbol(SimpleReward(7))))
   ))
   val ALEXANDRIA_B = Civilization("ALEXANDRIA", Glass, List(
-    WonderStage(Cost(0, MultiSet(Clay, Clay)), MultiSet(Wood | Stone | Ore | Clay)),
-    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(Glass | Tapestry | Paper)),
-    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+    WonderStage(Cost(0, MultiSet(Clay, Clay)), Set(Wood | Stone | Ore | Clay)),
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), Set(Glass | Tapestry | Paper)),
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), Set(VictoryPointSymbol(SimpleReward(7))))
   ))
   val HALIKARNASSOS_A = Civilization("HALIKARNASSOS", Tapestry, List(
-    WonderStage(Cost(0, MultiSet(Clay, Clay)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
-    WonderStage(Cost(0, MultiSet(Ore, Ore, Ore)), MultiSet(GrabFromDiscardPile)),
-    WonderStage(Cost(0, MultiSet(Tapestry, Tapestry)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+    WonderStage(Cost(0, MultiSet(Clay, Clay)), Set(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Ore, Ore, Ore)), Set(GrabFromDiscardPile)),
+    WonderStage(Cost(0, MultiSet(Tapestry, Tapestry)), Set(VictoryPointSymbol(SimpleReward(7))))
   ))
   val HALIKARNASSOS_B = Civilization("HALIKARNASSOS", Tapestry, List(
-    WonderStage(Cost(0, MultiSet(Ore, Ore)), MultiSet(VictoryPointSymbol(SimpleReward(2)), GrabFromDiscardPile)),
-    WonderStage(Cost(0, MultiSet(Clay, Clay, Clay)), MultiSet(VictoryPointSymbol(SimpleReward(1)), GrabFromDiscardPile)),
-    WonderStage(Cost(0, MultiSet(Glass, Paper, Tapestry)), MultiSet(GrabFromDiscardPile))
+    WonderStage(Cost(0, MultiSet(Ore, Ore)), Set(VictoryPointSymbol(SimpleReward(2)), GrabFromDiscardPile)),
+    WonderStage(Cost(0, MultiSet(Clay, Clay, Clay)), Set(VictoryPointSymbol(SimpleReward(1)), GrabFromDiscardPile)),
+    WonderStage(Cost(0, MultiSet(Glass, Paper, Tapestry)), Set(GrabFromDiscardPile))
   ))
   val OLYMPIA_A = Civilization("OLYMPIA", Wood, List(
-    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
-    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(FreeBuildEachAge)),
-    WonderStage(Cost(0, MultiSet(Ore, Ore)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), Set(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), Set(FreeBuildEachAge)),
+    WonderStage(Cost(0, MultiSet(Ore, Ore)), Set(VictoryPointSymbol(SimpleReward(7))))
   ))
   val OLYMPIA_B = Civilization("OLYMPIA", Wood, List(
-    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(RebateSymbol(Set(Clay, Stone, Wood, Ore), Set(Left, Right)))),
-    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(5)))),
-    WonderStage(Cost(0, MultiSet(Tapestry, Ore, Ore)), MultiSet(CopyGuildCard))
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), Set(RebateSymbol(Set(Clay, Stone, Wood, Ore), Set(Left, Right)))),
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), Set(VictoryPointSymbol(SimpleReward(5)))),
+    WonderStage(Cost(0, MultiSet(Tapestry, Ore, Ore)), Set(CopyGuildCard))
   ))
   val GIZAH_A = Civilization("GIZAH", Stone, List(
-    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
-    WonderStage(Cost(0, MultiSet(Wood, Wood, Wood)), MultiSet(VictoryPointSymbol(SimpleReward(5)))),
-    WonderStage(Cost(0, MultiSet(Stone, Stone, Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), Set(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Wood, Wood, Wood)), Set(VictoryPointSymbol(SimpleReward(5)))),
+    WonderStage(Cost(0, MultiSet(Stone, Stone, Stone, Stone)), Set(VictoryPointSymbol(SimpleReward(7))))
   ))
   val GIZAH_B = Civilization("GIZAH", Stone, List(
-    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
-    WonderStage(Cost(0, MultiSet(Stone, Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(5)))),
-    WonderStage(Cost(0, MultiSet(Clay, Clay, Clay)), MultiSet(VictoryPointSymbol(SimpleReward(5)))),
-    WonderStage(Cost(0, MultiSet(Tapestry, Stone, Stone, Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), Set(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Stone, Stone, Stone)), Set(VictoryPointSymbol(SimpleReward(5)))),
+    WonderStage(Cost(0, MultiSet(Clay, Clay, Clay)), Set(VictoryPointSymbol(SimpleReward(5)))),
+    WonderStage(Cost(0, MultiSet(Tapestry, Stone, Stone, Stone, Stone)), Set(VictoryPointSymbol(SimpleReward(7))))
   ))
   val EPHESOS_A = Civilization("EPHESOS", Paper, List(
-    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
-    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(CoinSymbol(SimpleReward(9)))),
-    WonderStage(Cost(0, MultiSet(Paper, Paper)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), Set(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), Set(CoinSymbol(SimpleReward(9)))),
+    WonderStage(Cost(0, MultiSet(Paper, Paper)), Set(VictoryPointSymbol(SimpleReward(7))))
   ))
   val EPHESOS_B = Civilization("EPHOSOS", Paper, List(
-    WonderStage(Cost(0, MultiSet(Stone, Stone)), MultiSet(VictoryPointSymbol(SimpleReward(2)))),
-    WonderStage(Cost(0, MultiSet(Wood, Wood)), MultiSet(VictoryPointSymbol(SimpleReward(3)), CoinSymbol(SimpleReward(4)))),
-    WonderStage(Cost(0, MultiSet(Paper, Tapestry, Glass)), MultiSet(VictoryPointSymbol(SimpleReward(5)), CoinSymbol(SimpleReward(4))))
+    WonderStage(Cost(0, MultiSet(Stone, Stone)), Set(VictoryPointSymbol(SimpleReward(2)))),
+    WonderStage(Cost(0, MultiSet(Wood, Wood)), Set(VictoryPointSymbol(SimpleReward(3)), CoinSymbol(SimpleReward(4)))),
+    WonderStage(Cost(0, MultiSet(Paper, Tapestry, Glass)), Set(VictoryPointSymbol(SimpleReward(5)), CoinSymbol(SimpleReward(4))))
   ))
   val BABYLON_A = Civilization("BABYLON", Clay, List(
-    WonderStage(Cost(0, MultiSet(Clay, Clay)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
-    WonderStage(Cost(0, MultiSet(Wood, Wood, Wood)), MultiSet(tablet | compass | gear)),
-    WonderStage(Cost(0, MultiSet(Clay, Clay, Clay)), MultiSet(VictoryPointSymbol(SimpleReward(7))))
+    WonderStage(Cost(0, MultiSet(Clay, Clay)), Set(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Wood, Wood, Wood)), Set(tablet | compass | gear)),
+    WonderStage(Cost(0, MultiSet(Clay, Clay, Clay)), Set(VictoryPointSymbol(SimpleReward(7))))
   ))
   val BABYLON_B = Civilization("BABYLON", Clay, List(
-    WonderStage(Cost(0, MultiSet(Tapestry, Clay)), MultiSet(VictoryPointSymbol(SimpleReward(3)))),
-    WonderStage(Cost(0, MultiSet(Glass, Wood, Wood)), MultiSet(PlayLastCardEachAge)),
-    WonderStage(Cost(0, MultiSet(Paper, Clay, Clay, Clay)), MultiSet(tablet | compass | gear))
+    WonderStage(Cost(0, MultiSet(Tapestry, Clay)), Set(VictoryPointSymbol(SimpleReward(3)))),
+    WonderStage(Cost(0, MultiSet(Glass, Wood, Wood)), Set(PlayLastCardEachAge)),
+    WonderStage(Cost(0, MultiSet(Paper, Clay, Clay, Clay)), Set(tablet | compass | gear))
   ))
 
   val civilizations = Set(RHODOS_A, ALEXANDRIA_A, HALIKARNASSOS_A, OLYMPIA_A, GIZAH_A, EPHESOS_A, BABYLON_A)
