@@ -45,10 +45,12 @@ public class PlayerManager {
 		HashMap<String, List<String>> cardsOnBoard2 = new HashMap<String, List<String>>();
 		cardsOnBoard2.put("culture", miliCards);
 		cardsOnBoard2.put("trade", miliCards);
+		cardsOnBoard2.put("basicRessource", miliCards);
 		
 		HashMap<String, List<String>> cardsOnBoard3 = new HashMap<String, List<String>>();
 		cardsOnBoard3.put("culture", miliCards);
 		cardsOnBoard3.put("gill", miliCards);
+		cardsOnBoard3.put("advancedRessource", miliCards);
 		
 		// Create players
 		Player p1 = new Player(null, 3, cardsOnBoard1, "civi1");
@@ -98,6 +100,11 @@ public class PlayerManager {
 	}
 	
 	public void play(String cardName){
+		// Temp code - TOREMOVE
 		me_.play(cardName);
+		// TODO: Send the request to server thrift here
+		
+		// TODO: Show a waiting screen while waiting for the answer of thrift server
+		
 	}
 }

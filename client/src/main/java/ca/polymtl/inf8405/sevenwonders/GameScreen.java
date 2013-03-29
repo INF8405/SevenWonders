@@ -23,13 +23,13 @@ import java.util.*;
 public class GameScreen extends Activity {
 	public static int SCREEN_HEIGTH ;
 	public static int SCREEN_WIDTH;
-	
+
 	private static final int BOARD_VIEW_WEIGHT = 3;
 	private static final int STATE_VIEW_WEIGHT = 2;
-	
+
 	private static String PLAYER_ID_MESSAGE = "playerId";
 	private static PlayerManager manager_;
-	
+
 	private OnFlingGestureListener flingGesture_;
 	private int playerId_;
 	private Activity seft_ = this;
@@ -74,25 +74,14 @@ public class GameScreen extends Activity {
 			handView.setAlpha((float)0.5);
 		}
 
-		ResourceView basicResources = (ResourceView)findViewById(R.id.BasicResourceView);
-		ResourceView advancedResources = (ResourceView)findViewById(R.id.AdvancedResourceView);
 		/*		for (int i=0; i<2; i++){
 			basicResources.addCard(cards.get(i));
 			advancedResources.addCard(cards.get(i));
 		}
 		 */
 
-		PlayedCards green = (PlayedCards) findViewById(R.id.GreenCard);
-		PlayedCards red = (PlayedCards) findViewById(R.id.RedCard);
-		PlayedCards blue = (PlayedCards) findViewById(R.id.BlueCard);
-		PlayedCards yellow = (PlayedCards) findViewById(R.id.YellowCard);
-		PlayedCards gill = (PlayedCards) findViewById(R.id.GillCard);
-		green.setCards(currentPlayer.getPlayedCards("science"));
-		red.setCards(currentPlayer.getPlayedCards("military"));
-		blue.setCards(currentPlayer.getPlayedCards("culture"));
-		yellow.setCards(currentPlayer.getPlayedCards("trade"));
-		gill.setCards(currentPlayer.getPlayedCards("gill"));
-
+		updateBoard(currentPlayer);
+		
 		// Set onFling Listener - TEMP - TO REFACTOR
 		flingGesture_ = new OnFlingGestureListener(){
 			@Override
@@ -135,7 +124,7 @@ public class GameScreen extends Activity {
 		View topView = findViewById(R.id.TopBoardView);
 		return flingGesture_.onTouch(topView, ev);
 	}
-	
+
 	public static void showZoomPopup(View view, int selectedCardId, List<String> cardNames, 
 			Context context, boolean withButtonPanel){
 		PopupWindow popup = new PopupWindow(view);
@@ -143,11 +132,32 @@ public class GameScreen extends Activity {
 		popup.showAtLocation(view, Gravity.CENTER, 0, 0);
 		popup.update(0, 0, GameScreen.SCREEN_WIDTH*2/3, GameScreen.SCREEN_HEIGTH/2);
 	}
-	
+
 	public void play(String cardName){
+		// Update modele
 		manager_.play(cardName);
+
+		// Update other views
 		PlayerStateView handView = (PlayerStateView)findViewById(R.id.PlayerStateView);
 		handView.play(cardName);
+		updateBoard(manager_.getMe());
 	}
 
+	private void updateBoard(Player currentPlayer){
+		PlayedCards green = (PlayedCards) findViewById(R.id.GreenCard);
+		PlayedCards red = (PlayedCards) findViewById(R.id.RedCard);
+		PlayedCards blue = (PlayedCards) findViewById(R.id.BlueCard);
+		PlayedCards yellow = (PlayedCards) findViewById(R.id.YellowCard);
+		PlayedCards gill = (PlayedCards) findViewById(R.id.GillCard);
+		ResourceView basicResources = (ResourceView)findViewById(R.id.BasicResourceView);
+		ResourceView advancedResources = (ResourceView)findViewById(R.id.AdvancedResourceView);
+		
+		green.setCards(currentPlayer.getPlayedCards("science"));
+		red.setCards(currentPlayer.getPlayedCards("military"));
+		blue.setCards(currentPlayer.getPlayedCards("culture"));
+		yellow.setCards(currentPlayer.getPlayedCards("trade"));
+		gill.setCards(currentPlayer.getPlayedCards("gill"));
+		basicResources.setCards(currentPlayer.getPlayedCards("basicRessource"));
+		advancedResources.setCards(currentPlayer.getPlayedCards("advancedRessource"));
+	}
 }

@@ -22,7 +22,7 @@ public class PlayedCards extends View {
 	private static float CARD_HEIGHT = 0;
 	private static int MARGIN_LEFT = 0;
 	private static int MARGIN_TOP = 0;
-	private PlayedCards sefl_ = this;
+	private PlayedCards self_ = this;
 
 	private void init(Context context){
 		cards_ = new HashMap<String, Bitmap>();
@@ -40,15 +40,17 @@ public class PlayedCards extends View {
 
 		setOnTouchListener(new OnTouchListener() {
 			@Override
-			public boolean onTouch(View arg0, MotionEvent arg1) {
+			public boolean onTouch(View view, MotionEvent evt) {
 				// TODO Auto-generated method stub
 				if (cards_.size() > 0){
-					// Get all bitmap values
+					// Get all bitmap key
 					List<String> cardNames = new ArrayList<String>();
 					for (Object o: cards_.keySet().toArray())
 						cardNames.add((String)o);
 
-					GameScreen.showZoomPopup(sefl_,0 , cardNames, getContext(),false);
+					int selectedCardId = findSelectedCard(evt.getX(), evt.getY());
+					if (selectedCardId != -1)
+						GameScreen.showZoomPopup(self_, selectedCardId, cardNames, getContext(), true);
 				}
 				return false;
 			}
@@ -68,6 +70,7 @@ public class PlayedCards extends View {
 
 	@Override
 	public void onDraw(Canvas canvas) {
+		this.invalidate();
 		int top = 0;
 		int left = 0;
 		for(Object object: cards_.keySet().toArray()){
@@ -91,9 +94,19 @@ public class PlayedCards extends View {
 
 	public void setCards( List<String> cards){
 		if (cards != null){
+			cards_.clear();
 			for (String card: cards){
 				addCard(card);
 			}
 		}
+	}
+	
+	public int findSelectedCard(float x, float y){
+		for(int i = cards_.size() ; i > 0 ; i--){
+			if ( (i*MARGIN_LEFT < x) && (x < (i*MARGIN_LEFT+CARD_WIDTH)) 
+					&& ((i-1)*MARGIN_TOP < y) && (y < ((i-1)*MARGIN_TOP+CARD_HEIGHT)) )
+				return i-1;
+		}
+		return -1;
 	}
 }
