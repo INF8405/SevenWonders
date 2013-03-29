@@ -330,8 +330,23 @@ object SevenWonders
     }
 
     def wondersScore(neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
-      calculateVictoryPoints(wonderStagesBuilt.asInstanceOf[MultiSet[PlayableElement]], neightboorCards)
-      // TODO: Add copy guild score
+      if (wonderStagesBuilt.isEmpty) 0
+      else {
+        val standardPoints = calculateVictoryPoints(wonderStagesBuilt.asInstanceOf[MultiSet[PlayableElement]], neightboorCards)
+        // This is a very special case where the player has a copy a guild card from a neighboor symbol.
+        // We need to find what neighbooring guild card would be the best for him and add it's value to his score
+        val pointsFromCopyGuildCard =
+          if (!wonderStagesBuilt.map(_.symbols).reduce(_ ++ _).contains(CopyGuildCard))
+            0
+          else {
+            val neigboorGuildCards = neightboorCards.values.reduce(_ ++ _).filter(_.isInstanceOf[VictoryPointsGuildCard]).map(_.asInstanceOf[VictoryPointsGuildCard])
+            if (neigboorGuildCards.isEmpty)
+              0
+            else
+              neigboorGuildCards.map(guildCard => calculateRewardAmount(guildCard.victoryPoint, neightboorCards)).max
+        }
+        standardPoints + pointsFromCopyGuildCard
+      }
     }
 
     def calculateVictoryPoints(of: MultiSet[PlayableElement], neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
