@@ -335,9 +335,12 @@ object SevenWonders
     }
 
     def calculateVictoryPoints(of: MultiSet[PlayableElement], neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
-      val symbols: MultiSet[Symbol] = of.map(_.symbols).reduce(_ ++ _)
-      val vicSymbols: MultiSet[VictoryPointSymbol] = symbols.filter(_.isInstanceOf[VictoryPointSymbol]).map(_.asInstanceOf[VictoryPointSymbol])
-      vicSymbols.map(symbol => calculateRewardAmount(symbol.reward, neightboorCards)).sum
+      if (of.isEmpty) 0
+      else {
+        val symbols: MultiSet[Symbol] = of.map(_.symbols).reduce(_ ++ _)
+        val vicSymbols: MultiSet[VictoryPointSymbol] = symbols.filter(_.isInstanceOf[VictoryPointSymbol]).map(_.asInstanceOf[VictoryPointSymbol])
+        vicSymbols.map(symbol => calculateRewardAmount(symbol.reward, neightboorCards)).sum
+      }
     }
 
     def calculateRewardAmount(reward: Reward, neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
