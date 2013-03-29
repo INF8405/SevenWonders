@@ -308,6 +308,7 @@ object SevenWonders
       val scienceSymbols = allSymbols.filter(_.isInstanceOf[ScienceSymbol]).map(_.asInstanceOf[ScienceSymbol])
       val scienceValue = scienceSymbols.foldLeft[ScienceSymbol](SimpleScienceSymbol(0, 0, 0))(_ + _)
       scienceValue.victoryPointValue
+      // TODO: Add the case where you have the copyguildCard but it is best to copy science
     }
 
     def militaryScore = battleMarkers.map(_.vicPoints).sum
