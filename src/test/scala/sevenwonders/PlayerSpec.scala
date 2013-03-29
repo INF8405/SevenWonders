@@ -128,7 +128,7 @@ class PlayerSpec extends Specification with defaults {
     }
 
     "civilianScore" in {
-      defaultPlayer.score(Map()) === 6
+      defaultPlayer.civilianScore === 6
     }
   }
 }
