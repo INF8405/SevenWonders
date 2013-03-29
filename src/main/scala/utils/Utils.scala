@@ -17,6 +17,12 @@ object Utils {
         Nil
       else
         value.drop(1) :+ value.head
+    def allEqual: Boolean =
+      if (value.isEmpty) true
+      else value.tail.forall(_ == value.head)
+    def hasDuplicate: Boolean =
+      if (value.isEmpty) false
+      else value.tail.exists(_ == value.head) || value.tail.hasDuplicate
   }
 
   implicit class AugmentedTraversable[A](value: Traversable[A]) {
