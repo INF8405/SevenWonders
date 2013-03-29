@@ -31,6 +31,11 @@ trait MultiSet[A] extends Collection[A] {
   def filter(pred: A => Boolean): MultiSet[A]
   def headOption: Option[A] = if (isEmpty) None else Some(head)
   def find(pred: A => Boolean):Option[A] = filter(pred).headOption
+  def max[B >: A](implicit cmp: Ordering[B]): A =
+    if (isEmpty) throw new UnsupportedOperationException
+    else
+    if (size == 1) head
+    else if (cmp.compare(head, tail.max(cmp)) > 0) head else tail.max(cmp)
 }
 
 object MultiSet {

@@ -99,5 +99,10 @@ class MultiSetSpec extends Specification {
     "+" in {
       MultiSet("allo", "byebye") + "ddd" === MultiSet("allo", "byebye", "ddd")
     }
+
+    "max" in {
+      MultiSet(6, 8, 3, 56).max === 56
+      MultiSet(-4, 0).max === 0
+    }
   }
 }
