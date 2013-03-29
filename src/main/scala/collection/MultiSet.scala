@@ -25,7 +25,9 @@ trait MultiSet[A] extends Collection[A] {
   def +[A1 >: A](elem: A1): MultiSet[A1]
   override def takeRandom(nb: Int): MultiSet[A] = Random.shuffle(toList).take(nb).toMultiSet
   override def toString = "MultiSet(" + mkString(", ") + ")"
-  def reduce(fun: (A, A) => A):A = if (size == 1) head else fun(head, tail.reduce(fun))
+  def reduce(fun: (A, A) => A):A =
+    if (isEmpty) throw new UnsupportedOperationException
+    else if(size == 1) head else fun(head, tail.reduce(fun))
   def filter(pred: A => Boolean): MultiSet[A]
   def headOption: Option[A] = if (isEmpty) None else Some(head)
   def find(pred: A => Boolean):Option[A] = filter(pred).headOption
