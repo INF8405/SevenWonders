@@ -5,6 +5,7 @@ import ca.polymtl.inf8405.sevenwonders.controller.*;
 import ca.polymtl.inf8405.sevenwonders.model.*;
 
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Point;
@@ -81,7 +82,7 @@ public class GameScreen extends Activity {
 		 */
 
 		updateBoard(currentPlayer);
-		
+
 		// Set onFling Listener - TEMP - TO REFACTOR
 		flingGesture_ = new OnFlingGestureListener(){
 			@Override
@@ -126,9 +127,9 @@ public class GameScreen extends Activity {
 	}
 
 	public static void showZoomPopup(View view, int selectedCardId, List<String> cardNames, 
-			Context context, boolean withButtonPanel){
-		PopupWindow popup = new PopupWindow(view);
-		popup.setContentView(new ZoomCardView(context, cardNames, selectedCardId, withButtonPanel));
+			boolean withButtonPanel){
+		PopupWindow popup = new PopupWindow();
+		popup.setContentView(new ZoomCardView(view.getContext(), cardNames, selectedCardId, withButtonPanel));
 		popup.showAtLocation(view, Gravity.CENTER, 0, 0);
 		popup.update(0, 0, GameScreen.SCREEN_WIDTH*2/3, GameScreen.SCREEN_HEIGTH/2);
 	}
@@ -151,7 +152,7 @@ public class GameScreen extends Activity {
 		PlayedCards gill = (PlayedCards) findViewById(R.id.GillCard);
 		ResourceView basicResources = (ResourceView)findViewById(R.id.BasicResourceView);
 		ResourceView advancedResources = (ResourceView)findViewById(R.id.AdvancedResourceView);
-		
+
 		green.setCards(currentPlayer.getPlayedCards("science"));
 		red.setCards(currentPlayer.getPlayedCards("military"));
 		blue.setCards(currentPlayer.getPlayedCards("culture"));

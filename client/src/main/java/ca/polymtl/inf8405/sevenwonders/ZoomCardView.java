@@ -3,7 +3,10 @@ package ca.polymtl.inf8405.sevenwonders;
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
 import ca.polymtl.inf8405.sevenwonders.controller.OnFlingGestureListener;
 
+import android.app.AlertDialog;
+import android.app.FragmentManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -73,7 +76,7 @@ public class ZoomCardView extends RelativeLayout{
 		closeButton.setText("Close");
 		closeButton.setOnTouchListener(new OnTouchListener() {
 			@Override
-			public boolean onTouch(View arg0, MotionEvent arg1) {
+			public boolean onTouch(View view, MotionEvent arg1) {
 				closeMe();
 				return false;
 			}
@@ -89,7 +92,6 @@ public class ZoomCardView extends RelativeLayout{
 			play.setLayoutParams(bl);
 			play.setText("Play");
 			play.setOnTouchListener(new OnTouchListener() {
-				
 				@Override
 				public boolean onTouch(View arg0, MotionEvent arg1) {
 					GameScreen screen = (GameScreen)sefl_.getContext();
@@ -106,11 +108,25 @@ public class ZoomCardView extends RelativeLayout{
 			Button wonders = new Button(context);
 			wonders.setLayoutParams(bl);
 			wonders.setText("Wonders");
+			wonders.setOnTouchListener(new OnTouchListener() {				
+				@Override
+				public boolean onTouch(View arg0, MotionEvent event) {
+					int action = event.getActionMasked();
+					if (action == MotionEvent.ACTION_DOWN){
+						GameScreen screen = (GameScreen)sefl_.getContext();
+						FragmentManager manager = screen.getFragmentManager();
+						TradeView tv = new TradeView();
+						tv.show(manager, "abc");
+						closeMe();
+					}
+					return false;
+				}
+			});
 
 			LinearLayout ln = new LinearLayout(context);
 			ln.setOrientation(LinearLayout.VERTICAL);
 			ln.setGravity(Gravity.CENTER_VERTICAL);
-			//ln.setBackgroundColor(Color.RED);
+			ln.setBackgroundColor(Color.RED);
 			ln.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.FILL_PARENT));
 			ln.addView(play);
 			ln.addView(wonders);

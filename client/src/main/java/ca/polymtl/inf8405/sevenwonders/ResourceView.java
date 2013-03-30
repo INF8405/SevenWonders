@@ -35,7 +35,7 @@ public class ResourceView extends View{
 					for (Object o: cards_.keySet().toArray())
 						cardNames.add((String)o);
 
-					GameScreen.showZoomPopup(sefl_,0, cardNames, getContext(), false);
+					GameScreen.showZoomPopup(sefl_,0, cardNames, false);
 				}
 				return false;
 			}

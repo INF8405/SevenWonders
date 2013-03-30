@@ -38,7 +38,7 @@ public class PlayerStateView extends View{
 				
 				int selectedCardId = findSelectedCard(evt.getX(), evt.getY());
 				if (selectedCardId != -1)
-					GameScreen.showZoomPopup(seft_, selectedCardId, cardNames, getContext(), true);
+					GameScreen.showZoomPopup(seft_, selectedCardId, cardNames, true);
 				return false;
 			}
 		});
