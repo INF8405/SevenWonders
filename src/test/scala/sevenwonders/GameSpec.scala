@@ -8,13 +8,13 @@ import collection.MultiSet
 class GameSpec extends Specification {
 
   val defaultHand1: MultiSet[Card] = MultiSet(TAVERN, STOCKADE, MINE, LOOM, PRESS)
-  val defaultPlayer1 = Player(defaultHand1, 3, MultiSet(), Set(BATHS, PAWNSHOP), 0, RHODOS_A)
+  val defaultPlayer1 = Player(RHODOS_A, defaultHand1, 3, MultiSet(), Set(BATHS, PAWNSHOP), 0)
 
   val defaultHand2: MultiSet[Card] = MultiSet(WEST_TRADING_POST, MARKETPLACE, EAST_TRADING_POST, BARRACKS, GUARD_TOWER)
-  val defaultPlayer2 = Player(defaultHand2, 9, MultiSet(), Set(), 0, ALEXANDRIA_A)
+  val defaultPlayer2 = Player(ALEXANDRIA_A, defaultHand2, 9, MultiSet(), Set(), 0)
 
   val defaultHand3: MultiSet[Card] = MultiSet(WORKSHOP, SCRIPTORIUM, THEATER, ORE_VEIN, EXCAVATION)
-  val defaultPlayer3 = Player(defaultHand3, 6, MultiSet(), Set(TREE_FARM), 0, OLYMPIA_A)
+  val defaultPlayer3 = Player(OLYMPIA_A, defaultHand3, 6, MultiSet(), Set(TREE_FARM), 0)
 
   "A Game" should {
     "getNeighboors should return the appropriate neighboring players of any player" in {

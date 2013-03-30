@@ -15,7 +15,7 @@ object SevenWonders
     val chosenCivilizations = Random.shuffle(civilizations.toList).take(nbPlayers)
     val players = chosenCivilizations.map{
       civ =>
-        Player(MultiSet(), 3, MultiSet(), Set(), 0, civ)
+        Player(civ, MultiSet(), 3)
     }
     Game(players, cards, MultiSet()).beginAge()
   }
@@ -256,7 +256,14 @@ object SevenWonders
 
   type Trade = MultiMap[Resource, NeighboorReference]
 
-  case class Player(hand: MultiSet[Card], coins: Int, battleMarkers: MultiSet[BattleMarker], played: Set[Card], nbWonders: Int, civilization: Civilization) {
+  case class Player(civilization: Civilization,
+                    hand: MultiSet[Card] = MultiSet(),
+                    coins: Int = 0,
+                    battleMarkers: MultiSet[BattleMarker] = MultiSet(),
+                    played: Set[Card] = Set(),
+                    nbWonders: Int = 0,
+                    hasBuiltForFreeThisAge: Boolean = false
+                    ) {
     def discard(card: Card): Player = this.copy(hand = hand - card, coins = coins + 3)
 
     /**
@@ -267,7 +274,7 @@ object SevenWonders
      */
     def play(card: Card, trade: Trade): (Player, Map[NeighboorReference, Int]) = {
       val coinsMap = trade.values.toSet.map(ref => (ref, cost(trade, ref))).toMap
-      val player = Player(hand - card, coins - cost(trade) - card.cost.coins, battleMarkers, played + card, nbWonders, civilization)
+      val player = this.copy(hand = hand - card,coins = coins - cost(trade) - card.cost.coins, played = played + card)
       (player, coinsMap)
     }
 
@@ -286,7 +293,7 @@ object SevenWonders
 
     def wonderStagesBuilt: MultiSet[WonderStage] = civilization.stagesOfWonder.take(nbWonders).toMultiSet
 
-    def allSymbols: MultiSet[Symbol] = allPlayables.map(_.symbols).reduce(_ ++ _)
+    def allSymbols: MultiSet[Symbol] = allPlayables.map(_.symbols).flatten
 
     def allPlayables: MultiSet[PlayableElement] = played.toMultiSet ++ wonderStagesBuilt
 
@@ -295,7 +302,7 @@ object SevenWonders
     def militaryStrength: Int = allSymbols.filter(_.isInstanceOf[MilitarySymbol]).map(_.asInstanceOf[MilitarySymbol]).map(_.strength).sum
 
     def score(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int =
-      scienceScore + militaryScore + civilianScore + commerceScore(neightboorStuff) + guildScore(neightboorStuff) + wondersScore(neightboorStuff)
+      scienceScore + militaryScore + civilianScore + commerceScore + guildScore(neightboorStuff) + wondersScore(neightboorStuff) + coins/3
 
     def scienceScore: Int = {
       val scienceSymbols = allSymbols.filter(_.isInstanceOf[ScienceSymbol]).map(_.asInstanceOf[ScienceSymbol])
@@ -313,9 +320,9 @@ object SevenWonders
       civilianCards.toMultiSet.map(_.value).sum
     }
 
-    def commerceScore(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
+    def commerceScore: Int = {
       val commerceCards = played.filter(_.isInstanceOf[CommercialCard]).map(_.asInstanceOf[CommercialCard])
-      calculateVictoryPoints(commerceCards.toMultiSet.asInstanceOf[MultiSet[PlayableElement]], neightboorStuff)
+      calculateVictoryPoints(commerceCards.toMultiSet.asInstanceOf[MultiSet[PlayableElement]], Map())
     }
 
     def guildScore(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
@@ -331,21 +338,22 @@ object SevenWonders
       vicSymbols.map{ vicSymbol => calculateRewardAmount(vicSymbol.reward, neightboorStuff)}.sum
     }
 
-    def wondersScore(neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
+    def wondersScore(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
       if (wonderStagesBuilt.isEmpty) 0
       else {
-        val standardPoints = calculateVictoryPoints(wonderStagesBuilt.asInstanceOf[MultiSet[PlayableElement]], neightboorCards)
+        val standardPoints = calculateVictoryPoints(wonderStagesBuilt.asInstanceOf[MultiSet[PlayableElement]], neightboorStuff)
         // This is a very special case where the player has a copy a guild card from a neighboor symbol.
         // We need to find what neighbooring guild card would be the best for him and add it's value to his score
+        // TODO: Handle the case where the best guild card to copy is science, making this value equal to zero
         val pointsFromCopyGuildCard =
-          if (!wonderStagesBuilt.map(_.symbols).reduce(_ ++ _).contains(CopyGuildCard))
+          if (!wonderStagesBuilt.map(_.symbols).flatten.contains(CopyGuildCard))
             0
           else {
-            val neigboorGuildCards = neightboorCards.values.reduce(_ ++ _).filter(_.isInstanceOf[GuildCard]).map(_.asInstanceOf[GuildCard])
+            val neigboorGuildCards = neightboorStuff.values.reduce(_ ++ _).filter(_.isInstanceOf[GuildCard]).map(_.asInstanceOf[GuildCard])
             if (neigboorGuildCards.isEmpty)
               0
             else
-              neigboorGuildCards.map(guildCard => score(guildCard, neightboorCards)).max
+              neigboorGuildCards.map(guildCard => score(guildCard, neightboorStuff)).max
         }
         standardPoints + pointsFromCopyGuildCard
       }
@@ -354,20 +362,21 @@ object SevenWonders
     def calculateVictoryPoints(of: MultiSet[PlayableElement], neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
       if (of.isEmpty) 0
       else {
-        val symbols: MultiSet[Symbol] = of.map(_.symbols).reduce(_ ++ _)
+        val symbols: MultiSet[Symbol] = of.map(_.symbols).flatten
         val vicSymbols: MultiSet[VictoryPointSymbol] = symbols.filter(_.isInstanceOf[VictoryPointSymbol]).map(_.asInstanceOf[VictoryPointSymbol])
         vicSymbols.map(symbol => calculateRewardAmount(symbol.reward, neightboorCards)).sum
       }
     }
 
-    def calculateRewardAmount(reward: Reward, neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
+    def calculateRewardAmount(reward: Reward, neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
       reward match {
         case reward: ComplexReward => {
+          // We need to handle references other than Self in a different way
           val fromNeighboors = reward.from.filter(_.isInstanceOf[NeighboorReference]).map(_.asInstanceOf[NeighboorReference])
-          val referencedNeighboorCards: MultiSet[GameElement] = fromNeighboors.map(neightboorCards(_)).reduce(_ ++ _)
-          val referencedMyCards = if (reward.from.contains(Self)) played.toMultiSet else MultiSet()
-          val cards = referencedNeighboorCards ++ referencedMyCards
-          cards.map( card => if (card.getClass == reward.forEach) reward.amount else 0).sum
+          val referencedNeighboorStuff: MultiSet[GameElement] = fromNeighboors.map(neightboorStuff(_)).fold(MultiSet())(_ ++ _)
+          val referencedMyStuff = if (reward.from.contains(Self)) allGameElements else MultiSet()
+          val referencedStuff = referencedNeighboorStuff ++ referencedMyStuff
+          referencedStuff.map( elem => if (elem.getClass == reward.forEach) reward.amount else 0).sum
         }
         case SimpleReward(amount) => amount
       }
@@ -577,6 +586,13 @@ object SevenWonders
 
   class BattleMarker(val vicPoints: Int) extends GameElement
   class DefeatBattleMarker extends BattleMarker(-1)
+  {
+    override def toString = "DefeatBattleMarker"
+    override def equals(other: Any) = other match {
+      case other: DefeatBattleMarker => true
+      case _ => false
+    }
+  }
   case class VictoryBattleMarker(override val vicPoints: Int) extends BattleMarker(vicPoints)
 
   type PlayerAmount = Int
@@ -705,7 +721,6 @@ object SevenWonders
   val SENATE = CivilianCard("SENATE", Cost(0, MultiSet(Wood, Wood, Stone, Ore)), Set(), 6)
 
   // Guilds
-  // TODO: Update victory point rewards for guilds
   val STRATEGISTS_GUILD = GuildCard("STARTEGISTS GUILD", Cost(0, MultiSet(Ore, Ore, Stone, Tapestry)), Set(VictoryPointSymbol(ComplexReward(1, classOf[DefeatBattleMarker], Set(Left, Right)))))
   val TRADERS_GUILD = GuildCard("TRADERS GUILD", Cost(0, MultiSet(Glass, Tapestry, Paper)), Set(VictoryPointSymbol(ComplexReward(1, classOf[CommercialCard], Set(Left, Right)))))
   val MAGISTRATES_GUILD = GuildCard("MAGISTRATES GUILD", Cost(0, MultiSet(Wood, Wood, Wood, Stone, Tapestry)), Set(VictoryPointSymbol(ComplexReward(1, classOf[CivilianCard], Set(Left, Right)))))

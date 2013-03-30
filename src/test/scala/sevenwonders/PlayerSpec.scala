@@ -8,14 +8,14 @@ import collection.MultiSet
 
 trait defaults {
   val defaultHand: MultiSet[Card] = MultiSet(TAVERN, STOCKADE, MINE, LOOM, PRESS)
-  val defaultPlayer = Player(defaultHand, 3, MultiSet(), Set(BATHS, PAWNSHOP), 0, OLYMPIA_A)
+  val defaultPlayer = Player(OLYMPIA_A, defaultHand, 3, MultiSet(), Set(BATHS, PAWNSHOP))
 }
 
 class PlayerSpec extends Specification with defaults {
 
   "A Player" should {
     "receive 3 coins when they discard a card and it should be removed from their hand" in {
-      defaultPlayer.discard(PRESS) === Player(defaultHand - PRESS, 6, MultiSet(), Set(BATHS, PAWNSHOP), 0, OLYMPIA_A)
+      defaultPlayer.discard(PRESS) === Player(OLYMPIA_A, defaultHand - PRESS, 6, MultiSet(), Set(BATHS, PAWNSHOP), 0)
     }
 
     // n.b. We don't resolve the effect of the card (usually receiving coins or something like that here)
@@ -30,6 +30,13 @@ class PlayerSpec extends Specification with defaults {
       "substract the coin cost" in {
         defaultPlayer.play(MINE, MultiMap())._1.coins === 2
       }
+      "substract the trade cost" in {
+        val hand = MultiSet[Card](THEATER, BATHS, ALTAR, WORKSHOP)
+        val player = Player(OLYMPIA_A, hand, 3, MultiSet(), Set(PAWNSHOP), 0)
+        val (newPlayer, map) = player.play(BATHS, MultiMap(Stone -> Left))
+        newPlayer === Player(OLYMPIA_A, hand - BATHS, 1, MultiSet(), Set(PAWNSHOP, BATHS), 0)
+        map === Map(Left -> 2)
+      }
     }
 
     "playableCards should return the Set of Cards it is possible for the player to play for his next turn" should {
@@ -37,27 +44,36 @@ class PlayerSpec extends Specification with defaults {
         defaultPlayer.playableCards(Map()) === defaultHand.toSet
       }
       "be unable to play all cards if he does not have all the required resources" in {
-        val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR), 0, GIZAH_A)
+        val player = Player(GIZAH_A, defaultHand, 3, MultiSet(), Set(BATHS, ALTAR), 0)
         player.playableCards(Map()) === Set(MINE, LOOM, PRESS, TAVERN)
       }
       "be unable to play a card requiring coins if he does not have any coins" in {
-        val player = Player(defaultHand, 0, MultiSet(), Set(BATHS, ALTAR), 0, GIZAH_A)
+        val player = Player(GIZAH_A, defaultHand, 0, MultiSet(), Set(BATHS, ALTAR), 0)
         player.playableCards(Map()) === Set(LOOM, PRESS, TAVERN)
       }
       "cannot play a card he already has" in {
-        val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR, TAVERN), 0, GIZAH_A)
+        val player = Player(GIZAH_A, defaultHand, 3, MultiSet(), Set(BATHS, ALTAR, TAVERN), 0)
         player.playableCards(Map()) === Set(MINE, LOOM, PRESS)
       }
-
       "can play a card by trading a resource with a neighboor" in {
-        val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR), 0, GIZAH_A)
+        val player = Player(GIZAH_A, defaultHand, 3, MultiSet(), Set(BATHS, ALTAR), 0)
         player.playableCards(Map(Left -> Wood)) === defaultHand.toSet
+      }
+      "can play all cards if he has the symbol can build one free per age and has not done so yet" in {
+        val hand = MultiSet[Card](SCHOOL, WALLS, BRICKYARD, COURTHOUSE, AQUEDUCT, STABLES)
+        val player = Player(OLYMPIA_A, hand, 0, MultiSet(), Set(), 2)
+        player.playableCards(Map()) === hand.toSet
+      }
+      "cannot play all cards if he has the symbol can build one free per age but has allready used it" in {
+        val hand = MultiSet[Card](SCHOOL, WALLS, BRICKYARD, COURTHOUSE, AQUEDUCT, STABLES)
+        val player = Player(OLYMPIA_A, hand, 0, MultiSet(), Set(), 2, true)
+        player.playableCards(Map()) === Set()
       }
     }
 
     "canPlayCard" in {
       defaultPlayer.canPlayCard(TAVERN, Map()) === true
-      val player = Player(defaultHand, 3, MultiSet(), Set(BATHS, ALTAR, TAVERN), 0, GIZAH_A)
+      val player = Player(GIZAH_A, defaultHand, 3, MultiSet(), Set(BATHS, ALTAR, TAVERN), 0)
       player.canPlayCard(TAVERN, Map()) === false
     }
 
@@ -66,21 +82,23 @@ class PlayerSpec extends Specification with defaults {
     }
 
     "total production" in {
-      val player = Player(MultiSet(THEATER, BATHS, ALTAR, PAWNSHOP), 3, MultiSet(), Set(MINE, CLAY_PIT, GLASSWORKS), 0, OLYMPIA_A)
+      val player = Player(OLYMPIA_A, MultiSet(THEATER, BATHS, ALTAR, PAWNSHOP), 3, MultiSet(), Set(MINE, CLAY_PIT, GLASSWORKS), 0)
       player.totalProduction === (Stone + Clay + Glass + Wood | Stone + Ore + Glass + Wood | Ore + Clay + Glass + Wood | Ore + Ore + Glass + Wood)
     }
 
     "tradableProductions; A player cannot trade a production that is granted from a Commerce Card" in {
-      val player = Player(MultiSet(AQUEDUCT), 3, MultiSet(), Set(CLAY_POOL, FORUM), 0, GIZAH_A)
+      val player = Player(GIZAH_A, MultiSet(AQUEDUCT), 3, MultiSet(), Set(CLAY_POOL, FORUM), 0)
       player.totalProduction === (Stone + Clay + Paper | Stone + Clay + Tapestry | Stone + Clay + Glass)
       player.tradableProduction === (Stone + Clay)
 
-      val player1 = Player(MultiSet(AQUEDUCT, STATUE, SCHOOL, LIBRARY, LABORATORY, STABLES),
+      val player1 = Player(
+        OLYMPIA_A,
+        MultiSet(AQUEDUCT, STATUE, SCHOOL, LIBRARY, LABORATORY, STABLES),
         3,
         MultiSet(VictoryBattleMarker(1), VictoryBattleMarker(1)),
         Set(STOCKADE, BARRACKS, GUARD_TOWER, TREE_FARM, CARAVANSERY),
-        0,
-        OLYMPIA_A)
+        0
+      )
 
       player1.totalProduction === ((Wood + Wood + Wood) |
         (Wood + Stone + Wood) |
@@ -93,12 +111,14 @@ class PlayerSpec extends Specification with defaults {
 
       player1.tradableProduction  === (Wood + Wood | Clay + Wood)
 
-      val player2 = Player(MultiSet(AQUEDUCT, STATUE, SCHOOL, LIBRARY, LABORATORY, STABLES),
+      val player2 = Player(
+        OLYMPIA_A,
+        MultiSet(AQUEDUCT, STATUE, SCHOOL, LIBRARY, LABORATORY, STABLES),
         3,
         MultiSet(VictoryBattleMarker(1), VictoryBattleMarker(1)),
         Set(STOCKADE, BARRACKS, GUARD_TOWER, TREE_FARM, MINE, CLAY_POOL, CARAVANSERY),
-        0,
-        OLYMPIA_A)
+        0
+      )
 
       player2.totalProduction === (Wood + Stone + Clay + Wood + Wood |
         Wood + Stone + Clay + Stone + Wood |
@@ -123,12 +143,87 @@ class PlayerSpec extends Specification with defaults {
         Clay + Ore + Clay + Wood)
     }
 
+    "allSymbols" in {
+      val player = Player(OLYMPIA_A, MultiSet(), 3, MultiSet(), Set(BATHS, AQUEDUCT, STABLES),1)
+      player.allSymbols ==== MultiSet(
+        VictoryPointSymbol(SimpleReward(3)),
+        VictoryPointSymbol(SimpleReward(3)),
+        VictoryPointSymbol(SimpleReward(5)),
+        MilitarySymbol(2)
+      )
+    }
+
+    "allPlayables" in {
+      val player = Player(OLYMPIA_A, MultiSet(), 3, MultiSet(), Set(BATHS), 1)
+      player.allPlayables ==== MultiSet(
+        BATHS,
+        OLYMPIA_A.stagesOfWonder(0)
+      )
+    }
+
+    "allGameElements" in {
+      val player = Player(OLYMPIA_A, MultiSet(), 3, MultiSet(VictoryBattleMarker(1), new DefeatBattleMarker), Set(BATHS), 1)
+      player.allGameElements ==== MultiSet(
+        BATHS,
+        OLYMPIA_A.stagesOfWonder(0),
+        VictoryBattleMarker(1),
+        new DefeatBattleMarker
+      )
+    }
+
+    "militaryStrength" in {
+      val player = Player(RHODOS_B, MultiSet(), 3, MultiSet(VictoryBattleMarker(1)), Set(STOCKADE, STABLES, FORTIFICATIONS), 2)
+      player.militaryStrength === 8
+    }
+
     "score" in {
-      defaultPlayer.score(Map()) === 6
+      defaultPlayer.score(Map()) === 7
+    }
+
+    "scienceScore" in {
+      val player = Player(
+        BABYLON_A,
+        MultiSet(),
+        3,
+        MultiSet(new DefeatBattleMarker, new DefeatBattleMarker),
+        Set(WORKSHOP, SCRIPTORIUM, APOTHECARY, SCHOOL, DISPENSARY, LIBRARY, SCIENTISTS_GUILD),
+        2
+      )
+      player.scienceScore === 38
+    }
+
+    "militaryScore" in {
+      val player = Player(
+        HALIKARNASSOS_A,
+        MultiSet(),
+        3,
+        MultiSet(
+          new DefeatBattleMarker,
+          new DefeatBattleMarker,
+          new VictoryBattleMarker(1),
+          new VictoryBattleMarker(3),
+          new VictoryBattleMarker(5)
+        )
+      )
+      player.militaryScore === 7
     }
 
     "civilianScore" in {
       defaultPlayer.civilianScore === 6
+    }
+
+    "commerceScore" in {
+      val player = Player(
+        GIZAH_B,
+        MultiSet(),
+        3,
+        MultiSet(),
+        Set(
+          LIGHTHOUSE, CHAMBER_OF_COMMERCE, ARENA, HAVEN, PRESS, LOOM, VINEYARD, BRICKYARD
+        ),
+        4
+      )
+      player.commerceScore === 5 + 4 + 4 + 1
     }
   }
 }

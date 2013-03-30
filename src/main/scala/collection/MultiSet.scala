@@ -2,6 +2,7 @@ package collection
 
 import scala.util.Random
 import utils.Utils._
+import scala.collection.{GenMap, GenTraversableOnce}
 
 object conversions {
   implicit def setToMultiSet[A](from: Set[A]): MultiSet[A] =
@@ -18,9 +19,11 @@ trait MultiSet[A] extends Collection[A] {
       case _ => false
     }
   }
+  override def --(other: GenTraversableOnce[Any]): MultiSet[A] = super.--(other).asInstanceOf[MultiSet[A]]
   override def --(other: Collection[Any]): MultiSet[A] = super.--(other).asInstanceOf[MultiSet[A]]
   def -(elem: Any): MultiSet[A]
   def tail: MultiSet[A]
+  override def ++[A1 >: A](other: GenTraversableOnce[A1]): MultiSet[A1] = super.++(other).asInstanceOf[MultiSet[A1]]
   override def ++[A1 >: A](other: Collection[A1]): MultiSet[A1] = super.++(other).asInstanceOf[MultiSet[A1]]
   def +[A1 >: A](elem: A1): MultiSet[A1]
   override def takeRandom(nb: Int): MultiSet[A] = Random.shuffle(toList).take(nb).toMultiSet
@@ -36,6 +39,8 @@ trait MultiSet[A] extends Collection[A] {
     else
     if (size == 1) head
     else if (cmp.compare(head, tail.max(cmp)) > 0) head else tail.max(cmp)
+  def flatten[B](implicit asTraversable: (A) => GenTraversableOnce[B]): MultiSet[B] =
+    foldLeft(MultiSet[B]())(_ ++ asTraversable(_))
 }
 
 object MultiSet {
