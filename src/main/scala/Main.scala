@@ -517,8 +517,8 @@ object SevenWonders
           }
       }
 
-      // A list containning everyone's hand without the currently played card
-      val hands = players.map(player => player.hand - actions(player).card)
+      // A list containning everyone's hands
+      val hands = players.map(player => player.hand)
       // A list of players with their upcomming hand
       val nextTurnPlayers = players.zip(if (currentAge == 1 || currentAge == 3) hands.shiftLeft else hands.shiftRight).map{
         case (player, hand) =>
@@ -599,10 +599,10 @@ object SevenWonders
       PlayerDelta(newCards ++ other.newCards, coinDelta + other.coinDelta, newBattleMarkers ++ other.newBattleMarkers)
   }
 
-  abstract class Action(val card: Card) {
+  trait Action {
     def perform(current:Game, by: Player): GameDelta
   }
-  case class Build(override val card: Card, trade: Trade) extends Action(card) {
+  case class Build(card: Card, trade: Trade) extends Action {
     def perform(current:Game, by: Player) = {
       val (newPlayer, coinsToGive) = by.build(card, trade)
       val left = current.getLeftNeighboor(by)
@@ -612,11 +612,11 @@ object SevenWonders
       GameDelta(Map(by -> newPlayer.-(by), left -> leftDelta, right -> rightDelta))
     }
   }
-  case class Discard(override val card: Card) extends Action(card) {
+  case class Discard(card: Card) extends Action {
     def perform(current:Game, by: Player) =
       GameDelta(Map(by -> by.discard(card).-(by)), MultiSet(card))
   }
-  case class BuildWonderStage(override val card: Card, trade: Trade) extends Action(card) {
+  case class BuildWonderStage(card: Card, trade: Trade) extends Action {
     def perform(current:Game, by: Player) = {
       val (newPlayer, coinsToGive) = by.buildWonderStage(card, trade)
       val left = current.getLeftNeighboor(by)
@@ -626,9 +626,18 @@ object SevenWonders
       GameDelta(Map(by -> newPlayer.-(by), left -> leftDelta, right -> rightDelta))
     }
   }
-  case class BuildForFree(override val card: Card) extends Action(card) {
+  case class BuildForFree(card: Card) extends Action {
     def perform(current:Game, by: Player) =
       GameDelta(Map(by -> by.buildForFree(card).-(by)))
+  }
+  case class TwoActions(first: Action, second: Action) extends Action {
+    def perform(current:Game, by: Player) =
+      if (!by.allSymbols.contains(PlayLastCardEachAge)) throw new UnsupportedOperationException("This player does not have the ability to play this action")
+      else if (by.hand.size != 2) throw new UnsupportedOperationException("This ability can only be used when the player has 2 cards left in his hand")
+      else {
+        val firstDelta = first.perform(current, by)
+        firstDelta + second.perform(current + firstDelta, by)
+      }
   }
 
   class BattleMarker(val vicPoints: Int) extends GameElement
