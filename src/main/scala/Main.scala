@@ -268,18 +268,37 @@ object SevenWonders
 
     /**
      * Handles all state changing relative to this player when he plays a card.
-     * @param card The card to play
-     * @param trade The trade used to play this card. Can be an empty trade
+     * @param card The card to build
+     * @param trade The trade used to build this card. Can be an empty trade
      * @return The updated Player state along with the amount of coins given to the left and right players
      */
-    def play(card: Card, trade: Trade): (Player, Map[NeighboorReference, Int]) = {
+    def build(card: Card, trade: Trade): (Player, Map[NeighboorReference, Int]) = {
       val coinsMap = trade.values.toSet.map(ref => (ref, cost(trade, ref))).toMap
       val player = this.copy(hand = hand - card,coins = coins - cost(trade) - card.cost.coins, played = played + card)
       (player, coinsMap)
     }
 
+    def buildWonderStage(card: Card, trade: Trade): (Player, Map[NeighboorReference, Int]) = {
+      val coinsMap = trade.values.toSet.map(ref => (ref, cost(trade, ref))).toMap
+      val player = this.copy(hand = hand - card, coins = coins - cost(trade) - civilization.stagesOfWonder(nbWonders).cost.coins)
+      (player, coinsMap)
+    }
+
+    def canBuildWonderStage(availableThroughTrade: Map[NeighboorReference, Production]): Boolean =
+      if (nbWonders == civilization.stagesOfWonder.size) false else canBuild(civilization.stagesOfWonder(nbWonders), availableThroughTrade)
+
+    def buildForFree(card: Card): Player = {
+      if (!canBuildForFree) throw new UnsupportedOperationException("It is not possible for this player to use this action from his current state")
+      else this.copy(hand = hand - card, played = played + card, hasBuiltForFreeThisAge = true)
+    }
+
+    def canBuildForFree = allSymbols.contains(FreeBuildEachAge) && !hasBuiltForFreeThisAge
+
     def playableCards(availableThroughTrade: Map[NeighboorReference, Production]): Set[Card] =
-      hand.toSet.filter( card => canPlayCard(card, availableThroughTrade))
+      if (canBuildForFree)
+        hand.toSet
+      else
+        hand.toSet.filter( card => canBuild(card, availableThroughTrade))
 
     def totalProduction: Production = {
       val productionSymbols = allSymbols.filter(_.isInstanceOf[Production]).map(_.asInstanceOf[Production])
@@ -302,13 +321,18 @@ object SevenWonders
     def militaryStrength: Int = allSymbols.filter(_.isInstanceOf[MilitarySymbol]).map(_.asInstanceOf[MilitarySymbol]).map(_.strength).sum
 
     def score(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int =
-      scienceScore + militaryScore + civilianScore + commerceScore + guildScore(neightboorStuff) + wondersScore(neightboorStuff) + coins/3
+      scienceScore(neightboorStuff) + militaryScore + civilianScore + commerceScore + guildScore(neightboorStuff) + wondersScore(neightboorStuff) + coinScore
 
-    def scienceScore: Int = {
+    def coinScore = coins/3
+
+    def scienceScore(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]] = Map()): Int = {
+      val (pointsFromCopyGuildCard, usedScienceGuildCard) = copyGuildCardBonus(neightboorStuff)
+      scienceValue.victoryPointValue + (if (usedScienceGuildCard) pointsFromCopyGuildCard else 0)
+    }
+
+    def scienceValue = {
       val scienceSymbols = allSymbols.filter(_.isInstanceOf[ScienceSymbol]).map(_.asInstanceOf[ScienceSymbol])
-      val scienceValue = scienceSymbols.foldLeft[ScienceSymbol](SimpleScienceSymbol(0, 0, 0))(_ + _)
-      scienceValue.victoryPointValue
-      // TODO: Add the case where you have the copyguildCard but it is best to copy science
+      scienceSymbols.foldLeft[ScienceSymbol](SimpleScienceSymbol(0, 0, 0))(_ + _)
     }
 
     def militaryScore = battleMarkers.map(_.vicPoints).sum
@@ -329,35 +353,42 @@ object SevenWonders
       val guildCards = played.filter(_.isInstanceOf[GuildCard]).map(_.asInstanceOf[GuildCard])
       if (guildCards.isEmpty) 0
       else {
-        guildCards.map(score(_, neightboorStuff)).sum
+        guildCards.map(card => calculateVictoryPoints(MultiSet(card), neightboorStuff)).sum
       }
     }
 
-    def score(guildCard: GuildCard, neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
-      val vicSymbols = guildCard.symbols.filter(_.isInstanceOf[VictoryPointSymbol]).map(_.asInstanceOf[VictoryPointSymbol])
-      vicSymbols.map{ vicSymbol => calculateRewardAmount(vicSymbol.reward, neightboorStuff)}.sum
-    }
-
-    def wondersScore(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
+    def wondersScore(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int =
       if (wonderStagesBuilt.isEmpty) 0
       else {
         val standardPoints = calculateVictoryPoints(wonderStagesBuilt.asInstanceOf[MultiSet[PlayableElement]], neightboorStuff)
-        // This is a very special case where the player has a copy a guild card from a neighboor symbol.
-        // We need to find what neighbooring guild card would be the best for him and add it's value to his score
-        // TODO: Handle the case where the best guild card to copy is science, making this value equal to zero
-        val pointsFromCopyGuildCard =
-          if (!wonderStagesBuilt.map(_.symbols).flatten.contains(CopyGuildCard))
-            0
-          else {
-            val neigboorGuildCards = neightboorStuff.values.reduce(_ ++ _).filter(_.isInstanceOf[GuildCard]).map(_.asInstanceOf[GuildCard])
-            if (neigboorGuildCards.isEmpty)
-              0
-            else
-              neigboorGuildCards.map(guildCard => score(guildCard, neightboorStuff)).max
-        }
-        standardPoints + pointsFromCopyGuildCard
+        val (pointsFromCopyGuildCard, usedScienceGuildCard) = copyGuildCardBonus(neightboorStuff)
+        standardPoints + (if (usedScienceGuildCard) 0 else pointsFromCopyGuildCard)
       }
-    }
+
+    type UsedScienceGuildCard = Boolean
+
+  /**
+   * Computes the bonus amount of points awarded by a copy guild card from a neighboor
+   * @param neightboorStuff
+   * @return The amount of points that the best guild card for this player would give. It also returns if the ScienceGuildCard is the best one to copy.
+   */
+    def copyGuildCardBonus(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): (Int, UsedScienceGuildCard) =
+      if (!wonderStagesBuilt.map(_.symbols).flatten.contains(CopyGuildCard))
+        (0, false)
+      else {
+        val neigboorGuildCards = neightboorStuff.values.reduce(_ ++ _).filter(_.isInstanceOf[GuildCard]).map(_.asInstanceOf[GuildCard])
+        if (neigboorGuildCards.isEmpty)
+          (0, false)
+        else {
+          val scienceBonus =
+            if (neigboorGuildCards.contains(SCIENTISTS_GUILD))
+              (scienceValue + SCIENTISTS_GUILD.symbols.head.asInstanceOf[ScienceSymbol]).victoryPointValue - scienceValue.victoryPointValue
+            else
+              0
+          val otherBonus = neigboorGuildCards.map(guildCard => calculateVictoryPoints(MultiSet(guildCard), neightboorStuff)).max
+          if (scienceBonus > otherBonus) (scienceBonus, true) else (otherBonus, false)
+        }
+      }
 
     def calculateVictoryPoints(of: MultiSet[PlayableElement], neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
       if (of.isEmpty) 0
@@ -382,17 +413,17 @@ object SevenWonders
       }
     }
 
-    def canPlayCard(card: Card, availableThroughTrade: Map[NeighboorReference, Production]): Boolean = {
-      !played.contains(card) && // You cannot play a card you already own
-      (availableEvolutions.contains(card) || // You can play an evolution whether you can pay it's cost or not
-      possibleTrades(card, availableThroughTrade).nonEmpty)
+    def canBuild(playable: PlayableElement, availableThroughTrade: Map[NeighboorReference, Production]): Boolean = {
+      !played.contains(playable) && // You cannot build a card you already own
+      (availableEvolutions.contains(playable) || // You can build an evolution whether you can pay it's cost or not
+      possibleTrades(playable, availableThroughTrade).nonEmpty)
     }
 
-    def possibleTrades(card: Card, tradableProduction: Map[NeighboorReference, Production]): Set[Trade] =
-      possibleTradesWithoutConsideringCoins(card, tradableProduction).filter(cost(_) <= coins - card.cost.coins)
+    def possibleTrades(playable: PlayableElement, tradableProduction: Map[NeighboorReference, Production]): Set[Trade] =
+      possibleTradesWithoutConsideringCoins(playable, tradableProduction).filter(cost(_) <= coins - playable.cost.coins)
 
-    def possibleTradesWithoutConsideringCoins(card: Card, tradableProduction: Map[NeighboorReference, Production]): Set[Trade] =
-      totalProduction.consume(card.cost.resources).map(possibleTrades(_, tradableProduction)).flatten
+    def possibleTradesWithoutConsideringCoins(playable: PlayableElement, tradableProduction: Map[NeighboorReference, Production]): Set[Trade] =
+      totalProduction.consume(playable.cost.resources).map(possibleTrades(_, tradableProduction)).flatten
 
     def possibleTrades(resources: MultiSet[Resource],
                        tradableResources: Map[NeighboorReference, Production]
@@ -472,28 +503,16 @@ object SevenWonders
     }
 
     def playTurn(actions: Map[Player, Action]): Game = {
-      val deltas = for ( (player, action) <- actions) yield {
-        action match {
-          case DiscardAction(card) =>
-            GameDelta(Map(player -> player.discard(card).-(player)), MultiSet(card))
-          case PlayAction(card, trade) => {
-            val (newPlayer, coinsToGive) = player.play(card, trade)
-            val left = getLeftNeighboor(player)
-            val right = getLeftNeighboor(player)
-            val leftDelta = PlayerDelta(Set(), coinsToGive.getOrElse(Left, 0), MultiSet())
-            val rightDelta = PlayerDelta(Set(), coinsToGive.getOrElse(Right, 0), MultiSet())
-            GameDelta(Map(player -> newPlayer.-(player), left -> leftDelta, right -> rightDelta), MultiSet())
-          }
+      val deltas = for ( (player, action) <- actions) yield
+        action.perform(this, player)
 
-        }
-      }
       val newGameState = this + deltas.reduce(_ + _)
 
       // We go through every played card and resolve it's effect (add coins to players who played a card that rewards in coins)
       val gameStateAfterResolvingCards = actions.foldLeft(newGameState) {
         (gameState, keyValue) =>
           keyValue match {
-            case (player, PlayAction(card, trade)) => card.resolve(gameState, player)
+            case (player, Build(card, trade)) => card.resolve(gameState, player)
             case _ => gameState
           }
       }
@@ -565,7 +584,7 @@ object SevenWonders
     }
   }
 
-  case class GameDelta(playerDeltas: Map[Player, PlayerDelta], additionalDiscards: MultiSet[Card]) {
+  case class GameDelta(playerDeltas: Map[Player, PlayerDelta], additionalDiscards: MultiSet[Card] = MultiSet()) {
     def +(other: GameDelta): GameDelta = {
       val newPlayerDeltas: Map[Player, PlayerDelta] = playerDeltas.map{case (player, delta) => (player, other.playerDeltas(player) + delta)}
       val totalDiscards = additionalDiscards ++ other.additionalDiscards
@@ -580,9 +599,37 @@ object SevenWonders
       PlayerDelta(newCards ++ other.newCards, coinDelta + other.coinDelta, newBattleMarkers ++ other.newBattleMarkers)
   }
 
-  class Action(val card: Card)
-  case class PlayAction(override val card: Card, trade: Trade) extends Action(card)
-  case class DiscardAction(override val card: Card) extends Action(card)
+  abstract class Action(val card: Card) {
+    def perform(current:Game, by: Player): GameDelta
+  }
+  case class Build(override val card: Card, trade: Trade) extends Action(card) {
+    def perform(current:Game, by: Player) = {
+      val (newPlayer, coinsToGive) = by.build(card, trade)
+      val left = current.getLeftNeighboor(by)
+      val right = current.getLeftNeighboor(by)
+      val leftDelta = PlayerDelta(Set(), coinsToGive.getOrElse(Left, 0), MultiSet())
+      val rightDelta = PlayerDelta(Set(), coinsToGive.getOrElse(Right, 0), MultiSet())
+      GameDelta(Map(by -> newPlayer.-(by), left -> leftDelta, right -> rightDelta))
+    }
+  }
+  case class Discard(override val card: Card) extends Action(card) {
+    def perform(current:Game, by: Player) =
+      GameDelta(Map(by -> by.discard(card).-(by)), MultiSet(card))
+  }
+  case class BuildWonderStage(override val card: Card, trade: Trade) extends Action(card) {
+    def perform(current:Game, by: Player) = {
+      val (newPlayer, coinsToGive) = by.buildWonderStage(card, trade)
+      val left = current.getLeftNeighboor(by)
+      val right = current.getLeftNeighboor(by)
+      val leftDelta = PlayerDelta(Set(), coinsToGive.getOrElse(Left, 0), MultiSet())
+      val rightDelta = PlayerDelta(Set(), coinsToGive.getOrElse(Right, 0), MultiSet())
+      GameDelta(Map(by -> newPlayer.-(by), left -> leftDelta, right -> rightDelta))
+    }
+  }
+  case class BuildForFree(override val card: Card) extends Action(card) {
+    def perform(current:Game, by: Player) =
+      GameDelta(Map(by -> by.buildForFree(card).-(by)))
+  }
 
   class BattleMarker(val vicPoints: Int) extends GameElement
   class DefeatBattleMarker extends BattleMarker(-1)
@@ -599,7 +646,7 @@ object SevenWonders
 
   case class GameSetup(allCards: Map[Age, Map[PlayerAmount, MultiSet[Card]]], guildCards: Set[GuildCard]) {
     def generateCards(nbPlayers: Int): Map[Age, MultiSet[Card]] = {
-      if (nbPlayers < 3) throw new IllegalArgumentException("You cannot currently play less than three players")
+      if (nbPlayers < 3) throw new IllegalArgumentException("You cannot currently build less than three players")
       else {
         // Adding all cards that should be used depending on the amount of players
         val cardsWithoutGuilds =

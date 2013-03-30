@@ -22,59 +22,67 @@ class PlayerSpec extends Specification with defaults {
     // because we do it in game. This is due to the fact that we must resolve cards after everyone has played
     "playing a card" should {
       "remove the card from their hand" in {
-        defaultPlayer.play(TAVERN, MultiMap())._1.hand === (defaultHand - TAVERN)
+        defaultPlayer.build(TAVERN, MultiMap())._1.hand === (defaultHand - TAVERN)
       }
       "add the card to their playedCards" in {
-        defaultPlayer.play(TAVERN, MultiMap())._1.played === Set(BATHS, PAWNSHOP, TAVERN)
+        defaultPlayer.build(TAVERN, MultiMap())._1.played === Set(BATHS, PAWNSHOP, TAVERN)
       }
       "substract the coin cost" in {
-        defaultPlayer.play(MINE, MultiMap())._1.coins === 2
+        defaultPlayer.build(MINE, MultiMap())._1.coins === 2
       }
       "substract the trade cost" in {
         val hand = MultiSet[Card](THEATER, BATHS, ALTAR, WORKSHOP)
         val player = Player(OLYMPIA_A, hand, 3, MultiSet(), Set(PAWNSHOP), 0)
-        val (newPlayer, map) = player.play(BATHS, MultiMap(Stone -> Left))
+        val (newPlayer, map) = player.build(BATHS, MultiMap(Stone -> Left))
         newPlayer === Player(OLYMPIA_A, hand - BATHS, 1, MultiSet(), Set(PAWNSHOP, BATHS), 0)
         map === Map(Left -> 2)
       }
     }
 
-    "playableCards should return the Set of Cards it is possible for the player to play for his next turn" should {
-      "be able to play all cards if he has all the required resources" in {
+    "buildForFree" in {
+      pending
+    }
+
+    "canBuildForFree" in {
+      pending
+    }
+
+    "playableCards should return the Set of Cards it is possible for the player to build for his next turn" should {
+      "be able to build all cards if he has all the required resources" in {
         defaultPlayer.playableCards(Map()) === defaultHand.toSet
       }
-      "be unable to play all cards if he does not have all the required resources" in {
+      "be unable to build all cards if he does not have all the required resources" in {
         val player = Player(GIZAH_A, defaultHand, 3, MultiSet(), Set(BATHS, ALTAR), 0)
         player.playableCards(Map()) === Set(MINE, LOOM, PRESS, TAVERN)
       }
-      "be unable to play a card requiring coins if he does not have any coins" in {
+      "be unable to build a card requiring coins if he does not have any coins" in {
         val player = Player(GIZAH_A, defaultHand, 0, MultiSet(), Set(BATHS, ALTAR), 0)
         player.playableCards(Map()) === Set(LOOM, PRESS, TAVERN)
       }
-      "cannot play a card he already has" in {
+      "cannot build a card he already has" in {
         val player = Player(GIZAH_A, defaultHand, 3, MultiSet(), Set(BATHS, ALTAR, TAVERN), 0)
         player.playableCards(Map()) === Set(MINE, LOOM, PRESS)
       }
-      "can play a card by trading a resource with a neighboor" in {
+      "can build a card by trading a resource with a neighboor" in {
         val player = Player(GIZAH_A, defaultHand, 3, MultiSet(), Set(BATHS, ALTAR), 0)
         player.playableCards(Map(Left -> Wood)) === defaultHand.toSet
       }
-      "can play all cards if he has the symbol can build one free per age and has not done so yet" in {
+      "can build all cards if he has the symbol can build one free per age and has not done so yet" in {
         val hand = MultiSet[Card](SCHOOL, WALLS, BRICKYARD, COURTHOUSE, AQUEDUCT, STABLES)
         val player = Player(OLYMPIA_A, hand, 0, MultiSet(), Set(), 2)
         player.playableCards(Map()) === hand.toSet
       }
-      "cannot play all cards if he has the symbol can build one free per age but has allready used it" in {
+      "cannot build all cards if he has the symbol can build one free per age but has allready used it" in {
         val hand = MultiSet[Card](SCHOOL, WALLS, BRICKYARD, COURTHOUSE, AQUEDUCT, STABLES)
         val player = Player(OLYMPIA_A, hand, 0, MultiSet(), Set(), 2, true)
         player.playableCards(Map()) === Set()
       }
     }
 
-    "canPlayCard" in {
-      defaultPlayer.canPlayCard(TAVERN, Map()) === true
+    "canBuild" in {
+      defaultPlayer.canBuild(TAVERN, Map()) === true
       val player = Player(GIZAH_A, defaultHand, 3, MultiSet(), Set(BATHS, ALTAR, TAVERN), 0)
-      player.canPlayCard(TAVERN, Map()) === false
+      player.canBuild(TAVERN, Map()) === false
     }
 
     "possibleTrades" in {
@@ -189,7 +197,7 @@ class PlayerSpec extends Specification with defaults {
         Set(WORKSHOP, SCRIPTORIUM, APOTHECARY, SCHOOL, DISPENSARY, LIBRARY, SCIENTISTS_GUILD),
         2
       )
-      player.scienceScore === 38
+      player.scienceScore() === 38
     }
 
     "militaryScore" in {
