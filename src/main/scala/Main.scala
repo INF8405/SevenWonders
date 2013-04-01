@@ -120,6 +120,7 @@ object SevenWonders
     def |(other: OptionalProduction) = other | this
     def |(other: CumulativeProduction) = OptionalProduction(Set(this, other))
   }
+  val NoProduction = CumulativeProduction(MultiSet[Resource]())
 
   case class MilitarySymbol(strength: Int) extends Symbol
   case class VictoryPointSymbol(reward: Reward) extends Symbol
@@ -129,6 +130,8 @@ object SevenWonders
   object GrabFromDiscardPile extends Symbol
   object CopyGuildCard extends Symbol
   object PlayLastCardEachAge extends Symbol
+  object ProduceResourceAlreadyProduced extends Symbol
+  object ProduceResourceNotProduced extends Symbol
 
   trait GameElement
 
@@ -310,7 +313,18 @@ object SevenWonders
 
     def totalProduction: Production = {
       val productionSymbols = allSymbols.filter(_.isInstanceOf[Production]).map(_.asInstanceOf[Production])
-      productionSymbols.foldLeft(civilization.base)(_ + _)
+      val normalProduction = productionSymbols.foldLeft(civilization.base)(_ + _)
+      val extraCanProduce: Production =
+        if (allSymbols.contains(ProduceResourceAlreadyProduced))
+          OptionalProduction(tradableProduction.canProduce.map(new CumulativeProduction(_)))
+        else
+          NoProduction
+      val extraCannotProduce: Production =
+        if (allSymbols.contains(ProduceResourceNotProduced))
+          OptionalProduction(tradableProduction.cannotProduce.map(new CumulativeProduction(_)))
+        else
+          NoProduction
+      normalProduction + extraCanProduce + extraCannotProduce
     }
 
     def tradableProduction: Production = {
