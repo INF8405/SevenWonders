@@ -23,6 +23,8 @@ object Utils {
     def hasDuplicate: Boolean =
       if (value.isEmpty) false
       else value.tail.exists(_ == value.head) || value.tail.hasDuplicate
+    def replace(old: A, new_ : A): List[A] =
+      value.updated(value.indexOf(old), new_)
   }
 
   implicit class AugmentedTraversable[A](value: Traversable[A]) {

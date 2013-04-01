@@ -47,6 +47,11 @@ class PlayerSpec extends Specification with defaults {
       pending
     }
 
+    "addCoins" in {
+      Player(GIZAH_A).addCoins(3) === Player(civilization = GIZAH_A, coins = 3)
+      Player(civilization = OLYMPIA_A, coins = 5).addCoins(4) === Player(civilization = OLYMPIA_A, coins = 9)
+    }
+
     "playableCards should return the Set of Cards it is possible for the player to build for his next turn" should {
       "be able to build all cards if he has all the required resources" in {
         defaultPlayer.playableCards(Map()) === defaultHand.toSet

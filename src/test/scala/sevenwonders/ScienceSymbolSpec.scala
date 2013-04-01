@@ -3,7 +3,7 @@ package sevenwonders
 import org.specs2.mutable._
 import com.github.jedesah.SevenWonders._
 
-class ScienceValueSpec extends Specification {
+class ScienceSymbolSpec extends Specification {
   "A SimpleScienceValue" should {
     "support adding another SimpleScienceValue" in {
       val a: ScienceSymbol = compass
