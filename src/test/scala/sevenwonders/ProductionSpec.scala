@@ -50,6 +50,14 @@ class ProductionSpec extends Specification {
       val expected1 = OptionalProduction(Set(first, second, third, fourth))
       actual1 === expected1
     }
+
+    "canProduce" in {
+      CumulativeProduction(MultiSet(Wood, Wood, Clay, Glass)).canProduce === Set(Wood, Clay, Glass)
+    }
+
+    "cannotProduce" in {
+      CumulativeProduction(MultiSet(Wood, Wood, Clay, Glass)).cannotProduce === Set(Ore, Stone, Paper, Tapestry)
+    }
   }
 
   "An OptionalProduction" should {
@@ -83,6 +91,14 @@ class ProductionSpec extends Specification {
       val actual = prod.consume(MultiSet[Resource](Ore, Ore, Stone, Stone, Wood))
       val expected = Set(MultiSet(Ore, Ore, Stone, Stone, Wood), MultiSet(Ore, Stone, Stone, Wood))
       actual === expected
+    }
+
+    "canProduce" in {
+      ((Wood | (Stone + Clay)) + Tapestry).canProduce === Set(Wood, Stone, Clay, Tapestry)
+    }
+
+    "cannotProduce" in {
+      ((Wood | (Stone + Clay)) + Tapestry).cannotProduce === Set(Ore, Glass, Paper)
     }
   }
 }
