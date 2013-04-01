@@ -28,6 +28,10 @@
             android:name="ca.polymtl.inf8405.sevenwonders.TestActivity"
             android:label="@string/title_activity_game_screen" >
         </activity>
+        <activity
+            android:name="ca.polymtl.inf8405.sevenwonders.ScreenSlidePagerActivity"
+            android:label="@string/title_activity_game_screen" >
+        </activity>
     </application>
 
 </manifest>

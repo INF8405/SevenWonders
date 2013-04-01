@@ -8,5 +8,6 @@ object Dependencies
 	lazy val actors   = "com.typesafe.akka" 	%% "akka-actor" 				% "2.1.0"
 	lazy val specs2 	= "org.specs2" 					%% "specs2" 						% "1.14" 			% "test"
 	lazy val multiset =	"com.sidewayscoding" 	%% "multisets" 					% "0.1"
+	lazy val androidSupport = "com.google.android" % "support-v4" % "r7"
 	// "com.typesafe.akka" %% "akka-testkit" % "2.1.0" % "test"
 }

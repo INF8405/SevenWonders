@@ -5,9 +5,11 @@ import ca.polymtl.inf8405.sevenwonders.controller.OnFlingGestureListener;
 
 import android.app.AlertDialog;
 import android.app.FragmentManager;
+
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Color;
+//import android.support.v4.app.FragmentManager;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -94,7 +96,7 @@ public class ZoomCardView extends RelativeLayout{
 			play.setOnTouchListener(new OnTouchListener() {
 				@Override
 				public boolean onTouch(View arg0, MotionEvent arg1) {
-					GameScreen screen = (GameScreen)sefl_.getContext();
+					ScreenSlidePagerActivity screen = (ScreenSlidePagerActivity)sefl_.getContext();
 					screen.play(allCardNames_.get(current_));
 					closeMe();
 					return false;
@@ -113,9 +115,9 @@ public class ZoomCardView extends RelativeLayout{
 				public boolean onTouch(View arg0, MotionEvent event) {
 					int action = event.getActionMasked();
 					if (action == MotionEvent.ACTION_DOWN){
-						GameScreen screen = (GameScreen)sefl_.getContext();
+						ScreenSlidePagerActivity screen = (ScreenSlidePagerActivity)sefl_.getContext();
 						FragmentManager manager = screen.getFragmentManager();
-						TradeView tv = new TradeView();
+						TradePopup tv = new TradePopup();
 						tv.show(manager, "abc");
 						closeMe();
 					}

@@ -31,7 +31,7 @@ public class GameScreen extends Activity {
 	private static String PLAYER_ID_MESSAGE = "playerId";
 	private static PlayerManager manager_;
 
-	private OnFlingGestureListener flingGesture_;
+//	private OnFlingGestureListener flingGesture_;
 	private int playerId_;
 	private Activity seft_ = this;
 
@@ -60,7 +60,7 @@ public class GameScreen extends Activity {
 		handView.setCardSize(size.y * STATE_VIEW_WEIGHT 
 				/ (STATE_VIEW_WEIGHT + BOARD_VIEW_WEIGHT));
 		// set hand cards for me
-		handView.setCards(manager_.getMe().getHand());
+		handView.setCards(manager_.getHand());
 
 		// Receive parameters
 		playerId_ = getIntent().getIntExtra(PLAYER_ID_MESSAGE, -1);
@@ -82,57 +82,13 @@ public class GameScreen extends Activity {
 		 */
 
 		updateBoard(currentPlayer);
-
-		// Set onFling Listener - TEMP - TO REFACTOR
-		flingGesture_ = new OnFlingGestureListener(){
-			@Override
-			public void onRightToLeft() {
-				// TODO Auto-generated method stub
-				if (playerId_+1 < manager_.getPlayers().size()){
-					Intent intent = new Intent(seft_, GameScreen.class);
-					intent.putExtra(PLAYER_ID_MESSAGE, playerId_+1);
-					startActivity(intent);
-					seft_.finish();
-				}
-			}
-
-			@Override
-			public void onLeftToRight() {
-				// TODO Auto-generated method stub
-				if (playerId_ > 0){
-					Intent intent = new Intent(seft_, GameScreen.class);
-					intent.putExtra(PLAYER_ID_MESSAGE, playerId_-1);
-					startActivity(intent);
-					seft_.finish();
-				}
-			}
-
-			@Override
-			public void onBottomToTop() {
-				// TODO Auto-generated method stub
-			}
-
-			@Override
-			public void onTopToBottom() {
-				// TODO Auto-generated method stub
-			}
-		};
-		boardView.setOnTouchListener(flingGesture_);
 	}	
 
-	public boolean dispatchTouchEvent(MotionEvent ev){
-		super.dispatchTouchEvent(ev);
-		View topView = findViewById(R.id.TopBoardView);
-		return flingGesture_.onTouch(topView, ev);
-	}
-
-	public static void showZoomPopup(View view, int selectedCardId, List<String> cardNames, 
-			boolean withButtonPanel){
-		PopupWindow popup = new PopupWindow();
-		popup.setContentView(new ZoomCardView(view.getContext(), cardNames, selectedCardId, withButtonPanel));
-		popup.showAtLocation(view, Gravity.CENTER, 0, 0);
-		popup.update(0, 0, GameScreen.SCREEN_WIDTH*2/3, GameScreen.SCREEN_HEIGTH/2);
-	}
+//	public boolean dispatchTouchEvent(MotionEvent ev){
+//		super.dispatchTouchEvent(ev);
+//		View topView = findViewById(R.id.TopBoardView);
+//		return flingGesture_.onTouch(topView, ev);
+//	}
 
 	public void play(String cardName){
 		// Update modele

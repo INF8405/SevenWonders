@@ -50,7 +50,7 @@ public class PlayedCards extends View {
 
 					int selectedCardId = findSelectedCard(evt.getX(), evt.getY());
 					if (selectedCardId != -1)
-						GameScreen.showZoomPopup(self_, selectedCardId, cardNames, true);
+						ScreenSlidePagerActivity.showZoomPopup(self_, selectedCardId, cardNames, false);
 				}
 				return false;
 			}

@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.widget.PopupWindow;
 
 import java.util.*;
@@ -22,7 +23,7 @@ public class PlayerStateView extends View{
 	private static float cardWidth_ = 0;
 	private static float cardHeight_ = 0;
 	private View seft_ = this;
-	
+
 	private void init(Context context){
 		setBackgroundResource(R.drawable.civilization1);
 		cardsInHand_ = new HashMap<String, Bitmap>();
@@ -35,10 +36,10 @@ public class PlayerStateView extends View{
 				for (int i = 0 ; i < allCards.length; i++){
 					cardNames.add((String)allCards[i]);
 				}
-				
+
 				int selectedCardId = findSelectedCard(evt.getX(), evt.getY());
 				if (selectedCardId != -1)
-					GameScreen.showZoomPopup(seft_, selectedCardId, cardNames, true);
+					ScreenSlidePagerActivity.showZoomPopup(seft_, selectedCardId, cardNames, true);
 				return false;
 			}
 		});
@@ -78,7 +79,7 @@ public class PlayerStateView extends View{
 		cardHeight_ = viewHeight * 2 / 3;
 		cardWidth_ = cardHeight_ * cardSample.getWidth() / cardSample.getHeight();
 	}
-	
+
 	public void setCards(List<String> cards){
 		Bitmap cardBm;
 		for (String card: cards){
@@ -96,6 +97,7 @@ public class PlayerStateView extends View{
 	}
 
 	public void play(String cardName){
+		
 		cardsInHand_.remove(cardName);
 	}
 
@@ -106,5 +108,4 @@ public class PlayerStateView extends View{
 		}
 		return -1;
 	}
-	
 }

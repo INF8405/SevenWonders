@@ -14,7 +14,7 @@ object AndroidBuild extends Build
     versionCode := 0,
     scalaVersion := Settings.scalaVersion,
     platformName in Android := "android-13",
-    libraryDependencies += logback
+    libraryDependencies ++= Seq(logback, androidSupport)
   )
 
   lazy val fullAndroidSettings = (
