@@ -17,12 +17,12 @@ public class MainActivity extends Activity {
 	}
 
 	public void play(View view){
-//		Intent intent = new Intent(this, GameScreen.class);
-//		startActivity(intent);
+		Intent intent = new Intent(this, ScreenSlidePagerActivity.class);
+		startActivity(intent);
 	}
 	
 	public void test(View view){
-		Intent intent = new Intent(this, ScreenSlidePagerActivity.class);
+		Intent intent = new Intent(this, GeoLocateActivity.class);
 		startActivity(intent);
 	}
 
