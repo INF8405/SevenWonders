@@ -162,6 +162,11 @@ object SevenWonders
   object PlayLastCardEachAge extends Symbol
   object ProduceResourceAlreadyProduced extends Symbol
   object ProduceResourceNotProduced extends Symbol
+  object DiplomacySymbol extends Symbol {
+    override def resolve(current:Game, playedBy: Player): Game = {
+      current.copy(players = current.players.replace(playedBy, playedBy.copy(stuff = playedBy.stuff + new DiplomacyToken)))
+    }
+  }
 
   trait GameElement
 
