@@ -61,7 +61,8 @@ struct GameState {
 
 service SevenWondersApi {
 
-	list<GameRoom> s_listGames( 1: GeoLocation geo ),
+	oneway void s_listGamesRequest( 1: GeoLocation geo ),
+    oneway void c_listGamesResponse( 1: list<GameRoom> rooms ),
 	oneway void s_create( 1: GameRoomDef definition ),
 	oneway void s_join( 1: GameId id ),
 	oneway void c_joined( 1: Username user ),

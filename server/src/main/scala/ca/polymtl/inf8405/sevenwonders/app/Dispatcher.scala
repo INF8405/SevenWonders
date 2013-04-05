@@ -7,11 +7,6 @@ import org.apache.thrift.transport.{TSocket, TTransport}
 
 import scala.concurrent.duration._
 
-case object Ping
-case class Pong( ip: InetAddress )
-case class Disconnect( ip: InetAddress )
-case class ProcessorRequest( transport: TTransport )
-
 trait Dispatcher {
   protected val system: ActorSystem
   protected val lobby: GameLobby
@@ -46,9 +41,10 @@ class DispatcherImpl(
       clients( ip ).processor
     } else {
 
-      val client = TypedActor( system ).typedActorOf(TypedProps(
+      val me = TypedActor.self[Dispatcher]
+      val client: GameClient = TypedActor( system ).typedActorOf(TypedProps(
         classOf[GameClient],
-        new GameClientImpl( transport, ip, lobby )
+        new GameClientImpl( transport, ip, lobby, me )
       ))
 
       val processor = new SevenWondersApi.Processor( client )
@@ -60,7 +56,7 @@ class DispatcherImpl(
 
   /* Connection monitoring */
 
-  val delta = 5.seconds
+  val delta = 500.milliseconds
   import system.dispatcher
 
   system.scheduler.schedule( delta, delta ){

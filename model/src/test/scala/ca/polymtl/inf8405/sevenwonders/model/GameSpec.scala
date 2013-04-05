@@ -1,9 +1,12 @@
+package ca.polymtl.inf8405.sevenwonders.model
+
 import org.specs2.mutable._
-import com.github.jedesah.SevenWonders._
 
 import com.sidewayscoding.Multiset
 
 class GameSpec extends Specification with defaults {
+
+  import SevenWonders._
 
   val defaultHand1 = Set(TAVERN, STOCKADE, MINE, LOOM, PRESS)
   val defaultPlayer1 = Player(defaultHand1.toSet, 3, Multiset(), Set(BATHS, PAWNSHOP), RHODOS)

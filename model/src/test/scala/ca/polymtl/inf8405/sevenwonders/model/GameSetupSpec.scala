@@ -1,5 +1,7 @@
+package ca.polymtl.inf8405.sevenwonders.model
+
+import ca.polymtl.inf8405.sevenwonders.model.SevenWonders._
 import org.specs2.mutable._
-import com.github.jedesah.SevenWonders._
 
 class GameSetupSpec extends Specification {
   "A GameSetup" should {

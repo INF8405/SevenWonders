@@ -20,7 +20,7 @@ class GameLobbyImpl( system: ActorSystem ) extends GameLobby {
     import java.util.UUID
     val id = UUID.randomUUID.toString
 
-    val game = TypedActor( system ).typedActorOf( TypedProps[Game]() )
+    val game: Game = TypedActor( system ).typedActorOf( TypedProps[GameImpl]() )
 
     games( id ) = ( new GameRoom( id, definition ), game )
 

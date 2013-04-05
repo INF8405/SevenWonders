@@ -12,5 +12,8 @@ cd ..
 cd  sbt-thrift
 sbt publish-local
 
-# sbt console intellij
-# launchctl setenv ANDROID_SDK_HOME "/usr/local/opt/android-sdk"
+# sbt console intellij for mac
+# launchctl setenv ANDROID_SDK_HOME "/usr/local/Cellar/android-sdk"
+# add => setenv PATH /usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin
+# to /etc/launchd.conf
+

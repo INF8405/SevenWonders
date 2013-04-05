@@ -3,37 +3,29 @@ package app
 
 import org.apache.thrift._
 import transport.TServerSocket
-import server.{TServer, TThreadPoolServer}
+import server.TThreadPoolServer
 import akka.actor.{TypedProps, TypedActor, ActorSystem}
 
 object Server extends App {
 
-  new ServerImpl().start()
+  new ServerImpl( ActorSystem() ).start()
 }
 
-class ServerImpl {
+class ServerImpl( system: ActorSystem ) {
 
-  private var system: Option[ActorSystem] = _
-  private var server: Option[TServer] = _
+  val lobby: GameLobby = TypedActor( system ).typedActorOf( TypedProps( classOf[GameLobby], new GameLobbyImpl( system ) ) )
+  val dispatcher: Dispatcher = TypedActor( system ).typedActorOf( TypedProps( classOf[Dispatcher], new DispatcherImpl( system, lobby ) ) )
 
-  def start(){
+  val serverTransport = new TServerSocket( 8001 )
+  val serverArgs = new TThreadPoolServer.Args( serverTransport )
+  serverArgs.processorFactory( new MessageProcessorFactory( dispatcher ) )
+  val server = new TThreadPoolServer( serverArgs )
 
-    system = Some( ActorSystem() )
-
-    val lobby = TypedActor( system ).typedActorOf( TypedProps( classOf[GameLobby], new GameLobbyImpl( system ) ) )
-    val dispatcher = TypedActor( system ).typedActorOf( TypedProps( classOf[Dispatcher], new DispatcherImpl( system, lobby ) ) )
-
-    val serverTransport = new TServerSocket( 8001 )
-    val serverArgs = new TThreadPoolServer.Args( serverTransport )
-    serverArgs.processorFactory( new MessageProcessorFactory( dispatcher ) )
-
-    server = Some( new TThreadPoolServer( serverArgs ) )
-
-    server.foreach( _.serve() )
+  def start() {
+    server.serve()
   }
 
-  def stop(){
-    server.foreach( _.stop() )
-    system.foreach( _.shutdown() )
+  def stop() {
+    server.stop()
   }
 }

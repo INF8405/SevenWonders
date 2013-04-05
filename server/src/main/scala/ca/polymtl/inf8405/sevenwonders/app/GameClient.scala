@@ -23,17 +23,27 @@ trait GameClient extends SevenWondersApi.Iface {
   def disconnect()
 }
 
-class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLobby ) extends GameClient
+class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLobby, dispatcher: Dispatcher ) extends GameClient
 {
   import ApiHelper._
   import collection.JavaConversions._
 
-  val client = new Client( new TBinaryProtocol( transport ) )
+  private val client = new Client( new TBinaryProtocol( transport ) )
 
-  def s_listGames(geo: GeoLocation): java.util.List[GameRoom] = lobby.list
+  def s_listGamesRequest(geo: GeoLocation) {
+    c_listGamesResponse( lobby.list )
+  }
+
+  def c_listGamesResponse(rooms: JList[GameRoom]) {
+    client.c_listGamesResponse(rooms)
+  }
 
   def s_create( definition: GameRoomDef ) {
-    game = Some( lobby.create( definition, TypedActor.self ) )
+    try {
+      game = Some( lobby.create( definition, TypedActor.self ) )
+    } catch {
+      case e : Throwable => println( e.getMessage )
+    }
   }
 
   def s_join( id: GameId ) {
@@ -59,13 +69,26 @@ class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLob
     game.foreach( _.disconnect( TypedActor.self ) )
   }
 
-  def s_pong() {}
+  def s_pong() {
+    dispatcher.pong( ip )
+  }
 
-  def c_joined( user: String) {}
-  def c_left(user: String) {}
-  def c_sendState(state: GameState) {}
-  def c_sendEndState(state: GameState, detail: java.util.List[java.util.Map[String, Integer]]) {}
-  def c_ping() {}
+  def c_joined( user: String) {
+    client.c_joined( user )
+  }
+  def c_left(user: String) {
+    client.c_left( user )
+  }
+  def c_sendState(state: GameState) {
+    client.c_sendState( state )
+  }
+  def c_sendEndState(state: GameState, detail: java.util.List[java.util.Map[String, Integer]]) {
+    client.c_sendEndState( state, detail )
+  }
+  def c_ping() {
+    client.c_ping()
+  }
+
 
 
   private var game: Option[Game] = None

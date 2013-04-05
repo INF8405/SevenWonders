@@ -1,5 +1,6 @@
+package ca.polymtl.inf8405.sevenwonders.model
+
 import org.specs2.mutable._
-import com.github.jedesah.SevenWonders._
 
 import com.sidewayscoding.Multiset
 
