@@ -4,6 +4,7 @@ import org.specs2.mutable._
 import com.github.jedesah.SevenWonders._
 
 import collection.MultiSet
+import collection.Circle
 
 class GameSpec extends Specification {
 
@@ -17,33 +18,9 @@ class GameSpec extends Specification {
   val defaultPlayer3 = Player(OLYMPIA_A, defaultHand3, 6, MultiSet(), Set(TREE_FARM), 0)
 
   "A Game" should {
-    "getNeighboors should return the appropriate neighboring players of any player" in {
-      val game = beginGame(3)
-      game.getNeighboors(game.players(0)) === Set(game.players(1), game.players(2))
-      game.getNeighboors(game.players(1)) === Set(game.players(0), game.players(2))
-      game.getNeighboors(game.players(2)) === Set(game.players(0), game.players(1))
-    }
-
-    "getLeftNeighboor should return the appropriate neighboring player" in {
-      val game = beginGame(4)
-      game.getLeftNeighboor(game.players(0)) === game.players(3)
-      game.getLeftNeighboor(game.players(1)) === game.players(0)
-      game.getLeftNeighboor(game.players(2)) === game.players(1)
-      game.getLeftNeighboor(game.players(3)) === game.players(2)
-    }
-
-    "getRightNeighboor should return the appropriate neighboring player" in {
-      val game = beginGame(5)
-      game.getRightNeighboor(game.players(0)) === game.players(1)
-      game.getRightNeighboor(game.players(1)) === game.players(2)
-      game.getRightNeighboor(game.players(2)) === game.players(3)
-      game.getRightNeighboor(game.players(3)) === game.players(4)
-      game.getRightNeighboor(game.players(4)) === game.players(0)
-    }
-
     "currentAge" in {
       val cards = classicSevenWonders.generateCards(3)
-      val game = Game(List(defaultPlayer1, defaultPlayer2, defaultPlayer3), cards.updated(1, MultiSet()), MultiSet())
+      val game = Game(new Circle(defaultPlayer1, defaultPlayer2, defaultPlayer3), cards.updated(1, MultiSet()), MultiSet())
       game.currentAge === 1
     }
 

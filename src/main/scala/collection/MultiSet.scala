@@ -7,6 +7,7 @@ import scala.collection.{GenMap, GenTraversableOnce}
 object conversions {
   implicit def setToMultiSet[A](from: Set[A]): MultiSet[A] =
     from.foldLeft(MultiSet[A]())((multiset, elem) => multiset + elem)
+  implicit def unboxCircleNode[A](from: CircleNode[A]): A = from.toValue
 }
 
 trait MultiSet[A] extends Collection[A] {
@@ -34,6 +35,7 @@ trait MultiSet[A] extends Collection[A] {
   def filter(pred: A => Boolean): MultiSet[A]
   def headOption: Option[A] = if (isEmpty) None else Some(head)
   def find(pred: A => Boolean):Option[A] = filter(pred).headOption
+  def toCircle: Circle[A] = new Circle[A](toList: _*)
   def max[B >: A](implicit cmp: Ordering[B]): A =
     if (isEmpty) throw new UnsupportedOperationException
     else

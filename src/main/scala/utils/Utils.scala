@@ -20,17 +20,15 @@ object Utils {
     def allEqual: Boolean =
       if (value.isEmpty) true
       else value.tail.forall(_ == value.head)
-    def hasDuplicate: Boolean =
-      if (value.isEmpty) false
-      else value.tail.exists(_ == value.head) || value.tail.hasDuplicate
-    def replace(old: A, new_ : A): List[A] =
-      value.updated(value.indexOf(old), new_)
   }
 
   implicit class AugmentedTraversable[A](value: Traversable[A]) {
     def createMap[B](fun: A => B): Map[A, B] =
       value.map( elem => (elem, fun(elem))).toMap
     def toMultiSet: MultiSet[A] = value.foldLeft(MultiSet[A]())((multiset, elem) => multiset + elem)
+    def hasDuplicate: Boolean =
+      if (value.isEmpty) false
+      else value.tail.exists(_ == value.head) || value.tail.hasDuplicate
   }
 
   implicit class AugmentedSet[A](value: Set[A]) {
