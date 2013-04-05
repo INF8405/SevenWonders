@@ -44,7 +44,7 @@ class DispatcherImpl(
       val me = TypedActor.self[Dispatcher]
       val client: GameClient = TypedActor( system ).typedActorOf(TypedProps(
         classOf[GameClient],
-        new GameClientImpl( transport, ip, lobby, me )
+        new GameClientImpl( transport, ip, lobby, me, system )
       ))
 
       val processor = new SevenWondersApi.Processor( client )

@@ -1,6 +1,7 @@
 package ca.polymtl.inf8405.sevenwonders.app
 
 import akka.actor.{TypedProps, TypedActor, ActorSystem}
+import scala.concurrent._
 import ca.polymtl.inf8405.sevenwonders.api.{GameRoom, GameRoomDef}
 
 import ApiHelper._
@@ -8,14 +9,16 @@ import ApiHelper._
 import collection.mutable.{ Map => MMap }
 
 trait GameLobby {
-  def create( game: GameRoomDef, player: GameClient ): Game
-  def join( game: GameId, player: GameClient ): Option[Game]
-  def list: List[GameRoom]
+  def create( game: GameRoomDef, player: GameClient ): Future[Game]
+  def join( game: GameId, player: GameClient ): Future[Game]
+  def list: Future[List[GameRoom]]
 }
 
 class GameLobbyImpl( system: ActorSystem ) extends GameLobby {
 
-  def create( definition: GameRoomDef, player: GameClient ): Game = {
+  import system.dispatcher
+
+  def create( definition: GameRoomDef, player: GameClient ) = {
 
     import java.util.UUID
     val id = UUID.randomUUID.toString
@@ -24,20 +27,19 @@ class GameLobbyImpl( system: ActorSystem ) extends GameLobby {
 
     games( id ) = ( new GameRoom( id, definition ), game )
 
-    game
+    future { game }
   }
 
-  def join( id: GameId, player: GameClient ): Option[Game] = {
-    val game = games.get( id )
+  def join( id: GameId, player: GameClient ): Future[Game] = {
 
-    for { ( _, g ) <- game } {
-      g.join( player )
-    }
+    games.get( id ).map{ case ( _, game  ) => {
+      game.join( player )
 
-    game.map( _._2 )
+      future{ game }
+    }}.getOrElse( (Promise failed sys.error( s"game not found id=$id" )).future )
   }
 
-  def list: List[GameRoom] = {
+  def list = future {
     games.values.map( _._1 ).toList
   }
 

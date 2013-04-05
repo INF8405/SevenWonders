@@ -10,7 +10,8 @@ import java.net.InetAddress
 
 import java.util.{ List => JList, Map => JMap }
 import api.Resource
-import akka.actor.TypedActor
+import akka.actor.{ActorSystem, TypedActor}
+import scala.concurrent._
 
 object ApiHelper {
   type GameId = String
@@ -21,17 +22,19 @@ object ApiHelper {
 
 trait GameClient extends SevenWondersApi.Iface {
   def disconnect()
+  def username(): Future[String]
 }
 
-class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLobby, dispatcher: Dispatcher ) extends GameClient
+class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLobby, dispatch: Dispatcher, system: ActorSystem ) extends GameClient
 {
   import ApiHelper._
   import collection.JavaConversions._
+  import system.dispatcher
 
   private val client = new Client( new TBinaryProtocol( transport ) )
 
   def s_listGamesRequest(geo: GeoLocation) {
-    c_listGamesResponse( lobby.list )
+    lobby.list.foreach( c_listGamesResponse( _ ) )
   }
 
   def c_listGamesResponse(rooms: JList[GameRoom]) {
@@ -39,15 +42,11 @@ class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLob
   }
 
   def s_create( definition: GameRoomDef ) {
-    try {
-      game = Some( lobby.create( definition, TypedActor.self ) )
-    } catch {
-      case e : Throwable => println( e.getMessage )
-    }
+    lobby.create( definition, TypedActor.self ).foreach( g => game = Some(g) )
   }
 
   def s_join( id: GameId ) {
-    game = lobby.join( id, TypedActor.self )
+    lobby.join( id, TypedActor.self ).foreach( g => game = Some(g) )
   }
 
   def s_start() {
@@ -70,7 +69,7 @@ class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLob
   }
 
   def s_pong() {
-    dispatcher.pong( ip )
+    dispatch.pong( ip )
   }
 
   def c_joined( user: String) {
@@ -82,14 +81,14 @@ class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLob
   def c_sendState(state: GameState) {
     client.c_sendState( state )
   }
-  def c_sendEndState(state: GameState, detail: java.util.List[java.util.Map[String, Integer]]) {
+  def c_sendEndState(state: GameState, detail: JList[JMap[String, Integer]]) {
     client.c_sendEndState( state, detail )
   }
   def c_ping() {
     client.c_ping()
   }
 
-
+  def username() = future { ip.toString }
 
   private var game: Option[Game] = None
 
