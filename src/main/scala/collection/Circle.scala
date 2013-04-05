@@ -16,11 +16,13 @@ class Circle[A](elems: A*) extends Traversable[A] {
     new Circle(elems.map( elem => if (elem == old) new_ else elem): _*)
   def getLeft(of: A): A = impl.find(_.toValue == of).get.left
   def getRight(of: A): A = impl.find(_.toValue == of).get.right
-  def getNeighboors(of: A): (A, A) = (getLeft(of), getRight(of))
+  def getNeighbors(of: A): (A, A) = (getLeft(of), getRight(of))
+  def remove(a: Any): Circle[A] = new Circle[A](elems.remove(a): _*)
   override def equals(other: Any) = other match {
     case other: Circle[_] => impl == other.impl
     case _ => false
   }
+  override def filter(pred: A => Boolean): Circle[A] = new Circle[A](elems.filter(pred): _*)
   def shuffle: Circle[A] = new Circle[A](Random.shuffle(elems): _*)
 }
 

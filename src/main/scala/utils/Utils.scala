@@ -20,6 +20,7 @@ object Utils {
     def allEqual: Boolean =
       if (value.isEmpty) true
       else value.tail.forall(_ == value.head)
+    def remove(a: Any): List[A] = value.remove(a)
   }
 
   implicit class AugmentedTraversable[A](value: Traversable[A]) {
@@ -29,6 +30,11 @@ object Utils {
     def hasDuplicate: Boolean =
       if (value.isEmpty) false
       else value.tail.exists(_ == value.head) || value.tail.hasDuplicate
+    def remove(a: Any): Traversable[A] = value.filter(_ != a)
+  }
+
+  implicit class AugmentedSeq[A](value: Seq[A]) {
+    def remove(a: Any): Seq[A] = value.remove(a)
   }
 
   implicit class AugmentedSet[A](value: Set[A]) {

@@ -363,7 +363,7 @@ object SevenWonders
 
     def removeDiplomacyToken: Player =
       if (hasDiplomacy) this.copy(stuff = stuff - new DiplomacyToken)
-      else throw new UnsupportedOperationException("You cannot remove a Diplomacy token from a player who does not have one")
+      else this
 
     def militaryStrength: Int = allSymbols.filter(_.isInstanceOf[MilitarySymbol]).map(_.asInstanceOf[MilitarySymbol]).map(_.strength).sum
 
@@ -582,26 +582,42 @@ object SevenWonders
 
     def endAge(): Game = {
       val winMarker = currentAge match { case 1 => VictoryBattleMarker(1) case 2 => VictoryBattleMarker(3) case 3 => VictoryBattleMarker(5)}
-      val playerDeltas = players.createMap{
-        player =>
-          val leftBattleMarker =
-            player.militaryStrength.compare(player.left.militaryStrength) match {
-              case 0 => MultiSet[BattleMarker]()
-              case 1 => MultiSet(winMarker)
-              case -1 => MultiSet(new DefeatBattleMarker)
-            }
+      val playersAtWar = players.filter(!_.hasDiplomacy)
+      val playerDeltas =
+        if (playersAtWar.size == 2)
+          playersAtWar.createMap{
+            player =>
+              val battleMarker =
+                player.militaryStrength.compare(player.left.militaryStrength) match {
+                  case 0 => MultiSet[BattleMarker]()
+                  case 1 => MultiSet[BattleMarker](winMarker)
+                  case -1 => MultiSet[BattleMarker](new DefeatBattleMarker)
+                }
+              PlayerDelta(Set(), 0, battleMarker)
+          }
+        else
+          playersAtWar.createMap{
+            player =>
+              val leftBattleMarker =
+                player.militaryStrength.compare(player.left.militaryStrength) match {
+                  case 0 => MultiSet[BattleMarker]()
+                  case 1 => MultiSet(winMarker)
+                  case -1 => MultiSet(new DefeatBattleMarker)
+                }
 
-          val rightBattleMarker =
-            player.militaryStrength.compare(player.right.militaryStrength) match {
-              case 0 => MultiSet[BattleMarker]()
-              case 1 => MultiSet(winMarker)
-              case -1 => MultiSet(new DefeatBattleMarker)
-            }
+              val rightBattleMarker =
+                player.militaryStrength.compare(player.right.militaryStrength) match {
+                  case 0 => MultiSet[BattleMarker]()
+                  case 1 => MultiSet(winMarker)
+                  case -1 => MultiSet(new DefeatBattleMarker)
+                }
 
-          PlayerDelta(Set(), 0, leftBattleMarker ++ rightBattleMarker)
-      }
+            PlayerDelta(Set(), 0, leftBattleMarker ++ rightBattleMarker)
+          }
       val discards = players.map[MultiSet[Card]](_.hand).reduce(_ ++ _)
-      this + GameDelta(playerDeltas, discards)
+      val afterWarAndDiscard = this + GameDelta(playerDeltas, discards)
+      // Let's remove one diplomacyToken from all players (if they don't have one they stay at zero)
+      afterWarAndDiscard.copy(players = players.map[Player](_.removeDiplomacyToken))
     }
 
     def +(delta: GameDelta): Game = {
