@@ -167,6 +167,7 @@ object SevenWonders
       current.copy(players = current.players.replace(playedBy, playedBy.copy(stuff = playedBy.stuff + new DiplomacyToken)))
     }
   }
+  class StealScience extends Symbol
   case class PayBankSymbol(amount: Amount) extends Symbol {
     override def resolve(current:Game, playedBy: Player): Game = {
       val newPlayers = current.players.map[Player] {
@@ -249,6 +250,8 @@ object SevenWonders
   ) extends Card(name, cost, evolutions, Set(VictoryPointSymbol(SimpleAmount(value))))
 
   case class GuildCard(override val name: String, override val cost: Cost, override val symbols: Set[Symbol]) extends Card(name, cost, Set(), symbols)
+
+  case class CityCard(override val name: String, override val cost: Cost,override val symbols: Set[Symbol]) extends Card(name, cost, Set(), symbols)
 
   trait Amount
   case class SimpleAmount(value: Int) extends Amount
@@ -402,12 +405,21 @@ object SevenWonders
 
     def scienceScore(neighborStuff: Map[NeighborReference, MultiSet[GameElement]] = Map()): Int = {
       val (pointsFromCopyGuildCard, usedScienceGuildCard) = copyGuildCardBonus(neighborStuff)
-      scienceValue.victoryPointValue + (if (usedScienceGuildCard) pointsFromCopyGuildCard else 0)
+      scienceValue(neighborStuff).victoryPointValue + (if (usedScienceGuildCard) pointsFromCopyGuildCard else 0)
     }
 
-    def scienceValue = {
+    def scienceValue(neighborStuff: Map[NeighborReference, MultiSet[GameElement]] = Map()) = {
+      def steal(stealSymbols: MultiSet[StealScience], neighborScienceSymbols: MultiSet[ScienceSymbol]): ScienceSymbol = {
+        if(stealSymbols.isEmpty) SimpleScienceSymbol(0,0,0)
+        else {
+          OptionalScienceSymbol(neighborScienceSymbols.toSet.map(symbol => symbol + steal(stealSymbols.tail, neighborScienceSymbols - symbol)))
+        }
+      }
       val scienceSymbols = allSymbols.filter(_.isInstanceOf[ScienceSymbol]).map(_.asInstanceOf[ScienceSymbol])
-      scienceSymbols.foldLeft[ScienceSymbol](SimpleScienceSymbol(0, 0, 0))(_ + _)
+      val stealSymbols = allSymbols.filter(_.isInstanceOf[StealScience]).map(_.asInstanceOf[StealScience])
+      val neighborScienceSymbolsFromScienceCards = neighborStuff.values.reduceOption(_ ++ _).getOrElse(MultiSet()).filter(_.isInstanceOf[ScienceCard]).map(_.asInstanceOf[ScienceCard].scienceSymbol)
+      scienceSymbols.foldLeft[ScienceSymbol](steal(stealSymbols, neighborScienceSymbolsFromScienceCards))(_ + _)
+
     }
 
     def militaryScore = battleMarkers.map(_.vicPoints).sum
@@ -457,7 +469,7 @@ object SevenWonders
         else {
           val scienceBonus =
             if (neigborGuildCards.contains(SCIENTISTS_GUILD))
-              (scienceValue + SCIENTISTS_GUILD.symbols.head.asInstanceOf[ScienceSymbol]).victoryPointValue - scienceValue.victoryPointValue
+              (scienceValue(neighborStuff) + SCIENTISTS_GUILD.symbols.head.asInstanceOf[ScienceSymbol]).victoryPointValue - scienceValue(neighborStuff).victoryPointValue
             else
               0
           val otherBonus = neigborGuildCards.map(guildCard => calculateVictoryPoints(MultiSet(guildCard), neighborStuff)).max
@@ -869,6 +881,11 @@ object SevenWonders
   val SCIENTISTS_GUILD = GuildCard("SCIENTISTS GUILD", Cost(0, MultiSet(Wood, Wood, Ore, Ore, Paper)), Set(gear | tablet | compass))
   val SPIES_GUILD = GuildCard("SPIES GUILD", Cost(0, MultiSet(Clay, Clay, Clay, Glass)), Set(VictoryPointSymbol(VariableAmount(1, classOf[MilitaryCard], Set(Left, Right)))))
   val BUILDERS_GUILD = GuildCard("BUILDERS GUILD", Cost(0, MultiSet(Stone, Stone, Clay, Clay, Glass)), Set(VictoryPointSymbol(VariableAmount(1, classOf[WonderStage], Set(Left, Self, Right)))))
+
+  // Cities Cards
+  val PIGEON_LOFT = CityCard("PIGEON_LOFT", Cost(1, MultiSet(Ore)), Set(new StealScience))
+  val SPY_RING = CityCard("SPY_RING", Cost(2, MultiSet(Stone, Clay)), Set(new StealScience))
+  val TORTURE_CHAMBER = CityCard("TORTURE_CHAMBER", Cost(3, MultiSet(Glass, Ore, Ore)), Set(new StealScience))
 
   // Civilizations
   val RHODOS_A = Civilization("RHODOS", Ore, List(

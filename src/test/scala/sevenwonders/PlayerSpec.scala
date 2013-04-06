@@ -199,10 +199,11 @@ class PlayerSpec extends Specification with defaults {
         MultiSet(),
         3,
         MultiSet(new DefeatBattleMarker, new DefeatBattleMarker),
-        Set(WORKSHOP, SCRIPTORIUM, APOTHECARY, SCHOOL, DISPENSARY, LIBRARY, SCIENTISTS_GUILD),
+        Set(WORKSHOP, SCRIPTORIUM, APOTHECARY, SCHOOL, DISPENSARY, LIBRARY, SCIENTISTS_GUILD, PIGEON_LOFT),
         2
       )
-      player.scienceScore() === 38
+      val neighborStuff = Map(Left -> MultiSet[GameElement](SCHOOL, LIBRARY), Right -> MultiSet[GameElement](DISPENSARY))
+      player.scienceScore(neighborStuff) === 48
     }
 
     "militaryScore" in {
