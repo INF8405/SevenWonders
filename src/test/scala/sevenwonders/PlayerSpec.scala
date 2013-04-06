@@ -159,9 +159,9 @@ class PlayerSpec extends Specification with defaults {
     "allSymbols" in {
       val player = Player(OLYMPIA_A, MultiSet(), 3, MultiSet(), Set(BATHS, AQUEDUCT, STABLES),1)
       player.allSymbols ==== MultiSet(
-        VictoryPointSymbol(SimpleReward(3)),
-        VictoryPointSymbol(SimpleReward(3)),
-        VictoryPointSymbol(SimpleReward(5)),
+        VictoryPointSymbol(SimpleAmount(3)),
+        VictoryPointSymbol(SimpleAmount(3)),
+        VictoryPointSymbol(SimpleAmount(5)),
         MilitarySymbol(2)
       )
     }
