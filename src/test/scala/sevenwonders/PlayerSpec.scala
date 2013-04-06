@@ -91,7 +91,7 @@ class PlayerSpec extends Specification with defaults {
     }
 
     "possibleTrades" in {
-      defaultPlayer.possibleTrades(TAVERN, Map[NeighboorReference, Production]()) === Set(MultiMap())
+      defaultPlayer.possibleTrades(TAVERN, Map[NeighborReference, Production]()) === Set(MultiMap())
     }
 
     "total production" in {

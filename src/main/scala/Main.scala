@@ -155,7 +155,7 @@ object SevenWonders
       }
     }
   }
-  case class RebateSymbol(affectedResources: Set[Resource], fromWho: Set[NeighboorReference]) extends Symbol
+  case class RebateSymbol(affectedResources: Set[Resource], fromWho: Set[NeighborReference]) extends Symbol
   object FreeBuildEachAge extends Symbol
   object GrabFromDiscardPile extends Symbol
   object CopyGuildCard extends Symbol
@@ -289,15 +289,15 @@ object SevenWonders
   val allResources = rawMaterials ++ manufacturedGoods
 
   sealed trait PlayerReference
-  sealed trait NeighboorReference extends PlayerReference
-  object Left extends NeighboorReference
-  object Right extends NeighboorReference
+  sealed trait NeighborReference extends PlayerReference
+  object Left extends NeighborReference
+  object Right extends NeighborReference
   object Self extends PlayerReference
 
 
   implicit def ResourceToProduction(value: Resource) = new CumulativeProduction(value)
 
-  type Trade = MultiMap[Resource, NeighboorReference]
+  type Trade = MultiMap[Resource, NeighborReference]
 
   case class Player(civilization: Civilization,
                     hand: MultiSet[Card] = MultiSet(),
@@ -315,19 +315,19 @@ object SevenWonders
      * @param trade The trade used to build this card. Can be an empty trade
      * @return The updated Player state along with the amount of coins given to the left and right players
      */
-    def build(card: Card, trade: Trade): (Player, Map[NeighboorReference, Int]) = {
+    def build(card: Card, trade: Trade): (Player, Map[NeighborReference, Int]) = {
       val coinsMap = trade.values.toSet.map(ref => (ref, cost(trade, ref))).toMap
       val player = this.copy(hand = hand - card,coins = coins - cost(trade) - card.cost.coins, played = played + card)
       (player, coinsMap)
     }
 
-    def buildWonderStage(card: Card, trade: Trade): (Player, Map[NeighboorReference, Int]) = {
+    def buildWonderStage(card: Card, trade: Trade): (Player, Map[NeighborReference, Int]) = {
       val coinsMap = trade.values.toSet.map(ref => (ref, cost(trade, ref))).toMap
       val player = this.copy(hand = hand - card, coins = coins - cost(trade) - civilization.stagesOfWonder(nbWonders).cost.coins)
       (player, coinsMap)
     }
 
-    def canBuildWonderStage(availableThroughTrade: Map[NeighboorReference, Production]): Boolean =
+    def canBuildWonderStage(availableThroughTrade: Map[NeighborReference, Production]): Boolean =
       if (nbWonders == civilization.stagesOfWonder.size) false else canBuild(civilization.stagesOfWonder(nbWonders), availableThroughTrade)
 
     def buildForFree(card: Card): Player = {
@@ -337,7 +337,7 @@ object SevenWonders
 
     def canBuildForFree = allSymbols.contains(FreeBuildEachAge) && !hasBuiltForFreeThisAge
 
-    def playableCards(availableThroughTrade: Map[NeighboorReference, Production]): Set[Card] =
+    def playableCards(availableThroughTrade: Map[NeighborReference, Production]): Set[Card] =
       if (canBuildForFree)
         hand.toSet
       else
@@ -393,15 +393,15 @@ object SevenWonders
 
     def militaryStrength: Int = allSymbols.filter(_.isInstanceOf[MilitarySymbol]).map(_.asInstanceOf[MilitarySymbol]).map(_.strength).sum
 
-    def score(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int =
-      scienceScore(neightboorStuff) + militaryScore + civilianScore + commerceScore + guildScore(neightboorStuff) + wondersScore(neightboorStuff) + coinScore
+    def score(neighborStuff: Map[NeighborReference, MultiSet[GameElement]]): Int =
+      scienceScore(neighborStuff) + militaryScore + civilianScore + commerceScore + guildScore(neighborStuff) + wondersScore(neighborStuff) + coinScore
 
     def coinScore = coins/3 - debtScorePenalty
 
     def debtScorePenalty = debtTokens.map(_.amount).sum
 
-    def scienceScore(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]] = Map()): Int = {
-      val (pointsFromCopyGuildCard, usedScienceGuildCard) = copyGuildCardBonus(neightboorStuff)
+    def scienceScore(neighborStuff: Map[NeighborReference, MultiSet[GameElement]] = Map()): Int = {
+      val (pointsFromCopyGuildCard, usedScienceGuildCard) = copyGuildCardBonus(neighborStuff)
       scienceValue.victoryPointValue + (if (usedScienceGuildCard) pointsFromCopyGuildCard else 0)
     }
 
@@ -424,19 +424,19 @@ object SevenWonders
       calculateVictoryPoints(commerceCards.toMultiSet.asInstanceOf[MultiSet[PlayableElement]], Map())
     }
 
-    def guildScore(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
+    def guildScore(neighborStuff: Map[NeighborReference, MultiSet[GameElement]]): Int = {
       val guildCards = played.filter(_.isInstanceOf[GuildCard]).map(_.asInstanceOf[GuildCard])
       if (guildCards.isEmpty) 0
       else {
-        guildCards.map(card => calculateVictoryPoints(MultiSet(card), neightboorStuff)).sum
+        guildCards.map(card => calculateVictoryPoints(MultiSet(card), neighborStuff)).sum
       }
     }
 
-    def wondersScore(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int =
+    def wondersScore(neighborStuff: Map[NeighborReference, MultiSet[GameElement]]): Int =
       if (wonderStagesBuilt.isEmpty) 0
       else {
-        val standardPoints = calculateVictoryPoints(wonderStagesBuilt.asInstanceOf[MultiSet[PlayableElement]], neightboorStuff)
-        val (pointsFromCopyGuildCard, usedScienceGuildCard) = copyGuildCardBonus(neightboorStuff)
+        val standardPoints = calculateVictoryPoints(wonderStagesBuilt.asInstanceOf[MultiSet[PlayableElement]], neighborStuff)
+        val (pointsFromCopyGuildCard, usedScienceGuildCard) = copyGuildCardBonus(neighborStuff)
         standardPoints + (if (usedScienceGuildCard) 0 else pointsFromCopyGuildCard)
       }
 
@@ -444,66 +444,66 @@ object SevenWonders
 
   /**
    * Computes the bonus amount of points awarded by a copy guild card from a neighboor
-   * @param neightboorStuff
+   * @param neighborStuff
    * @return The amount of points that the best guild card for this player would give. It also returns if the ScienceGuildCard is the best one to copy.
    */
-    def copyGuildCardBonus(neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): (Int, UsedScienceGuildCard) =
+    def copyGuildCardBonus(neighborStuff: Map[NeighborReference, MultiSet[GameElement]]): (Int, UsedScienceGuildCard) =
       if (!wonderStagesBuilt.map(_.symbols).flatten.contains(CopyGuildCard))
         (0, false)
       else {
-        val neigboorGuildCards = neightboorStuff.values.reduce(_ ++ _).filter(_.isInstanceOf[GuildCard]).map(_.asInstanceOf[GuildCard])
-        if (neigboorGuildCards.isEmpty)
+        val neigborGuildCards = neighborStuff.values.reduce(_ ++ _).filter(_.isInstanceOf[GuildCard]).map(_.asInstanceOf[GuildCard])
+        if (neigborGuildCards.isEmpty)
           (0, false)
         else {
           val scienceBonus =
-            if (neigboorGuildCards.contains(SCIENTISTS_GUILD))
+            if (neigborGuildCards.contains(SCIENTISTS_GUILD))
               (scienceValue + SCIENTISTS_GUILD.symbols.head.asInstanceOf[ScienceSymbol]).victoryPointValue - scienceValue.victoryPointValue
             else
               0
-          val otherBonus = neigboorGuildCards.map(guildCard => calculateVictoryPoints(MultiSet(guildCard), neightboorStuff)).max
+          val otherBonus = neigborGuildCards.map(guildCard => calculateVictoryPoints(MultiSet(guildCard), neighborStuff)).max
           if (scienceBonus > otherBonus) (scienceBonus, true) else (otherBonus, false)
         }
       }
 
-    def calculateVictoryPoints(of: MultiSet[PlayableElement], neightboorCards: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
+    def calculateVictoryPoints(of: MultiSet[PlayableElement], neighborCards: Map[NeighborReference, MultiSet[GameElement]]): Int = {
       if (of.isEmpty) 0
       else {
         val symbols: MultiSet[Symbol] = of.map(_.symbols).flatten
         val vicSymbols: MultiSet[VictoryPointSymbol] = symbols.filter(_.isInstanceOf[VictoryPointSymbol]).map(_.asInstanceOf[VictoryPointSymbol])
-        vicSymbols.map(symbol => calculateRewardAmount(symbol.reward, neightboorCards)).sum
+        vicSymbols.map(symbol => calculateRewardAmount(symbol.reward, neighborCards)).sum
       }
     }
 
-    def calculateRewardAmount(reward: Amount, neightboorStuff: Map[NeighboorReference, MultiSet[GameElement]]): Int = {
+    def calculateRewardAmount(reward: Amount, neighborStuff: Map[NeighborReference, MultiSet[GameElement]]): Int = {
       reward match {
         case reward: VariableAmount => {
           // We need to handle references other than Self in a different way
-          val fromNeighboors = reward.from.filter(_.isInstanceOf[NeighboorReference]).map(_.asInstanceOf[NeighboorReference])
-          val referencedNeighboorStuff: MultiSet[GameElement] = fromNeighboors.map(neightboorStuff(_)).fold(MultiSet())(_ ++ _)
+          val fromNeighbors = reward.from.filter(_.isInstanceOf[NeighborReference]).map(_.asInstanceOf[NeighborReference])
+          val referencedNeighborStuff: MultiSet[GameElement] = fromNeighbors.map(neighborStuff(_)).fold(MultiSet())(_ ++ _)
           val referencedMyStuff = if (reward.from.contains(Self)) allGameElements else MultiSet()
-          val referencedStuff = referencedNeighboorStuff ++ referencedMyStuff
+          val referencedStuff = referencedNeighborStuff ++ referencedMyStuff
           referencedStuff.map( elem => if (elem.getClass == reward.forEach) reward.amount else 0).sum
         }
         case SimpleAmount(amount) => amount
       }
     }
 
-    def canBuild(playable: PlayableElement, availableThroughTrade: Map[NeighboorReference, Production]): Boolean = {
+    def canBuild(playable: PlayableElement, availableThroughTrade: Map[NeighborReference, Production]): Boolean = {
       !played.contains(playable) && // You cannot build a card you already own
       (availableEvolutions.contains(playable) || // You can build an evolution whether you can pay it's cost or not
       possibleTrades(playable, availableThroughTrade).nonEmpty)
     }
 
-    def possibleTrades(playable: PlayableElement, tradableProduction: Map[NeighboorReference, Production]): Set[Trade] =
+    def possibleTrades(playable: PlayableElement, tradableProduction: Map[NeighborReference, Production]): Set[Trade] =
       possibleTradesWithoutConsideringCoins(playable, tradableProduction).filter(cost(_) <= coins - playable.cost.coins)
 
-    def possibleTradesWithoutConsideringCoins(playable: PlayableElement, tradableProduction: Map[NeighboorReference, Production]): Set[Trade] =
+    def possibleTradesWithoutConsideringCoins(playable: PlayableElement, tradableProduction: Map[NeighborReference, Production]): Set[Trade] =
       totalProduction.consume(playable.cost.resources).map(possibleTrades(_, tradableProduction)).flatten
 
     def possibleTrades(resources: MultiSet[Resource],
-                       tradableResources: Map[NeighboorReference, Production]
+                       tradableResources: Map[NeighborReference, Production]
                       ): Set[Trade] = {
-      if (resources.isEmpty) Set(MultiMap[Resource, NeighboorReference]())
+      if (resources.isEmpty) Set(MultiMap[Resource, NeighborReference]())
       else
         (
           for ((neighboorRef, production) <- tradableResources) yield
@@ -533,14 +533,14 @@ object SevenWonders
      * @param from
      * @return The cost in coins of this trade related to the specified neighboor
      */
-    def cost(trade: Trade, from: NeighboorReference): Int =
+    def cost(trade: Trade, from: NeighborReference): Int =
       if (trade.isEmpty) 0
       else {
         val (resource, from1) = trade.head
         if (from1 == from) cost(resource, from) else 0 + cost(trade.tail, from)
       }
 
-    def cost(resource: Resource, from: NeighboorReference): Int = {
+    def cost(resource: Resource, from: NeighborReference): Int = {
       val rebateSymbols = allSymbols.filter(_.isInstanceOf[RebateSymbol]).map(_.asInstanceOf[RebateSymbol])
       rebateSymbols.find(_.fromWho == from) match {
         case Some(rebateSymbol) => if (rebateSymbol.affectedResources.contains(resource)) 1 else 2
@@ -560,7 +560,7 @@ object SevenWonders
   type Age = Int
 
   case class Game(players: Circle[Player], cards: Map[Age, MultiSet[Card]], discarded: MultiSet[Card]) {
-    def getNeighboorsStuff(player: Player): Map[NeighboorReference, MultiSet[GameElement]] = {
+    def getNeighboorsStuff(player: Player): Map[NeighborReference, MultiSet[GameElement]] = {
       Map(Left -> players.getLeft(player).allGameElements, Right -> players.getRight(player).allGameElements)
     }
 
