@@ -35,7 +35,7 @@ class PlayerSpec extends Specification with defaults {
         val player = Player(OLYMPIA_A, hand, 3, MultiSet(), Set(PAWNSHOP), 0)
         val (newPlayer, map) = player.build(BATHS, MultiMap(Stone -> Left))
         newPlayer === Player(OLYMPIA_A, hand - BATHS, 1, MultiSet(), Set(PAWNSHOP, BATHS), 0)
-        map === Map(Left -> 2)
+        map ==== (2, 0)
       }
     }
 
@@ -92,6 +92,27 @@ class PlayerSpec extends Specification with defaults {
 
     "possibleTrades" in {
       defaultPlayer.possibleTrades(TAVERN, Map[NeighborReference, Production]()) === Set(MultiMap())
+    }
+
+    "cost" should {
+      "1" in {
+        val player = Player(OLYMPIA_B, defaultHand, 3, MultiSet(), Set(EAST_TRADING_POST, CLANDESTINE_DOCK_WEST))
+        val trade = MultiMap(Ore -> Left, Ore -> Left, Wood -> Right, Paper -> Left, Tapestry -> Right)
+
+        player.cost(trade) ==== (3, 3)
+      }
+      "2" in {
+        val player = Player(OLYMPIA_B, defaultHand, 3, MultiSet(), Set(EAST_TRADING_POST, CLANDESTINE_DOCK_WEST))
+        val trade = MultiMap(Paper -> Left, Ore -> Left, Ore -> Left, Wood -> Right, Paper -> Left, Tapestry -> Right)
+
+        player.cost(trade) ==== (5, 3)
+      }
+      "3" in {
+        val player = Player(BABYLON_A, defaultHand, 3, MultiSet(), Set(EAST_TRADING_POST, CLANDESTINE_DOCK_WEST))
+        val trade = MultiMap(Ore -> Left, Ore -> Left, Paper -> Left, Ore -> Left, Ore -> Left, Wood -> Right, Paper -> Left, Tapestry -> Right)
+
+        player.cost(trade) ==== (7, 3)
+      }
     }
 
     "total production" in {

@@ -155,7 +155,7 @@ object SevenWonders
       }
     }
   }
-  case class RebateSymbol(affectedResources: Set[Resource], fromWho: Set[NeighborReference]) extends Symbol
+  case class RebateSymbol(affectedResources: Set[Resource], fromWho: Set[NeighborReference], multiplicity: Int = Int.MaxValue) extends Symbol
   object FreeBuildEachAge extends Symbol
   object GrabFromDiscardPile extends Symbol
   object CopyGuildCard extends Symbol
@@ -318,16 +318,14 @@ object SevenWonders
      * @param trade The trade used to build this card. Can be an empty trade
      * @return The updated Player state along with the amount of coins given to the left and right players
      */
-    def build(card: Card, trade: Trade): (Player, Map[NeighborReference, Int]) = {
-      val coinsMap = trade.values.toSet.map(ref => (ref, cost(trade, ref))).toMap
-      val player = this.copy(hand = hand - card,coins = coins - cost(trade) - card.cost.coins, played = played + card)
-      (player, coinsMap)
+    def build(card: Card, trade: Trade): (Player, (Int, Int)) = {
+      val player = this.copy(hand = hand - card,coins = coins - cost(trade).sum - card.cost.coins, played = played + card)
+      (player, cost(trade))
     }
 
-    def buildWonderStage(card: Card, trade: Trade): (Player, Map[NeighborReference, Int]) = {
-      val coinsMap = trade.values.toSet.map(ref => (ref, cost(trade, ref))).toMap
-      val player = this.copy(hand = hand - card, coins = coins - cost(trade) - civilization.stagesOfWonder(nbWonders).cost.coins)
-      (player, coinsMap)
+    def buildWonderStage(card: Card, trade: Trade): (Player, (Int, Int)) = {
+      val player = this.copy(hand = hand - card, coins = coins - cost(trade).sum - civilization.stagesOfWonder(nbWonders).cost.coins)
+      (player, cost(trade))
     }
 
     def canBuildWonderStage(availableThroughTrade: Map[NeighborReference, Production]): Boolean =
@@ -507,7 +505,7 @@ object SevenWonders
     }
 
     def possibleTrades(playable: PlayableElement, tradableProduction: Map[NeighborReference, Production]): Set[Trade] =
-      possibleTradesWithoutConsideringCoins(playable, tradableProduction).filter(cost(_) <= coins - playable.cost.coins)
+      possibleTradesWithoutConsideringCoins(playable, tradableProduction).filter(cost(_).sum <= coins - playable.cost.coins)
 
     def possibleTradesWithoutConsideringCoins(playable: PlayableElement, tradableProduction: Map[NeighborReference, Production]): Set[Trade] =
       totalProduction.consume(playable.cost.resources).map(possibleTrades(_, tradableProduction)).flatten
@@ -532,32 +530,17 @@ object SevenWonders
      * @param trade
      * @return The cost in coins of this trade
      */
-    def cost(trade: Trade): Int =
-      if (trade.isEmpty) 0
-      else {
-        val (resource, from) = trade.head
-        cost(resource, from) + cost(trade.tail)
-      }
-
-    /**
-     *
-     * @param trade
-     * @param from
-     * @return The cost in coins of this trade related to the specified neighboor
-     */
-    def cost(trade: Trade, from: NeighborReference): Int =
-      if (trade.isEmpty) 0
-      else {
-        val (resource, from1) = trade.head
-        if (from1 == from) cost(resource, from) else 0 + cost(trade.tail, from)
-      }
-
-    def cost(resource: Resource, from: NeighborReference): Int = {
-      val rebateSymbols = allSymbols.filter(_.isInstanceOf[RebateSymbol]).map(_.asInstanceOf[RebateSymbol])
-      rebateSymbols.find(_.fromWho == from) match {
-        case Some(rebateSymbol) => if (rebateSymbol.affectedResources.contains(resource)) 1 else 2
-        case None => 2
-      }
+    def cost(trade: Trade): (Int, Int) = {
+      def cost(trade: Trade, rebates: Set[RebateSymbol]): (Int, Int) =
+        if (trade.isEmpty) (0, 0)
+        else {
+          val (resource, from) = trade.head
+          val (relevant, nonRelevant) = rebates.span(rebate => rebate.affectedResources.contains(resource) && rebate.fromWho.contains(from))
+          val newRebates = relevant.map(rebate => rebate.copy(multiplicity = rebate.multiplicity - 1)).filter(_.multiplicity > 0) ++ nonRelevant
+          val resourceCost = 2 - relevant.size
+          if (from == Left) (resourceCost, 0) else (0, resourceCost) + cost(trade.tail, newRebates)
+        }
+      cost(trade, allSymbols.filter(_.isInstanceOf[RebateSymbol]).map(_.asInstanceOf[RebateSymbol]).toSet)
     }
 
     def availableEvolutions: Set[Card] = played.map(_.evolutions).flatten
@@ -693,8 +676,8 @@ object SevenWonders
       val (newPlayer, coinsToGive) = by.build(card, trade)
       val left = current.players.getLeft(by)
       val right = current.players.getRight(by)
-      val leftDelta = PlayerDelta(Set(), coinsToGive.getOrElse(Left, 0), MultiSet())
-      val rightDelta = PlayerDelta(Set(), coinsToGive.getOrElse(Right, 0), MultiSet())
+      val leftDelta = PlayerDelta(Set(), coinsToGive._1, MultiSet())
+      val rightDelta = PlayerDelta(Set(), coinsToGive._2, MultiSet())
       GameDelta(Map(by -> newPlayer.-(by), left -> leftDelta, right -> rightDelta))
     }
   }
@@ -707,8 +690,8 @@ object SevenWonders
       val (newPlayer, coinsToGive) = by.buildWonderStage(card, trade)
       val left = current.players.getLeft(by)
       val right = current.players.getRight(by)
-      val leftDelta = PlayerDelta(Set(), coinsToGive.getOrElse(Left, 0), MultiSet())
-      val rightDelta = PlayerDelta(Set(), coinsToGive.getOrElse(Right, 0), MultiSet())
+      val leftDelta = PlayerDelta(Set(), coinsToGive._1, MultiSet())
+      val rightDelta = PlayerDelta(Set(), coinsToGive._2, MultiSet())
       GameDelta(Map(by -> newPlayer.-(by), left -> leftDelta, right -> rightDelta))
     }
   }
@@ -886,6 +869,10 @@ object SevenWonders
   val PIGEON_LOFT = CityCard("PIGEON_LOFT", Cost(1, MultiSet(Ore)), Set(new StealScience))
   val SPY_RING = CityCard("SPY_RING", Cost(2, MultiSet(Stone, Clay)), Set(new StealScience))
   val TORTURE_CHAMBER = CityCard("TORTURE_CHAMBER", Cost(3, MultiSet(Glass, Ore, Ore)), Set(new StealScience))
+  val CLANDESTINE_DOCK_WEST = CityCard("CLANDESTINE_DOCK_WEST", new Cost(1), Set(RebateSymbol(allResources, Set(Left), 1)))
+  val CLANDESTINE_DOCK_EAST = CityCard("CLANDESTINE_DOCK_EAST", new Cost(1), Set(RebateSymbol(allResources, Set(Right), 1)))
+  val GAMBLING_DEN = CityCard("GAMBLING_DEN",Free, Set(CoinSymbol(ThreeWayAmount(1, 6, 1))))
+  val GAMBLING_HOUSE = CityCard("GAMBLING_HOUSE",new Cost(1), Set(CoinSymbol(ThreeWayAmount(2, 8, 2))))
 
   // Civilizations
   val RHODOS_A = Civilization("RHODOS", Ore, List(

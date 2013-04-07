@@ -41,6 +41,11 @@ object Utils {
     def takeRandom(nb: Int): Set[A] = Random.shuffle(value.to[List]).take(nb).to[Set]
   }
 
+  implicit class AugmentedTupple2[A](value: (A, A)) {
+    def +[B >: A](other: (A, A))(implicit num: Numeric[B]): (B , B) = (num.plus(value._1, other._1), num.plus(value._2, other._2))
+    def sum[B >: A](implicit num: Numeric[B]): B = num.plus(value._1, value._2)
+  }
+
   implicit class AugmentedTuple3[A](value: (A, A, A)) {
     def toList = List(value._1, value._2, value._3)
     def min[B >: A](implicit cmp: Ordering[B]) = toList.min(cmp)
