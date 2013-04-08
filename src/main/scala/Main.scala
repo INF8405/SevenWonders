@@ -324,7 +324,7 @@ object SevenWonders
     }
 
     def buildWonderStage(card: Card, trade: Trade): (Player, (Int, Int)) = {
-      val player = this.copy(hand = hand - card, coins = coins - cost(trade).sum - civilization.stagesOfWonder(nbWonders).cost.coins)
+      val player = this.copy(hand = hand - card, coins = coins - cost(trade).sum - civilization.stagesOfWonder(nbWonders).cost.coins, nbWonders = nbWonders + 1)
       (player, cost(trade))
     }
 
