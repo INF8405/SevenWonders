@@ -160,6 +160,7 @@ object SevenWonders
   object GrabFromDiscardPile extends Symbol
   object CopyGuildCard extends Symbol
   object PlayLastCardEachAge extends Symbol
+  object BuildWondersForFree extends Symbol
   object ProduceResourceAlreadyProduced extends Symbol
   object ProduceResourceNotProduced extends Symbol
   object DiplomacySymbol extends Symbol {
@@ -324,12 +325,15 @@ object SevenWonders
     }
 
     def buildWonderStage(card: Card, trade: Trade): (Player, (Int, Int)) = {
-      val player = this.copy(hand = hand - card, coins = coins - cost(trade).sum - civilization.stagesOfWonder(nbWonders).cost.coins, nbWonders = nbWonders + 1)
+      val totalCost = if (allSymbols.contains(BuildWondersForFree)) 0 else cost(trade).sum + civilization.stagesOfWonder(nbWonders).cost.coins
+      val player = this.copy(hand = hand - card, coins = coins - totalCost, nbWonders = nbWonders + 1)
       (player, cost(trade))
     }
 
     def canBuildWonderStage(availableThroughTrade: Map[NeighborReference, Production]): Boolean =
-      if (nbWonders == civilization.stagesOfWonder.size) false else canBuild(civilization.stagesOfWonder(nbWonders), availableThroughTrade)
+      if (nbWonders == civilization.stagesOfWonder.size) false
+      else if (allSymbols.contains(BuildWondersForFree)) true
+      else canBuild(civilization.stagesOfWonder(nbWonders), availableThroughTrade)
 
     def buildForFree(card: Card): Player = {
       if (!canBuildForFree) throw new UnsupportedOperationException("It is not possible for this player to use this action from his current state")
