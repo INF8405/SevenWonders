@@ -149,7 +149,7 @@ object SevenWonders
           current.copy(players = current.players.replace(oldLeft, newLeft).replace(oldRight, newRight).replace(playedBy, newSelf))
         }
         case _ => {
-          val coinsToAdd = playedBy.calculateRewardAmount(reward, current.getNeighboorsStuff(playedBy))
+          val coinsToAdd = playedBy.calculateAmount(reward, current.getNeighboorsStuff(playedBy))
           current.copy(players = current.players.replace(playedBy, playedBy.addCoins(coinsToAdd)))
         }
       }
@@ -174,9 +174,7 @@ object SevenWonders
       val newPlayers = current.players.map[Player] {
         player =>
           if (player == playedBy) player
-          else amount match {
-            case SimpleAmount(nb) => player.removeCoins(nb)
-          }
+          else player.removeCoins(player.calculateAmount(amount, current.getNeighboorsStuff(player)))
       }
       current.copy(players = newPlayers)
     }
@@ -484,11 +482,11 @@ object SevenWonders
       else {
         val symbols: MultiSet[Symbol] = of.map(_.symbols).flatten
         val vicSymbols: MultiSet[VictoryPointSymbol] = symbols.filter(_.isInstanceOf[VictoryPointSymbol]).map(_.asInstanceOf[VictoryPointSymbol])
-        vicSymbols.map(symbol => calculateRewardAmount(symbol.reward, neighborCards)).sum
+        vicSymbols.map(symbol => calculateAmount(symbol.reward, neighborCards)).sum
       }
     }
 
-    def calculateRewardAmount(reward: Amount, neighborStuff: Map[NeighborReference, MultiSet[GameElement]]): Int = {
+    def calculateAmount(reward: Amount, neighborStuff: Map[NeighborReference, MultiSet[GameElement]]): Int = {
       reward match {
         case reward: VariableAmount => {
           // We need to handle references other than Self in a different way
