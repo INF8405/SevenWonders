@@ -298,6 +298,7 @@ object SevenWonders
 
 
   implicit def ResourceToProduction(value: Resource) = new CumulativeProduction(value)
+  implicit def IntToSimpleAmount(value: Int) = SimpleAmount(value)
 
   type Trade = MultiMap[Resource, NeighborReference]
 
@@ -868,13 +869,33 @@ object SevenWonders
   val BUILDERS_GUILD = GuildCard("BUILDERS GUILD", Cost(0, MultiSet(Stone, Stone, Clay, Clay, Glass)), Set(VictoryPointSymbol(VariableAmount(1, classOf[WonderStage], Set(Left, Self, Right)))))
 
   // Cities Cards
-  val PIGEON_LOFT = CityCard("PIGEON_LOFT", Cost(1, MultiSet(Ore)), Set(new StealScience))
-  val SPY_RING = CityCard("SPY_RING", Cost(2, MultiSet(Stone, Clay)), Set(new StealScience))
-  val TORTURE_CHAMBER = CityCard("TORTURE_CHAMBER", Cost(3, MultiSet(Glass, Ore, Ore)), Set(new StealScience))
-  val CLANDESTINE_DOCK_WEST = CityCard("CLANDESTINE_DOCK_WEST", new Cost(1), Set(RebateSymbol(allResources, Set(Left), 1)))
-  val CLANDESTINE_DOCK_EAST = CityCard("CLANDESTINE_DOCK_EAST", new Cost(1), Set(RebateSymbol(allResources, Set(Right), 1)))
-  val GAMBLING_DEN = CityCard("GAMBLING_DEN",Free, Set(CoinSymbol(ThreeWayAmount(1, 6, 1))))
-  val GAMBLING_HOUSE = CityCard("GAMBLING_HOUSE",new Cost(1), Set(CoinSymbol(ThreeWayAmount(2, 8, 2))))
+  val PIGEON_LOFT = CityCard("PIGEON LOFT", Cost(1, MultiSet(Ore)), Set(new StealScience))
+  val SPY_RING = CityCard("SPY RING", Cost(2, MultiSet(Stone, Clay)), Set(new StealScience))
+  val TORTURE_CHAMBER = CityCard("TORTURE CHAMBER", Cost(3, MultiSet(Glass, Ore, Ore)), Set(new StealScience))
+  val RESIDENCE = CityCard("RESIDENCE", Cost(0, MultiSet(Clay)), Set(VictoryPointSymbol(1), DiplomacySymbol))
+  val CONSULATE = CityCard("CONSULATE", Cost(0, MultiSet(Paper, Clay)), Set(VictoryPointSymbol(2), DiplomacySymbol))
+  val EMBASSY = CityCard("EMBASSY", Cost(0, MultiSet(Tapestry, Stone, Paper)), Set(VictoryPointSymbol(3), DiplomacySymbol))
+  val HIDEOUT = CityCard("HIDEOUT", Free, Set(VictoryPointSymbol(2), PayBankSymbol(1)))
+  val LAIR = CityCard("LAIR", Cost(0, MultiSet(Wood, Glass)), Set(VictoryPointSymbol(3), PayBankSymbol(2)))
+  val BROTHERHOOD = CityCard("BROTHERHOOD", Cost(0, MultiSet(Wood, Wood, Tapestry, Ore)), Set(VictoryPointSymbol(4), PayBankSymbol(3)))
+  val CLANDESTINE_DOCK_WEST = CityCard("CLANDESTINE DOCK WEST", new Cost(1), Set(RebateSymbol(allResources, Set(Left), 1)))
+  val CLANDESTINE_DOCK_EAST = CityCard("CLANDESTINE DOCK EAST", new Cost(1), Set(RebateSymbol(allResources, Set(Right), 1)))
+  val GAMBLING_DEN = CityCard("GAMBLING DEN",Free, Set(CoinSymbol(ThreeWayAmount(1, 6, 1))))
+  val GAMBLING_HOUSE = CityCard("GAMBLING HOUSE",new Cost(1), Set(CoinSymbol(ThreeWayAmount(2, 8, 2))))
+  val BLACK_MARKET = CityCard("BLACK MARKET", Cost(0, MultiSet(Ore, Tapestry)), Set(ProduceResourceNotProduced))
+  val SECRET_WAREHOUSE = CityCard("SECRET WAREHOUSE", new Cost(2), Set(ProduceResourceAlreadyProduced))
+  val ARCHITECT_CABINET = CityCard("ARCHITECT CABINET", Cost(1, MultiSet(Paper)), Set(VictoryPointSymbol(2), BuildWondersForFree))
+  val BUILDERS_UNION = CityCard("BUILDERS' UNION", Cost(0, MultiSet(Clay, Wood, Paper, Glass)), Set(VictoryPointSymbol(4), PayBankSymbol(VariableAmount(1, classOf[WonderStage], Set(Self)))))
+  val SEPULCHER = CityCard("SEPULCHER", Cost(0, MultiSet(Stone, Glass, Tapestry)), Set(VictoryPointSymbol(4), PayBankSymbol(VariableAmount(1, classOf[VictoryBattleMarker], Set(Self)))))
+  val CENOTAPH = CityCard("CENOTAPH", Cost(0, MultiSet(Clay, Clay, Stone, Tapestry, Glass)), Set(VictoryPointSymbol(5), PayBankSymbol(VariableAmount(1, classOf[VictoryBattleMarker], Set(Self)))))
+  val SECRET_SOCIETY = CityCard("SECRET SOCIETY", Cost(0, MultiSet(Stone, Paper)), Set(CoinSymbol(VariableAmount(1, classOf[CityCard], Set(Self))), VictoryPointSymbol(VariableAmount(1, classOf[CityCard], Set(Self)))))
+  val SLAVE_MARKET = CityCard("SLAVE MARKET", Cost(0, MultiSet(Ore, Ore, Wood, Wood)), Set(CoinSymbol(VariableAmount(1, classOf[VictoryBattleMarker], Set(Self))), VictoryPointSymbol(VariableAmount(1, classOf[VictoryBattleMarker], Set(Self)))))
+  val MILITIA = CityCard("MILITIA", new Cost(3), Set(MilitarySymbol(2)))
+  val MERCENARIES = CityCard("MERCENARIES", Cost(4, MultiSet(Paper)), Set(MilitarySymbol(3)))
+  val CONTINGENT = CityCard("CONTINGENT", Cost(5, MultiSet(Tapestry)), Set(MilitarySymbol(5)))
+  val GATES_OF_THE_CITY = CityCard("GATES OF THE CITY", Cost(1, MultiSet(Wood)), Set(VictoryPointSymbol(4)))
+  val TABULARIUM = CityCard("TABULARIUM", Cost(2, MultiSet(Ore, Wood, Tapestry)), Set(VictoryPointSymbol(6)))
+  val CAPITOL = CityCard("CAPITOL", Cost(2, MultiSet(Clay, Clay, Stone, Stone, Glass, Paper)), Set(VictoryPointSymbol(8)))
 
   // Civilizations
   val RHODOS_A = Civilization("RHODOS", Ore, List(
@@ -946,6 +967,24 @@ object SevenWonders
     WonderStage(Cost(0, MultiSet(Tapestry, Clay)), Set(VictoryPointSymbol(SimpleAmount(3)))),
     WonderStage(Cost(0, MultiSet(Glass, Wood, Wood)), Set(PlayLastCardEachAge)),
     WonderStage(Cost(0, MultiSet(Paper, Clay, Clay, Clay)), Set(tablet | compass | gear))
+  ))
+  val PETRA_A = Civilization("PETRA", Clay, List(
+    WonderStage(Cost(0, MultiSet(Wood, Stone)), Set(VictoryPointSymbol(SimpleAmount(3)))),
+    WonderStage(new Cost(7), Set(VictoryPointSymbol(SimpleAmount(7)))),
+    WonderStage(Cost(0, MultiSet(Paper, Wood, Stone, Stone)), Set(VictoryPointSymbol(SimpleAmount(7))))
+  ))
+  val PETRA_B = Civilization("PETRA", Clay, List(
+    WonderStage(Cost(0, MultiSet(Clay, Clay, Ore, Ore)), Set(VictoryPointSymbol(SimpleAmount(3)), PayBankSymbol(SimpleAmount(2)))),
+    WonderStage(new Cost(14), Set(VictoryPointSymbol(SimpleAmount(14))))
+  ))
+  val BYZANTIUM_A = Civilization("BYZANTIUM", Stone, List(
+    WonderStage(Cost(0, MultiSet(Ore, Clay)), Set(VictoryPointSymbol(SimpleAmount(3)))),
+    WonderStage(Cost(0, MultiSet(Paper, Wood, Wood)), Set(VictoryPointSymbol(SimpleAmount(2)), DiplomacySymbol)),
+    WonderStage(Cost(0, MultiSet(Glass, Tapestry, Clay, Clay)), Set(VictoryPointSymbol(SimpleAmount(7))))
+  ))
+  val BYZANTIUM_B = Civilization("BYZANTIUM", Stone, List(
+    WonderStage(Cost(0, MultiSet(Glass, Paper, Ore, Wood)), Set(VictoryPointSymbol(SimpleAmount(3)), DiplomacySymbol)),
+    WonderStage(Cost(0, MultiSet(Ore, Ore, Clay, Tapestry)), Set(VictoryPointSymbol(SimpleAmount(4)), DiplomacySymbol))
   ))
 
   val civilizations = Set(RHODOS_A, ALEXANDRIA_A, HALIKARNASSOS_A, OLYMPIA_A, GIZAH_A, EPHESOS_A, BABYLON_A)
