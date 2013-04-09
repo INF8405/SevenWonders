@@ -194,6 +194,8 @@ object SevenWonders
   trait PlayableElement extends GameElement {
     val cost: Cost
     val symbols: Set[Symbol]
+    def resolve(current:Game, playedBy: Player): Game =
+      symbols.foldLeft(current){ case (gameState, symbol) => symbol.resolve(gameState, playedBy) }
   }
 
   class Card( 
@@ -321,13 +323,17 @@ object SevenWonders
                     ) {
     def discard(card: Card): Player = this.copy(hand = hand - card, coins = coins + 3)
 
+    def build(card: Card, trade: Trade, wonder: Boolean = false) =
+      if (wonder) buildWonderStage(card, trade)
+      else buildNormal(card, trade)
+
     /**
      * Handles all state changing relative to this player when he plays a card.
      * @param card The card to build
      * @param trade The trade used to build this card. Can be an empty trade
      * @return The updated Player state along with the amount of coins given to the left and right players
      */
-    def build(card: Card, trade: Trade): (Player, (Int, Int)) = {
+    def buildNormal(card: Card, trade: Trade): (Player, (Int, Int)) = {
       val player = this.copy(hand = hand - card,coins = coins - cost(trade).sum - card.cost.coins, played = played + card)
       (player, cost(trade))
     }
@@ -561,15 +567,35 @@ object SevenWonders
     def availableEvolutions: Set[Card] = played.map(_.evolutions).flatten
 
     def +(delta: PlayerDelta) =
-      this.copy(coins = coins + delta.coinDelta, played = played ++ delta.newCards, stuff = stuff ++ delta.newBattleMarkers)
+      this.copy(
+        coins = coins + delta.coinDelta,
+        played = played ++ delta.newCards,
+        stuff = stuff ++ delta.additionalStuff,
+        hand = hand -- delta.discards,
+        nbWonders = nbWonders + delta.additionalWonders,
+        hasBuiltForFreeThisAge = hasBuiltForFreeThisAge || delta.builtForFree
+      )
 
     def -(previous: Player): PlayerDelta =
-      PlayerDelta(played -- previous.played, coins - previous.coins, battleMarkers -- previous.battleMarkers)
+      PlayerDelta(
+        newCards = played -- previous.played,
+        coinDelta = coins - previous.coins,
+        additionalStuff = stuff -- previous.stuff,
+        discards = hand -- previous.hand,
+        additionalWonders = nbWonders - previous.nbWonders,
+        builtForFree = hasBuiltForFreeThisAge && !previous.hasBuiltForFreeThisAge
+      )
   }
 
   type Age = Int
 
-  case class Game(players: Circle[Player], cards: Map[Age, MultiSet[Card]], discarded: MultiSet[Card]) {
+  case class Game(
+    players: Circle[Player],
+    cards: Map[Age, MultiSet[Card]],
+    discarded: MultiSet[Card],
+    needsToGrabFromDiscardPile: Option[Player] = None,
+    needsToPlayLastCard: Option[Player] = None)
+  {
     def getNeighboorsStuff(player: Player): Map[NeighborReference, MultiSet[GameElement]] = {
       Map(Left -> players.getLeft(player).allGameElements, Right -> players.getRight(player).allGameElements)
     }
@@ -580,32 +606,81 @@ object SevenWonders
 
       val newGameState = this + deltas.reduce(_ + _)
 
+      var grabDiscard: Option[Player] = None
+      var playLast: Option[Player] = None
+
       // We go through every played card and resolve it's effect (add coins to players who played a card that rewards in coins)
       val gameStateAfterResolvingCards = actions.foldLeft(newGameState) {
         (gameState, keyValue) =>
           keyValue match {
-            case (player, Build(card, trade)) => card.symbols.foldLeft(gameState){ case (gameState, symbol) => symbol.resolve(gameState, player)}
-            case (player, BuildWonderStage(card, trade)) => player.wonderStagesBuilt.last.symbols.foldLeft(gameState){ case (gameState, symbol) => symbol.resolve(gameState, player)}
+            case (player, Build(card, trade, false)) => card.resolve(gameState, player)
+            case (player, Build(card, trade, true)) => {
+              val wonderStage = player.wonderStagesBuilt.last
+              if (wonderStage.symbols.contains(GrabFromDiscardPile)) grabDiscard = Some(player)
+              if (wonderStage.symbols.contains(PlayLastCardEachAge)) playLast = Some(player)
+              wonderStage.resolve(gameState, player)
+            }
             case _ => gameState
           }
       }
-      // During age I and III, we pass our hands to the player to our left, during age II, we pass our hand to the right
-      val passHandLeft = currentAge == 1 || currentAge == 3
-      // Let's pass the hands left or right
-      val nextTurnPlayers: Circle[Player] = players.map[Player](player => if (passHandLeft) player.copy(hand = player.left.hand) else player.copy(hand = player.right.hand))
 
-      val finalGameState = gameStateAfterResolvingCards.copy(players = nextTurnPlayers)
+      if (grabDiscard.isDefined || playLast.isDefined)
+        gameStateAfterResolvingCards.copy(needsToGrabFromDiscardPile = grabDiscard, needsToPlayLastCard = playLast)
+      else
+        gameStateAfterResolvingCards.endTurnUpkeep
+    }
 
+    def endTurnUpkeep = {
       // Was this the last turn of this age?
-      if (finalGameState.players.head.hand.size == 1){
+      if (players.head.hand.size > 1){
+        // During age I and III, we pass our hands to the player to our left, during age II, we pass our hand to the right
+        val passHandLeft = currentAge == 1 || currentAge == 3
+        // Let's pass the hands left or right
+        val nextTurnPlayers: Circle[Player] = players.map[Player](player => if (passHandLeft) player.copy(hand = player.left.hand) else player.copy(hand = player.right.hand))
+
+        this.copy(players = nextTurnPlayers, needsToGrabFromDiscardPile = None, needsToPlayLastCard = None)
+      }
+      else {
         // Was this the last age?
         if (currentAge == 3)
-          finalGameState.endAge()
+          endAge()
         else
-          finalGameState.endAge().beginAge()
+          endAge().beginAge()
       }
-      else
-        finalGameState
+    }
+
+    def grabFromDiscardPile(card: Card): Game = {
+      needsToGrabFromDiscardPile match {
+        case None => throw new UnsupportedOperationException("No player should be grabing from discard pile in this state")
+        case Some(player) => {
+          if (discarded.contains(card)) {
+            val newPlayers = players.replace(player, player.copy(played = player.played + card))
+            val stateAfterResolved = card.resolve(this, player)
+            if (needsToPlayLastCard.isDefined)
+              stateAfterResolved.copy(players = newPlayers, discarded = discarded - card, needsToGrabFromDiscardPile = None)
+            else
+              stateAfterResolved.copy(players = newPlayers, discarded = discarded - card).endTurnUpkeep
+          }
+          else throw new UnsupportedOperationException("Can only grab a card from the discard pile")
+        }
+      }
+    }
+
+    def playLastCardOfAge(action: Action): Game = {
+      needsToPlayLastCard match {
+        case None => throw new UnsupportedOperationException("No player should be playing the last card of this age")
+        case Some(player) => {
+          if (needsToGrabFromDiscardPile.isDefined) throw new UnsupportedOperationException("A player needs to grab from the discard pile before this player can play his last card")
+          else {
+            val stateAferAction = this + action.perform(this, player)
+            val stateAfterResolve = action match {
+              case Build(card, trade, false) => card.resolve(stateAferAction, player)
+              case Build(card, trade, true) => player.wonderStagesBuilt.last.resolve(stateAferAction, player)
+            }
+            stateAfterResolve.endTurnUpkeep
+          }
+        }
+      }
     }
 
     def currentAge = cards.keys.toList.reverse.find(cards(_).isEmpty).getOrElse(0)
@@ -625,13 +700,13 @@ object SevenWonders
         if (playersAtWar.size == 2)
           playersAtWar.createMap{
             player =>
-              val battleMarker =
+              val battleMarker: MultiSet[GameElement] =
                 player.militaryStrength.compare(player.left.militaryStrength) match {
-                  case 0 => MultiSet[BattleMarker]()
-                  case 1 => MultiSet[BattleMarker](winMarker)
-                  case -1 => MultiSet[BattleMarker](new DefeatBattleMarker)
+                  case 0 => MultiSet()
+                  case 1 => MultiSet(winMarker)
+                  case -1 => MultiSet(new DefeatBattleMarker)
                 }
-              PlayerDelta(Set(), 0, battleMarker)
+              PlayerDelta(additionalStuff = battleMarker)
           }
         else
           playersAtWar.createMap{
@@ -650,7 +725,7 @@ object SevenWonders
                   case -1 => MultiSet(new DefeatBattleMarker)
                 }
 
-            PlayerDelta(Set(), 0, leftBattleMarker ++ rightBattleMarker)
+            PlayerDelta(additionalStuff = leftBattleMarker ++ rightBattleMarker)
           }
       val discards = players.map[MultiSet[Card]](_.hand).reduce(_ ++ _)
       val afterWarAndDiscard = this + GameDelta(playerDeltas, discards)
@@ -678,37 +753,39 @@ object SevenWonders
       GameDelta(playerDeltas.updated(player, playerDeltas(player) + other), additionalDiscards)
   }
 
-  case class PlayerDelta(newCards: Set[Card], coinDelta: Int, newBattleMarkers: MultiSet[BattleMarker]) {
+  case class PlayerDelta(discards: MultiSet[Card] = MultiSet(),
+                         newCards: Set[Card] = Set(),
+                         coinDelta: Int = 0,
+                         additionalStuff: MultiSet[GameElement] = MultiSet(),
+                         additionalWonders: Int = 0,
+                         builtForFree: Boolean = false) {
     def +(other: PlayerDelta): PlayerDelta =
-      PlayerDelta(newCards ++ other.newCards, coinDelta + other.coinDelta, newBattleMarkers ++ other.newBattleMarkers)
+      PlayerDelta(
+        discards ++ other.discards,
+        newCards ++ other.newCards,
+        coinDelta + other.coinDelta,
+        additionalStuff ++ other.additionalStuff,
+        additionalWonders + other.additionalWonders,
+        builtForFree || builtForFree
+      )
   }
 
   trait Action {
     def perform(current:Game, by: Player): GameDelta
   }
-  case class Build(card: Card, trade: Trade) extends Action {
+  case class Build(card: Card, trade: Trade, wonder: Boolean) extends Action {
     def perform(current:Game, by: Player) = {
-      val (newPlayer, coinsToGive) = by.build(card, trade)
+      val (newPlayer, coinsToGive) = by.build(card, trade, wonder)
       val left = current.players.getLeft(by)
       val right = current.players.getRight(by)
-      val leftDelta = PlayerDelta(Set(), coinsToGive._1, MultiSet())
-      val rightDelta = PlayerDelta(Set(), coinsToGive._2, MultiSet())
+      val leftDelta = PlayerDelta(coinDelta = coinsToGive._1)
+      val rightDelta = PlayerDelta(coinDelta = coinsToGive._2)
       GameDelta(Map(by -> newPlayer.-(by), left -> leftDelta, right -> rightDelta))
     }
   }
   case class Discard(card: Card) extends Action {
     def perform(current:Game, by: Player) =
       GameDelta(Map(by -> by.discard(card).-(by)), MultiSet(card))
-  }
-  case class BuildWonderStage(card: Card, trade: Trade) extends Action {
-    def perform(current:Game, by: Player) = {
-      val (newPlayer, coinsToGive) = by.buildWonderStage(card, trade)
-      val left = current.players.getLeft(by)
-      val right = current.players.getRight(by)
-      val leftDelta = PlayerDelta(Set(), coinsToGive._1, MultiSet())
-      val rightDelta = PlayerDelta(Set(), coinsToGive._2, MultiSet())
-      GameDelta(Map(by -> newPlayer.-(by), left -> leftDelta, right -> rightDelta))
-    }
   }
   case class BuildForFree(card: Card) extends Action {
     def perform(current:Game, by: Player) =
