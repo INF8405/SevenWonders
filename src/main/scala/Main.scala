@@ -11,12 +11,20 @@ import collection.conversions._
 object SevenWonders 
 {
 
-  def beginGame( nbPlayers: Int ): Game = {
-    val cards = classicSevenWonders.generateCards(nbPlayers)
-    val chosenCivilizations = Random.shuffle(baseCivilizations.toList).take(nbPlayers)
+  def beginGame( nbPlayers: Int , playWithCities: Boolean = false): Game = {
+    val cards =
+      if (playWithCities)
+        citySevenWonders.generateCards(nbPlayers)
+      else
+        classicSevenWonders.generateCards(nbPlayers)
+    val qualifiedCivs =
+      if (playWithCities) baseCivilizations
+      else baseCivilizations ++ cityCivilizations
+
+    val chosenCivilizations = Random.shuffle(qualifiedCivs.toList).take(nbPlayers)
     val players = chosenCivilizations.map{
       civ =>
-        Player(civ, MultiSet(), 3)
+        Player(civ.takeRandom, MultiSet(), 3)
     }
     Game(new Circle[Player](players: _*), cards, MultiSet()).beginAge()
   }
@@ -1041,8 +1049,19 @@ object SevenWonders
     WonderStage(Cost(0, MultiSet(Ore, Ore, Clay, Tapestry)), Set(VictoryPointSymbol(SimpleAmount(4)), DiplomacySymbol))
   ))
 
-  val baseCivilizations = Set(RHODOS_A, ALEXANDRIA_A, HALIKARNASSOS_A, OLYMPIA_A, GIZAH_A, EPHESOS_A, BABYLON_A)
-  val cityCivilizations = Set(BYZANTIUM_A, PETRA_A)
+  val baseCivilizations = Set(
+    (RHODOS_A, RHODOS_B),
+    (ALEXANDRIA_A, ALEXANDRIA_B),
+    (HALIKARNASSOS_A, HALIKARNASSOS_B),
+    (OLYMPIA_A, OLYMPIA_B),
+    (GIZAH_A, GIZAH_B),
+    (EPHESOS_A, EPHESOS_B),
+    (BABYLON_A, BABYLON_B)
+  )
+  val cityCivilizations = Set(
+    (BYZANTIUM_A, BYZANTIUM_B),
+    (PETRA_A, PETRA_B)
+  )
 
   val normalBaseCards: Map[Age, Map[PlayerAmount, MultiSet[Card]]] =
     Map(

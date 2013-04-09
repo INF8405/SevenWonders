@@ -42,8 +42,10 @@ object Utils {
   }
 
   implicit class AugmentedTupple2[A](value: (A, A)) {
+    def toList = List(value._1, value._2)
     def +[B >: A](other: (A, A))(implicit num: Numeric[B]): (B , B) = (num.plus(value._1, other._1), num.plus(value._2, other._2))
     def sum[B >: A](implicit num: Numeric[B]): B = num.plus(value._1, value._2)
+    def takeRandom: A = Random.shuffle(value.toList).head
   }
 
   implicit class AugmentedTuple3[A](value: (A, A, A)) {
