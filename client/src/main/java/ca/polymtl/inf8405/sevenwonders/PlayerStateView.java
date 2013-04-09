@@ -8,9 +8,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.widget.PopupWindow;
 
 import java.util.*;
@@ -21,23 +23,23 @@ public class PlayerStateView extends View{
 	private static float cardWidth_ = 0;
 	private static float cardHeight_ = 0;
 	private View seft_ = this;
-	
+
 	private void init(Context context){
 		setBackgroundResource(R.drawable.civilization1);
 		cardsInHand_ = new HashMap<String, Bitmap>();
 		setOnTouchListener(new OnTouchListener() {
 			@Override
-			public boolean onTouch(View arg0, MotionEvent arg1) {
-				// TODO Auto-generated method stub
-//				if (cardsInHand_.size() > 0)
-//					play((Card)cardsInHand_.keySet().toArray()[0]);
-				
+			public boolean onTouch(View view, MotionEvent evt) {
 				// Get all card names
 				List<String> cardNames = new ArrayList<String>();
-				for (Object o: cardsInHand_.keySet().toArray())
-					cardNames.add((String)o);
-				
-				GameScreen.showZoomPopup(seft_, cardNames, getContext(), true);
+				Object[] allCards = cardsInHand_.keySet().toArray(); 
+				for (int i = 0 ; i < allCards.length; i++){
+					cardNames.add((String)allCards[i]);
+				}
+
+				int selectedCardId = findSelectedCard(evt.getX(), evt.getY());
+				if (selectedCardId != -1)
+					ScreenSlidePagerActivity.showZoomPopup(seft_, selectedCardId, cardNames, true);
 				return false;
 			}
 		});
@@ -77,35 +79,33 @@ public class PlayerStateView extends View{
 		cardHeight_ = viewHeight * 2 / 3;
 		cardWidth_ = cardHeight_ * cardSample.getWidth() / cardSample.getHeight();
 	}
-	
-	public void setCards(List<Card> cards){
+
+	public void setCards(List<String> cards){
 		Bitmap cardBm;
-		for (Card card: cards){
+		for (String card: cards){
 			if ((cardHeight_ == 0) && (cardWidth_ == 0)){
-				cardBm = CardLoader.getInstance().getBitmap(getContext(), card.getName());
+				cardBm = CardLoader.getInstance().getBitmap(getContext(), card);
 			}
 			else{
 				// Resize Bitmap
 				cardBm = Bitmap.createScaledBitmap(
-						CardLoader.getInstance().getBitmap(getContext(), card.getName()),
+						CardLoader.getInstance().getBitmap(getContext(), card),
 						(int)cardWidth_, (int)cardHeight_, false);
 			}
-			cardsInHand_.put(card.getName(), cardBm );
+			cardsInHand_.put(card, cardBm );
 		}
 	}
 
-	public void play(Card card){
-		cardsInHand_.remove(card.getName());
+	public void play(String cardName){
+		
+		cardsInHand_.remove(cardName);
 	}
 
-	/*	@Override
-	protected  void onMeasure(int widthSpec, int heightSpec){
-		// Assurer que le canvas est toujours un carre
-		int measuredWidth = MeasureSpec.getSize(widthSpec);
-		int measureHeigth = MeasureSpec.getSize(heightSpec);
-
-		int d = Math.min(measuredWidth, measureHeigth);
-		setMeasuredDimension(measuredWidth, d * 1/3);
+	private int findSelectedCard(float x, float y){
+		for(int i = 0 ; i < cardsInHand_.size(); i++){
+			if ( (i*cardWidth_ < x) && (x < (i+1)*cardWidth_))
+				return i;
+		}
+		return -1;
 	}
-	 */
 }

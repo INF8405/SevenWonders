@@ -1,16 +1,19 @@
 package ca.polymtl.inf8405.sevenwonders.controller;
 
+import android.util.Log;
 import ca.polymtl.inf8405.sevenwonders.model.*;
 
 import java.util.*;
 
 public class PlayerManager {
 	private Player me_;
+	private List<String> hand_;
 	private int currentId_ = -1;
 	private List<Player> allPlayers_;
 	
-	public PlayerManager(Player me, List<Player> allPlayers){
+	public PlayerManager(Player me, List<Player> allPlayers, List<String> hand){
 		me_ = me;
+		hand_ = hand;
 		allPlayers_ = allPlayers;
 	}
 
@@ -18,39 +21,49 @@ public class PlayerManager {
 		testStub();
 	}
 	
+	public List<String> getHand(){ return hand_; }
+	
+	public void setHand(List<String> hand){ hand_ = hand; }
+	
 	private void testStub(){
 		//Create list of cards
-		List<Card> cards = new ArrayList<Card>();
+		List<String> cards = new ArrayList<String>();
 		for (int i = 0; i < 7; i++){
-			Card card = new Card(i+"");
-			cards.add(card);
+			cards.add(i+"");
 		}
+		hand_ = cards;
 		
 		// Create militaryCard
-		List<MilitaryCard> miliCards = new ArrayList<MilitaryCard>();
+		List<String> miliCards = new ArrayList<String>();
 		for (int i = 0 ; i < 3; i++){
-			miliCards.add(new MilitaryCard(i+""));
+			miliCards.add(i+"");
 		}
 		
 		// Create science card
-		List<ScienceCard> scienceCards = new ArrayList<ScienceCard>();
+		List<String> scienceCards = new ArrayList<String>();
 		for (int i = 0 ; i < 5; i++){
-			scienceCards.add(new ScienceCard(i+""));
+			scienceCards.add(i+"");
 		}
 		
 		// Create played cards
-		List<Card> played1 = new ArrayList<Card>(miliCards);
-		played1.add(scienceCards.get(0));
-		played1.add(scienceCards.get(1));
+		HashMap<String, List<String>> cardsOnBoard1 = new HashMap<String, List<String>>();
+		cardsOnBoard1.put("military", miliCards);
+		cardsOnBoard1.put("science", scienceCards);
 		
-		List<Card> played2 = new ArrayList<Card>(scienceCards);
-		played2.add(miliCards.get(1));
-		played2.add(miliCards.get(2));
+		HashMap<String, List<String>> cardsOnBoard2 = new HashMap<String, List<String>>();
+		cardsOnBoard2.put("culture", miliCards);
+		cardsOnBoard2.put("trade", miliCards);
+		cardsOnBoard2.put("basicRessource", miliCards);
+		
+		HashMap<String, List<String>> cardsOnBoard3 = new HashMap<String, List<String>>();
+		cardsOnBoard3.put("culture", miliCards);
+		cardsOnBoard3.put("gill", miliCards);
+		cardsOnBoard3.put("advancedRessource", miliCards);
 		
 		// Create players
-		Player p1 = new Player(null, 3, played1, "civi1");
-		Player p2 = new Player(null, 3, played2, "civi2");
-		me_ = new Player(cards, 3, played2, "civi3");
+		Player p1 = new Player(3, cardsOnBoard1, "civi1");
+		Player p2 = new Player(3, cardsOnBoard2, "civi2");
+		me_ = new Player(3, cardsOnBoard3, "civi3");
 		
 		allPlayers_ = new ArrayList<Player>();
 		allPlayers_.add(p1);
@@ -92,5 +105,21 @@ public class PlayerManager {
 			currentId_ = getMyId();
 		}
 		return currentId_;
+	}
+	
+	public void play(String cardName){
+		// Remove the card from hand_
+		int i = hand_.indexOf(cardName);
+		Log.e(this.getClass().toString(), "Card=" + cardName + " - index = " + i);
+		if (i != -1 ) // I dont understand why this function is called twice after each touch			
+			// Please Help me!!
+			
+			// => BECAUSE YOUR FONCTION ONTOUCHELISTENER WILL BE CALLED EVERYTIME IT RECEIVES A TOUCH_DOWN
+			// OR TOUCH_UP. YOU NEED TO PUSH AN IF (TOUCHE_DOWN) INSIDE OF THE CALLER, REMOVE THIS STUPID IF HERE
+			// PLEASE DO IT!!!!!
+			hand_.remove(i); 
+			
+		// Add the card to played_ - TEMP - Remove in integration - API will take care of this
+		
 	}
 }

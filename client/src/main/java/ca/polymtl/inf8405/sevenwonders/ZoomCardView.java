@@ -3,8 +3,13 @@ package ca.polymtl.inf8405.sevenwonders;
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
 import ca.polymtl.inf8405.sevenwonders.controller.OnFlingGestureListener;
 
+import android.app.AlertDialog;
+import android.app.FragmentManager;
+
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
+//import android.support.v4.app.FragmentManager;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -23,15 +28,12 @@ public class ZoomCardView extends RelativeLayout{
 	private View sefl_ = this;
 	private OnFlingGestureListener flingGesture_;
 	private List<String> allCardNames_;
-	private int current_;
+	private int current_; // current card id
 
 	// Test - TO REMOVE
 	private TextView text;
 	private void changeText(){
-		int max = 100;
-		int min = 0;
-		int random = min + (int)(Math.random() * ((max - min) + 1));
-		text.setText("ab= " + random);
+		text.setText("name = " + allCardNames_.get(current_) + " - index=" + current_);
 	}
 
 	/**
@@ -76,8 +78,8 @@ public class ZoomCardView extends RelativeLayout{
 		closeButton.setText("Close");
 		closeButton.setOnTouchListener(new OnTouchListener() {
 			@Override
-			public boolean onTouch(View arg0, MotionEvent arg1) {
-				sefl_.setVisibility(INVISIBLE);
+			public boolean onTouch(View view, MotionEvent arg1) {
+				closeMe();
 				return false;
 			}
 		});
@@ -91,6 +93,15 @@ public class ZoomCardView extends RelativeLayout{
 			bl.addRule(RelativeLayout.CENTER_IN_PARENT);
 			play.setLayoutParams(bl);
 			play.setText("Play");
+			play.setOnTouchListener(new OnTouchListener() {
+				@Override
+				public boolean onTouch(View arg0, MotionEvent arg1) {
+					ScreenSlidePagerActivity screen = (ScreenSlidePagerActivity)sefl_.getContext();
+					screen.play(allCardNames_.get(current_));
+					closeMe();
+					return false;
+				}
+			});
 
 			Button discard = new Button(context);
 			discard.setLayoutParams(bl);
@@ -99,11 +110,25 @@ public class ZoomCardView extends RelativeLayout{
 			Button wonders = new Button(context);
 			wonders.setLayoutParams(bl);
 			wonders.setText("Wonders");
+			wonders.setOnTouchListener(new OnTouchListener() {				
+				@Override
+				public boolean onTouch(View arg0, MotionEvent event) {
+					int action = event.getActionMasked();
+					if (action == MotionEvent.ACTION_DOWN){
+						ScreenSlidePagerActivity screen = (ScreenSlidePagerActivity)sefl_.getContext();
+						FragmentManager manager = screen.getFragmentManager();
+						TradePopup tv = new TradePopup();
+						tv.show(manager, "abc");
+						closeMe();
+					}
+					return false;
+				}
+			});
 
 			LinearLayout ln = new LinearLayout(context);
 			ln.setOrientation(LinearLayout.VERTICAL);
 			ln.setGravity(Gravity.CENTER_VERTICAL);
-			//ln.setBackgroundColor(Color.RED);
+			ln.setBackgroundColor(Color.RED);
 			ln.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.FILL_PARENT));
 			ln.addView(play);
 			ln.addView(wonders);
@@ -150,21 +175,26 @@ public class ZoomCardView extends RelativeLayout{
 
 	private void left(){
 		if (current_ > 0){
-			changeText();
 			current_--;
 			ImageView img = (ImageView)findViewWithTag("imageView");
 			img.setImageBitmap(CardLoader.getInstance()
 					.getBitmap(sefl_.getContext(), allCardNames_.get(current_)));
+			changeText();
 		}
 	}
 
 	private void right(){
 		if (current_+1 < allCardNames_.size()){
-			changeText();
 			current_++;
 			ImageView img = (ImageView)findViewWithTag("imageView");
 			img.setImageBitmap(CardLoader.getInstance()
 					.getBitmap(sefl_.getContext(), allCardNames_.get(current_)));
+			changeText();
 		}
 	}
+	
+	private void closeMe(){
+		sefl_.setVisibility(INVISIBLE);
+	}
+	
 }

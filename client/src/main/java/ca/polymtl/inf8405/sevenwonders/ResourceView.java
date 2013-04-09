@@ -35,7 +35,7 @@ public class ResourceView extends View{
 					for (Object o: cards_.keySet().toArray())
 						cardNames.add((String)o);
 
-					GameScreen.showZoomPopup(sefl_, cardNames, getContext(), false);
+					ScreenSlidePagerActivity.showZoomPopup(sefl_,0, cardNames, false);
 				}
 				return false;
 			}
@@ -66,18 +66,34 @@ public class ResourceView extends View{
 
 		for(Object object: cards_.keySet().toArray()){
 			String cardName = (String)object;
-			//			Bitmap resizedBitmap = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), 
-			//					R.drawable.green_card), 
-			//					getWidth(), 
-			//					(int)cardHeight, false);
 			canvas.drawBitmap(cards_.get(cardName), 0, topCorner, null);
 			topCorner += headerSize;
 		}
 	}
 
-	public void addCard(Card card){
-		cards_.put(card.getName(), 
-				CardLoader.getInstance().getBitmap(getContext(), card.getName()));
+	public void addCard(String card){
+		Bitmap cardBm;
+		if ( (getHeight() == 0) || (getWidth() == 0) ){
+			cardBm = CardLoader.getInstance().getBitmap(getContext(), card);
+		}
+		else{
+			CARD_RATIO =  getHeight() / getWidth();
+			float cardHeight = CARD_RATIO * getWidth();
+			cardBm = Bitmap.createScaledBitmap(
+					CardLoader.getInstance().getBitmap(getContext(), card), 
+					getWidth(), 
+					(int)cardHeight, false);
+		}
+		cards_.put(card, cardBm);
+	}
+
+	public void setCards( List<String> cards){
+		if (cards != null){
+			cards_.clear();
+			for (String card: cards){
+				addCard(card);
+			}
+		}
 	}
 
 }

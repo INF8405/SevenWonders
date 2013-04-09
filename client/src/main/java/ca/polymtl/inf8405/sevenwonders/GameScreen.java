@@ -5,6 +5,7 @@ import ca.polymtl.inf8405.sevenwonders.controller.*;
 import ca.polymtl.inf8405.sevenwonders.model.*;
 
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Point;
@@ -23,14 +24,14 @@ import java.util.*;
 public class GameScreen extends Activity {
 	public static int SCREEN_HEIGTH ;
 	public static int SCREEN_WIDTH;
-	
+
 	private static final int BOARD_VIEW_WEIGHT = 3;
 	private static final int STATE_VIEW_WEIGHT = 2;
-	
+
 	private static String PLAYER_ID_MESSAGE = "playerId";
 	private static PlayerManager manager_;
-	
-	private OnFlingGestureListener flingGesture_;
+
+//	private OnFlingGestureListener flingGesture_;
 	private int playerId_;
 	private Activity seft_ = this;
 
@@ -59,7 +60,7 @@ public class GameScreen extends Activity {
 		handView.setCardSize(size.y * STATE_VIEW_WEIGHT 
 				/ (STATE_VIEW_WEIGHT + BOARD_VIEW_WEIGHT));
 		// set hand cards for me
-		handView.setCards(manager_.getMe().getHand());
+		handView.setCards(manager_.getHand());
 
 		// Receive parameters
 		playerId_ = getIntent().getIntExtra(PLAYER_ID_MESSAGE, -1);
@@ -74,76 +75,46 @@ public class GameScreen extends Activity {
 			handView.setAlpha((float)0.5);
 		}
 
-		ResourceView basicResources = (ResourceView)findViewById(R.id.BasicResourceView);
-		ResourceView advancedResources = (ResourceView)findViewById(R.id.AdvancedResourceView);
 		/*		for (int i=0; i<2; i++){
 			basicResources.addCard(cards.get(i));
 			advancedResources.addCard(cards.get(i));
 		}
 		 */
 
+		updateBoard(currentPlayer);
+	}	
+
+//	public boolean dispatchTouchEvent(MotionEvent ev){
+//		super.dispatchTouchEvent(ev);
+//		View topView = findViewById(R.id.TopBoardView);
+//		return flingGesture_.onTouch(topView, ev);
+//	}
+
+	public void play(String cardName){
+		// Update modele
+		manager_.play(cardName);
+
+		// Update other views
+		PlayerStateView handView = (PlayerStateView)findViewById(R.id.PlayerStateView);
+		handView.play(cardName);
+		updateBoard(manager_.getMe());
+	}
+
+	private void updateBoard(Player currentPlayer){
 		PlayedCards green = (PlayedCards) findViewById(R.id.GreenCard);
 		PlayedCards red = (PlayedCards) findViewById(R.id.RedCard);
 		PlayedCards blue = (PlayedCards) findViewById(R.id.BlueCard);
 		PlayedCards yellow = (PlayedCards) findViewById(R.id.YellowCard);
 		PlayedCards gill = (PlayedCards) findViewById(R.id.GillCard);
-		for (Card c: currentPlayer.getPlayed()){
-			if (c.getClass() == MilitaryCard.class){
-				red.addCard(c);
-			}
-			else 
-				green.addCard(c);
-		}
+		ResourceView basicResources = (ResourceView)findViewById(R.id.BasicResourceView);
+		ResourceView advancedResources = (ResourceView)findViewById(R.id.AdvancedResourceView);
 
-		// Set onFling Listener - TEMP - TO REFACTOR
-		flingGesture_ = new OnFlingGestureListener(){
-			@Override
-			public void onRightToLeft() {
-				// TODO Auto-generated method stub
-				if (playerId_+1 < manager_.getPlayers().size()){
-					Intent intent = new Intent(seft_, GameScreen.class);
-					intent.putExtra(PLAYER_ID_MESSAGE, playerId_+1);
-					startActivity(intent);
-					seft_.finish();
-				}
-			}
-
-			@Override
-			public void onLeftToRight() {
-				// TODO Auto-generated method stub
-				if (playerId_ > 0){
-					Intent intent = new Intent(seft_, GameScreen.class);
-					intent.putExtra(PLAYER_ID_MESSAGE, playerId_-1);
-					startActivity(intent);
-					seft_.finish();
-				}
-			}
-
-			@Override
-			public void onBottomToTop() {
-				// TODO Auto-generated method stub
-			}
-
-			@Override
-			public void onTopToBottom() {
-				// TODO Auto-generated method stub
-			}
-		};
-		boardView.setOnTouchListener(flingGesture_);
-	}	
-
-	public boolean dispatchTouchEvent(MotionEvent ev){
-		super.dispatchTouchEvent(ev);
-		View topView = findViewById(R.id.TopBoardView);
-		return flingGesture_.onTouch(topView, ev);
+		green.setCards(currentPlayer.getPlayedCards("science"));
+		red.setCards(currentPlayer.getPlayedCards("military"));
+		blue.setCards(currentPlayer.getPlayedCards("culture"));
+		yellow.setCards(currentPlayer.getPlayedCards("trade"));
+		gill.setCards(currentPlayer.getPlayedCards("gill"));
+		basicResources.setCards(currentPlayer.getPlayedCards("basicRessource"));
+		advancedResources.setCards(currentPlayer.getPlayedCards("advancedRessource"));
 	}
-	
-	public static void showZoomPopup(View view, List<String> cardNames, Context context,
-			boolean withButtonPanel){
-		PopupWindow popup = new PopupWindow(view);
-		popup.setContentView(new ZoomCardView(context, cardNames, 0, withButtonPanel));
-		popup.showAtLocation(view, Gravity.CENTER, 0, 0);
-		popup.update(0, 0, GameScreen.SCREEN_WIDTH*2/3, GameScreen.SCREEN_HEIGTH/2);
-	}
-
 }
