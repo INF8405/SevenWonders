@@ -13,7 +13,7 @@ object SevenWonders
 
   def beginGame( nbPlayers: Int ): Game = {
     val cards = classicSevenWonders.generateCards(nbPlayers)
-    val chosenCivilizations = Random.shuffle(civilizations.toList).take(nbPlayers)
+    val chosenCivilizations = Random.shuffle(baseCivilizations.toList).take(nbPlayers)
     val players = chosenCivilizations.map{
       civ =>
         Player(civ, MultiSet(), 3)
@@ -737,7 +737,7 @@ object SevenWonders
 
   type PlayerAmount = Int
 
-  case class GameSetup(allCards: Map[Age, Map[PlayerAmount, MultiSet[Card]]], guildCards: Set[GuildCard]) {
+  class ClassicGameSetup(allCards: Map[Age, Map[PlayerAmount, MultiSet[Card]]], guildCards: Set[GuildCard]) {
     def generateCards(nbPlayers: Int): Map[Age, MultiSet[Card]] = {
       if (nbPlayers < 3) throw new IllegalArgumentException("You cannot currently build less than three players")
       else {
@@ -746,6 +746,17 @@ object SevenWonders
           allCards.mapValues( cards => (3 to nbPlayers).foldLeft(MultiSet[Card]())((set, key) => set ++ cards(key)))
         // Add 2 + nbPlayers guild cards selected randomly
         cardsWithoutGuilds.updated(3, cardsWithoutGuilds(3).++[Card](setToMultiSet(AugmentedSet(guildCards).takeRandom(nbPlayers + 2))))
+      }
+    }
+  }
+
+  class CityGameSetup(allCards: Map[Age, Map[PlayerAmount, MultiSet[Card]]], guildCards: Set[GuildCard], cityCards: Map[Age, Set[CityCard]])
+    extends ClassicGameSetup(allCards, guildCards) {
+    override def generateCards(nbPlayers: Int): Map[Age, MultiSet[Card]] = {
+      val classicSetup = super.generateCards(nbPlayers)
+      classicSetup.map {
+        case (age, cards) =>
+          (age, cards ++ AugmentedSet(cityCards(age)).takeRandom(nbPlayers))
       }
     }
   }
@@ -901,6 +912,45 @@ object SevenWonders
   val TABULARIUM = CityCard("TABULARIUM", Cost(2, MultiSet(Ore, Wood, Tapestry)), Set(VictoryPointSymbol(6)))
   val CAPITOL = CityCard("CAPITOL", Cost(2, MultiSet(Clay, Clay, Stone, Stone, Glass, Paper)), Set(VictoryPointSymbol(8)))
 
+  val MOURNERS_GUILD = GuildCard("MOURNERS GUILD", Cost(0, MultiSet(Clay, Clay, Wood, Glass, Tapestry)), Set(VictoryPointSymbol(VariableAmount(1, classOf[VictoryBattleMarker], Set(Left, Right)))))
+  val COUNTERFEITERS_GUILD = GuildCard("COUNTERFEITERS GUILD", Cost(0, MultiSet(Ore, Ore, Ore, Glass, Tapestry)), Set(VictoryPointSymbol(5), PayBankSymbol(3)))
+  val GUILD_OF_SHADOWS = GuildCard("GUILD OF SHADOWS", Cost(0, MultiSet(Stone, Stone, Wood, Paper)), Set(VictoryPointSymbol(VariableAmount(1, classOf[CityCard], Set(Left, Right)))))
+
+  val cityCards =
+    Map(
+      1 -> Set(
+        PIGEON_LOFT,
+        RESIDENCE,
+        HIDEOUT,
+        CLANDESTINE_DOCK_EAST,
+        CLANDESTINE_DOCK_WEST,
+        GAMBLING_DEN,
+        MILITIA,
+        GATES_OF_THE_CITY
+      ),
+      2 -> Set(
+        SPY_RING,
+        CONSULATE,
+        LAIR,
+        GAMBLING_HOUSE,
+        BLACK_MARKET,
+        SECRET_WAREHOUSE,
+        ARCHITECT_CABINET,
+        MERCENARIES,
+        TABULARIUM
+      ),
+      3 -> Set(
+        TORTURE_CHAMBER,
+        EMBASSY,
+        BROTHERHOOD,
+        BUILDERS_UNION,
+        CENOTAPH,
+        SLAVE_MARKET,
+        CONTINGENT,
+        CAPITOL
+      )
+    )
+
   // Civilizations
   val RHODOS_A = Civilization("RHODOS", Ore, List(
     WonderStage(Cost(0, MultiSet(Wood, Wood)), Set(VictoryPointSymbol(SimpleAmount(3)))),
@@ -991,10 +1041,10 @@ object SevenWonders
     WonderStage(Cost(0, MultiSet(Ore, Ore, Clay, Tapestry)), Set(VictoryPointSymbol(SimpleAmount(4)), DiplomacySymbol))
   ))
 
-  val civilizations = Set(RHODOS_A, ALEXANDRIA_A, HALIKARNASSOS_A, OLYMPIA_A, GIZAH_A, EPHESOS_A, BABYLON_A)
+  val baseCivilizations = Set(RHODOS_A, ALEXANDRIA_A, HALIKARNASSOS_A, OLYMPIA_A, GIZAH_A, EPHESOS_A, BABYLON_A)
+  val cityCivilizations = Set(BYZANTIUM_A, PETRA_A)
 
-  // Game Setup
-  val classicSevenWonders = GameSetup(
+  val normalBaseCards: Map[Age, Map[PlayerAmount, MultiSet[Card]]] =
     Map(
       1 -> Map(
         3 -> MultiSet(APOTHECARY, CLAY_POOL, ORE_VEIN, WORKSHOP, SCRIPTORIUM, BARRACKS, EAST_TRADING_POST, STOCKADE, CLAY_PIT, LOOM, GLASSWORKS, THEATER, BATHS, TIMBER_YARD, PRESS, STONE_PIT, MARKETPLACE, GUARD_TOWER, WEST_TRADING_POST, ALTAR, LUMBER_YARD),
@@ -1017,7 +1067,30 @@ object SevenWonders
         6 -> MultiSet(TOWN_HALL, CIRCUS, LODGE, PANTHEON, CHAMBER_OF_COMMERCE, LIGHTHOUSE),
         7 -> MultiSet(ARENA, OBSERVATORY, ACADEMY, FORTIFICATIONS, ARSENAL, PALACE)
       )
-    ),
-    Set(STRATEGISTS_GUILD, TRADERS_GUILD, MAGISTRATES_GUILD, SHOPOWNERS_GUILD, CRAFTMENS_GUILD, WORKERS_GUILD, PHILOSOPHERS_GUILD, SCIENTISTS_GUILD, SPIES_GUILD, BUILDERS_GUILD)
-  )
+    )
+
+  val baseGuilds =
+    Set(
+      STRATEGISTS_GUILD,
+      TRADERS_GUILD,
+      MAGISTRATES_GUILD,
+      SHOPOWNERS_GUILD,
+      CRAFTMENS_GUILD,
+      WORKERS_GUILD,
+      PHILOSOPHERS_GUILD,
+      SCIENTISTS_GUILD,
+      SPIES_GUILD,
+      BUILDERS_GUILD
+    )
+
+  val cityGuilds =
+    Set(
+      MOURNERS_GUILD,
+      COUNTERFEITERS_GUILD,
+      GUILD_OF_SHADOWS
+    )
+
+  // Game Setup
+  val classicSevenWonders = new ClassicGameSetup(normalBaseCards, baseGuilds)
+  val citySevenWonders = new CityGameSetup(normalBaseCards, baseGuilds ++ cityGuilds, cityCards)
 }

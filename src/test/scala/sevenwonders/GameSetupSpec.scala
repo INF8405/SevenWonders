@@ -4,7 +4,7 @@ import org.specs2.mutable._
 import com.github.jedesah.SevenWonders._
 
 class GameSetupSpec extends Specification {
-  "A GameSetup" should {
+  "A classicGameSetup" should {
     "correclty generate the cards to play with during the three ages" in {
       val cards = classicSevenWonders.generateCards(3)
       cards(1).size === 21
