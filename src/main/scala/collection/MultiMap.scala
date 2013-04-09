@@ -7,6 +7,7 @@ trait MultiMap[A, B] /*extends Collection[(A, B)]*/ {
   def values: MultiSet[B]
   def contains(key: A): Boolean
   def +(elem: (A, B)): MultiMap[A, B]
+  def size: Int = if (isEmpty) 0 else 1 + tail.size
 }
 
 object MultiMap {
@@ -39,7 +40,7 @@ class DefaultMultiMap[A, B](private val impl: Map[A, MultiSet[B]]) extends Multi
 object DefaultMultiMap {
   def apply[A, B](pairs: (A, B)*): DefaultMultiMap[A, B] = {
     val impl: Map[A, MultiSet[B]] = pairs.foldLeft(Map[A, MultiSet[B]]())((map, elem) =>
-      if (map.contains(elem._1)) map.updated(elem._1, map(elem._1))
+      if (map.contains(elem._1)) map.updated(elem._1, map(elem._1) + elem._2)
       else map + (elem._1 -> MultiSet[B](elem._2))
     )
     new DefaultMultiMap[A, B](impl)

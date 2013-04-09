@@ -155,7 +155,8 @@ object SevenWonders
       }
     }
   }
-  case class RebateSymbol(affectedResources: Set[Resource], fromWho: Set[NeighborReference], multiplicity: Int = Int.MaxValue) extends Symbol
+  case class RebateSymbol(affectedResources: Set[Resource], fromWho: Set[NeighborReference]) extends Symbol
+  case class DiscountSymbol(affectedResources: Set[Resource], fromWho: Set[NeighborReference], multiplicity: Int = 1) extends Symbol
   object FreeBuildEachAge extends Symbol
   object GrabFromDiscardPile extends Symbol
   object CopyGuildCard extends Symbol
@@ -530,20 +531,23 @@ object SevenWonders
     }
 
     /**
-     * @param trade
-     * @return The cost in coins of this trade
+     * @return A pair containing the left and right cost of a given Trade
      */
     def cost(trade: Trade): (Int, Int) = {
-      def cost(trade: Trade, rebates: Set[RebateSymbol]): (Int, Int) =
+      val rebates = allSymbols.filter(_.isInstanceOf[RebateSymbol]).map(_.asInstanceOf[RebateSymbol]).toSet
+      def cost(trade: Trade, discounts: Set[DiscountSymbol]): (Int, Int) =
         if (trade.isEmpty) (0, 0)
         else {
           val (resource, from) = trade.head
-          val (relevant, nonRelevant) = rebates.span(rebate => rebate.affectedResources.contains(resource) && rebate.fromWho.contains(from))
-          val newRebates = relevant.map(rebate => rebate.copy(multiplicity = rebate.multiplicity - 1)).filter(_.multiplicity > 0) ++ nonRelevant
-          val resourceCost = 2 - relevant.size
-          if (from == Left) (resourceCost, 0) else (0, resourceCost) + cost(trade.tail, newRebates)
+          val (relevant, nonRelevant) = discounts.span(discount => discount.affectedResources.contains(resource) && discount.fromWho.contains(from))
+          val newDiscounts = relevant.map(discount => discount.copy(multiplicity = discount.multiplicity - 1)).filter(_.multiplicity > 0) ++ nonRelevant
+          val anyRelevantRebate = rebates.exists(rebate => rebate.affectedResources.contains(resource) && rebate.fromWho.contains(from))
+          val resourceCostAfterRebates = if (anyRelevantRebate) 1 else 2
+          val resourceCostAfterDiscounts = resourceCostAfterRebates - relevant.size
+          val costThisResource = if (from == Left) (resourceCostAfterDiscounts, 0) else (0, resourceCostAfterDiscounts)
+          costThisResource + cost(trade.tail, newDiscounts)
         }
-      cost(trade, allSymbols.filter(_.isInstanceOf[RebateSymbol]).map(_.asInstanceOf[RebateSymbol]).toSet)
+      cost(trade, allSymbols.filter(_.isInstanceOf[DiscountSymbol]).map(_.asInstanceOf[DiscountSymbol]).toSet)
     }
 
     def availableEvolutions: Set[Card] = played.map(_.evolutions).flatten
@@ -878,8 +882,8 @@ object SevenWonders
   val HIDEOUT = CityCard("HIDEOUT", Free, Set(VictoryPointSymbol(2), PayBankSymbol(1)))
   val LAIR = CityCard("LAIR", Cost(0, MultiSet(Wood, Glass)), Set(VictoryPointSymbol(3), PayBankSymbol(2)))
   val BROTHERHOOD = CityCard("BROTHERHOOD", Cost(0, MultiSet(Wood, Wood, Tapestry, Ore)), Set(VictoryPointSymbol(4), PayBankSymbol(3)))
-  val CLANDESTINE_DOCK_WEST = CityCard("CLANDESTINE DOCK WEST", new Cost(1), Set(RebateSymbol(allResources, Set(Left), 1)))
-  val CLANDESTINE_DOCK_EAST = CityCard("CLANDESTINE DOCK EAST", new Cost(1), Set(RebateSymbol(allResources, Set(Right), 1)))
+  val CLANDESTINE_DOCK_WEST = CityCard("CLANDESTINE DOCK WEST", new Cost(1), Set(DiscountSymbol(allResources, Set(Left))))
+  val CLANDESTINE_DOCK_EAST = CityCard("CLANDESTINE DOCK EAST", new Cost(1), Set(DiscountSymbol(allResources, Set(Right))))
   val GAMBLING_DEN = CityCard("GAMBLING DEN",Free, Set(CoinSymbol(ThreeWayAmount(1, 6, 1))))
   val GAMBLING_HOUSE = CityCard("GAMBLING HOUSE",new Cost(1), Set(CoinSymbol(ThreeWayAmount(2, 8, 2))))
   val BLACK_MARKET = CityCard("BLACK MARKET", Cost(0, MultiSet(Ore, Tapestry)), Set(ProduceResourceNotProduced))

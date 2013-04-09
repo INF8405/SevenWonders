@@ -99,19 +99,25 @@ class PlayerSpec extends Specification with defaults {
         val player = Player(OLYMPIA_B, defaultHand, 3, MultiSet(), Set(EAST_TRADING_POST, CLANDESTINE_DOCK_WEST))
         val trade = MultiMap(Ore -> Left, Ore -> Left, Wood -> Right, Paper -> Left, Tapestry -> Right)
 
-        player.cost(trade) ==== (3, 3)
+        player.cost(trade) ==== (5, 3)
       }
       "2" in {
-        val player = Player(OLYMPIA_B, defaultHand, 3, MultiSet(), Set(EAST_TRADING_POST, CLANDESTINE_DOCK_WEST))
+        val player = Player(OLYMPIA_B, defaultHand, 3, MultiSet(), Set(EAST_TRADING_POST, CLANDESTINE_DOCK_WEST), nbWonders = 3)
         val trade = MultiMap(Paper -> Left, Ore -> Left, Ore -> Left, Wood -> Right, Paper -> Left, Tapestry -> Right)
 
         player.cost(trade) ==== (5, 3)
       }
       "3" in {
-        val player = Player(BABYLON_A, defaultHand, 3, MultiSet(), Set(EAST_TRADING_POST, CLANDESTINE_DOCK_WEST))
+        val player = Player(BABYLON_A, defaultHand, 3, MultiSet(), Set(MARKETPLACE, CLANDESTINE_DOCK_WEST))
         val trade = MultiMap(Ore -> Left, Ore -> Left, Paper -> Left, Ore -> Left, Ore -> Left, Wood -> Right, Paper -> Left, Tapestry -> Right)
 
-        player.cost(trade) ==== (7, 3)
+        player.cost(trade) ==== (9, 3)
+      }
+      "4" in {
+        val player = Player(GIZAH_A, defaultHand, 3, MultiSet(), Set())
+        val trade = MultiMap(Ore -> Left, Paper -> Right)
+
+        player.cost(trade) ==== (2, 2)
       }
     }
 

@@ -14,4 +14,10 @@ class UtilsSpec extends Specification {
       List(1,2,3,4).shiftRight === List(4,1,2,3)
     }
   }
+
+  "Augmented Tuple2" should {
+    "support adding elements with an implicit num" in {
+      (1,2) + (3,6) ==== (4,8)
+    }
+  }
 }
