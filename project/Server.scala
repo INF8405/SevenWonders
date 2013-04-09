@@ -16,7 +16,13 @@ object Server extends Build {
       version := Settings.version,
       scalaVersion := Settings.scalaVersion,
       resolvers ++= Settings.resolvers,
-      libraryDependencies ++= Seq( actors, logback )
+      libraryDependencies ++= Seq( 
+        akka, 
+        logback,
+        scalaTest,
+        akkaTest
+      ),
+      parallelExecution in Test := false
     )
   ) dependsOn ( model , api )
 
