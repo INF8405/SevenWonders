@@ -1,0 +1,30 @@
+Geo location
+    setup
+        create couple of games
+    plan
+        list those games
+
+Join
+    setup
+        A create a game
+    plan
+        B join the game
+        A is notified that B has joined
+        C join the game
+        A and B are notified that C has joined
+        D join the game
+        A, B and C are notified that D has joined
+
+Game mechanic
+    setup
+        A create a game
+        B, C and D join
+        D starts the game
+    plan
+        ...
+
+Disconnect
+    setup
+        A create
+    plan
+        A disconnect

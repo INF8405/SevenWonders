@@ -4,25 +4,28 @@ package app
 import org.apache.thrift._
 import transport.TServerSocket
 import server.TThreadPoolServer
-import akka.actor.{Props, ActorSystem}
+import akka.actor.{TypedProps, TypedActor, ActorSystem}
 
 object Server extends App {
 
-  private def start() {
+  new ServerImpl( ActorSystem() ).start()
+}
 
-    val system = ActorSystem()
+class ServerImpl( system: ActorSystem ) {
 
-    val dispatcher = system.actorOf( Props[Dispatcher] )
+  val lobby: GameLobby = TypedActor( system ).typedActorOf( TypedProps( classOf[GameLobby], new GameLobbyImpl( system ) ) )
+  val dispatcher: Dispatcher = TypedActor( system ).typedActorOf( TypedProps( classOf[Dispatcher], new DispatcherImpl( system, lobby ) ) )
 
-    val serverTransport = new TServerSocket( 8001 )
-    val serverArgs = new TThreadPoolServer.Args( serverTransport )
+  val serverTransport = new TServerSocket( 8001 )
+  val serverArgs = new TThreadPoolServer.Args( serverTransport )
+  serverArgs.processorFactory( new MessageProcessorFactory( dispatcher ) )
+  val server = new TThreadPoolServer( serverArgs )
 
-    serverArgs.processorFactory( new MessageProcessorFactory( dispatcher ) )
-
-    val server = new TThreadPoolServer( serverArgs )
-
+  def start() {
     server.serve()
   }
 
-  start()
+  def stop() {
+    server.stop()
+  }
 }
