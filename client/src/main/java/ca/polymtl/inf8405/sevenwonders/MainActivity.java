@@ -26,5 +26,10 @@ public class MainActivity extends Activity {
 		Intent intent = new Intent(this, GeoLocateActivity.class);
 		startActivity(intent);
 	}
+	
+	public void joinGameRoom(View view){
+		Intent intent = new Intent(this, ListGameRoomActivity.class);
+		startActivity(intent);
+	}
 
 }

@@ -2,12 +2,17 @@ package ca.polymtl.inf8405.sevenwonders;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.text.Html;
+import android.view.View;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +45,13 @@ public class GeoLocateActivity extends Activity implements LocationListener{
 	    } else {
 	      locationField.setText("Location not available");
 	    }
+	
+	    // Test
+//	    Button button = (Button)findViewById(R.id.ButtonTest);
+//	    button.setBackgroundColor(Color.GRAY);
+//	    button.setText(Html.fromHtml("<font color='red'>First line</font><br/><font color='blue'>Second line</font>"));
+	    
+	    //
 	}
 
 	@Override
@@ -69,4 +81,17 @@ public class GeoLocateActivity extends Activity implements LocationListener{
 		Toast.makeText(this, "Disabled provider " + provider,
 		        Toast.LENGTH_SHORT).show();
 	}
+	
+	public void joinGame(View view){
+		// TODO: Send Join request to server and wait
+		Intent intent = new Intent(this, ScreenSlidePagerActivity.class);
+		startActivity(intent);
+	}
+	
+	public void createGame(View view){
+		// TODO: Send Create request to server and wait
+		Intent intent = new Intent(this, ScreenSlidePagerActivity.class);
+		startActivity(intent);
+	}
+	
 }
