@@ -1,6 +1,7 @@
 package ca.polymtl.inf8405.sevenwonders;
 
 import ca.polymtl.inf8405.sevenwonders.R;
+import ca.polymtl.inf8405.sevenwonders.database.Database;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
