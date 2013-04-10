@@ -3,7 +3,6 @@ import Keys._
 
 object Settings
 {
-  val name = "Seven Wonders"
   val scalaVersion = "2.10.0"
   val version = "0.1-SNAPSHOT"
   val org = "ca.polymtl.inf8405"

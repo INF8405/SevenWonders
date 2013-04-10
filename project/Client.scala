@@ -8,7 +8,7 @@ object AndroidBuild extends Build
   import Dependencies._
 
   val allSettings = Defaults.defaultSettings ++ Seq(
-    name := Settings.name,
+    name := "sevenwonders-client",
     organization := Settings.org,
     version := Settings.version,
     versionCode := 0,
@@ -38,10 +38,10 @@ object AndroidBuild extends Build
   ) dependsOn Server.api
 
   lazy val tests = Project(
-    "Client-Tests",
+    "ClientTests",
     file( base + "/tests" ),
     settings = allSettings ++ AndroidTest.androidSettings ++ Seq (
-      name := "Client Tests"
+      name := "sevenwonders-client-tests"
     )
   ) dependsOn main
 }
