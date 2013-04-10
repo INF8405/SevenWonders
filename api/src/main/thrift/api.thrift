@@ -39,8 +39,8 @@ struct GameRoom {
 }
 
 struct Hand {
-	1: list<Card> playable,
-	2: list<Card> unplayable
+    1: map<Card,set<Trade>> playables,
+	2: list<Card> unplayables
 }
 
 struct Player {
@@ -55,8 +55,7 @@ struct Player {
 
 struct GameState {
 	1: Hand hand,
-	2: list<Trade> trades
-	3: list<Player> player
+	2: list<Player> players
 }
 
 service SevenWondersApi {

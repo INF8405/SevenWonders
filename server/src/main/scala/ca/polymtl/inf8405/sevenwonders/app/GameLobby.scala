@@ -9,8 +9,8 @@ import ApiHelper._
 import collection.mutable.{ Map => MMap }
 
 trait GameLobby {
-  def create( game: GameRoomDef, player: GameClient ): Future[Game]
-  def join( game: GameId, player: GameClient ): Future[Game]
+  def create( game: GameRoomDef, player: GameClient ): Future[TGame]
+  def join( game: GameId, player: GameClient ): Future[TGame]
   def list: Future[List[GameRoom]]
 }
 
@@ -23,14 +23,14 @@ class GameLobbyImpl( system: ActorSystem ) extends GameLobby {
     import java.util.UUID
     val id = UUID.randomUUID.toString
 
-    val game: Game = TypedActor( system ).typedActorOf( TypedProps[GameImpl]() )
+    val game: TGame = TypedActor( system ).typedActorOf( TypedProps[GameImpl]() )
 
     games( id ) = ( new GameRoom( id, definition ), game )
 
     future { game }
   }
 
-  def join( id: GameId, player: GameClient ): Future[Game] = {
+  def join( id: GameId, player: GameClient ): Future[TGame] = {
 
     games.get( id ).map{ case ( _, game  ) => {
       game.join( player )
@@ -44,5 +44,5 @@ class GameLobbyImpl( system: ActorSystem ) extends GameLobby {
   }
 
 
-  private val games = MMap.empty[GameId, (GameRoom, Game)]
+  private val games = MMap.empty[GameId, (GameRoom, TGame)]
 }

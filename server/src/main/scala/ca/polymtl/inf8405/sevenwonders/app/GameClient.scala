@@ -15,9 +15,9 @@ import scala.concurrent._
 
 object ApiHelper {
   type GameId = String
-  type Card = String
-  type Player = InetAddress
-  type Trade = JMap[Resource, JList[NeighborReference]]
+  type TCard = String
+  type TPlayer = InetAddress
+  type TTrade = JMap[Resource, JList[NeighborReference]]
 }
 
 trait GameClient extends SevenWondersApi.Iface {
@@ -53,14 +53,14 @@ class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLob
     game.foreach( _.start() )
   }
 
-  def s_playCard( card: String, trade: Trade ) {
+  def s_playCard( card: TCard, trade: TTrade ) {
     game.foreach( _.playCard( card, trade ) )
   }
 
-  def s_playWonder( trade: Trade ) {
+  def s_playWonder( trade: TTrade ) {
     game.foreach( _.playWonder( trade ) )
   }
-  def s_discard( card: Card ) {
+  def s_discard( card: TCard ) {
     game.foreach( _.discard( card ) )
   }
 
@@ -90,7 +90,7 @@ class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLob
 
   def username() = future { ip.toString }
 
-  private var game: Option[Game] = None
+  private var game: Option[TGame] = None
 
   override def equals( other: Any ) = {
     other match {
