@@ -5,18 +5,23 @@ import ca.polymtl.inf8405.sevenwonders.api.*;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TProtocol;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class Receiver implements SevenWondersApi.Iface {
+public class Receiver extends Api {
 
-    public Receiver( GeoLocateActivity targetActivity ) {
-        this.targetActivity = targetActivity;
+    private static Receiver instance = new Receiver();
+    private Receiver() {
+        start();
+    }
+    public static Receiver getInstance(){
+        return instance;
     }
 
 	private SevenWondersApi.Processor processor = new SevenWondersApi.Processor( this );
 
-	public void start() {
+	private void start() {
 		new Thread(new Runnable(){
 			public void run(){
                 try {
@@ -31,48 +36,44 @@ public class Receiver implements SevenWondersApi.Iface {
 		}).start();
 	}
 
+    public void addObserver( Api observer ){
+        observers.add( observer );
+    }
+
 	public void c_listGamesResponse(final List<GameRoom> rooms) throws TException {
-        targetActivity.runOnUiThread( new Runnable() {
-            @Override
-            public void run() {
-                targetActivity.updateGameList( rooms );
-            }
-        });
+        for( Api observer : observers ) {
+            observer.c_listGamesResponse(rooms);
+        }
 	}
 
 	public void c_joined(String user) throws TException {
-
+        for( Api observer : observers ) {
+            observer.c_joined(user);
+        }
 	}
 
 	public void c_left(String user) throws TException {
-
+        for( Api observer : observers ) {
+            observer.c_left(user);
+        }
 	}
 
 	public void c_sendState(final GameState state) throws TException {
-		targetActivity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                // update
-            }
-        });
+        for( Api observer : observers ) {
+            observer.c_sendState( state );
+        }
 	}
 
 	public void c_sendEndState(GameState state, List<Map<String,Integer>> detail) throws TException {
-
+        for( Api observer : observers ) {
+            observer.c_sendEndState( state, detail );
+        }
 	}
 
 	public void c_ping() throws TException{
 		Sender.getInstance().client.s_pong();
 	}
 
-	public void s_listGamesRequest(GeoLocation geo) throws TException {}
-    public void s_create(GameRoomDef definition) throws TException {}
-    public void s_join(String id) throws TException {}
-    public void s_start() throws TException {}
-    public void s_playCard(String card, Map<Resource,List<NeighborReference>> trade) throws TException {}
-    public void s_playWonder(Map<Resource,List<NeighborReference>> trade) throws TException {}
-    public void s_discard(String card) throws TException {}
-    public void s_pong() throws TException {}
-
-    private GeoLocateActivity targetActivity;
+    private List<Api> observers = new LinkedList<Api>();
 }
+

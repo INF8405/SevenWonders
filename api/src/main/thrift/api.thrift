@@ -24,8 +24,8 @@ typedef string CardCategory
 typedef map<Resource,list<NeighborReference>> Trade
 
 struct GeoLocation {
-	1: string longitude,
-	2: string latitude
+	1: double latitude,
+	2: double longitude
 }
 
 struct GameRoomDef {

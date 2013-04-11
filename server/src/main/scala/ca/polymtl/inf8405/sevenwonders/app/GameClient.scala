@@ -34,12 +34,11 @@ class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLob
   private val client = new Client( new TBinaryProtocol( transport ) )
 
   def s_listGamesRequest(geo: GeoLocation) {
-    lobby.list.foreach( c_listGamesResponse( _ ) )
+    println("request")
+    lobby.list.foreach( client.c_listGamesResponse( _ ) )
   }
 
-  def c_listGamesResponse(rooms: JList[GameRoom]) {
-    client.c_listGamesResponse(rooms)
-  }
+  def c_listGamesResponse(rooms: JList[GameRoom]) { }
 
   def s_create( definition: GameRoomDef ) {
     lobby.create( definition, TypedActor.self ).foreach( g => game = Some(g) )
@@ -69,6 +68,7 @@ class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLob
   }
 
   def s_pong() {
+    println( s"pong ${ip.getHostAddress}" )
     dispatch.pong( ip )
   }
 

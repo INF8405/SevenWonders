@@ -32,11 +32,16 @@ class GameLobbyImpl( system: ActorSystem ) extends GameLobby {
 
   def join( id: GameId, player: GameClient ): Future[TGame] = {
 
-    games.get( id ).map{ case ( _, game  ) => {
+    games.headOption.map{ case ( _, ( _, game ) ) => {
       game.join( player )
-
       future{ game }
-    }}.getOrElse( (Promise failed sys.error( s"game not found id=$id" )).future )
+    }}getOrElse( (Promise failed sys.error( "no games exists" )).future )
+
+//    games.get( id ).map{ case ( _, game  ) => {
+//      game.join( player )
+//
+//      future{ game }
+//    }}.getOrElse( (Promise failed sys.error( s"game not found id=$id" )).future )
   }
 
   def list = future {

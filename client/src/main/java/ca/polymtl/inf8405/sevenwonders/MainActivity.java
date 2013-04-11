@@ -23,8 +23,6 @@ public class MainActivity extends Activity {
 	}
 	
 	public void test(View view){
-		Intent intent = new Intent(this, GeoLocateActivity.class);
-		startActivity(intent);
 	}
 	
 	public void joinGameRoom(View view){
