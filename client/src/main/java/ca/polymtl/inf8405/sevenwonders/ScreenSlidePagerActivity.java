@@ -1,21 +1,14 @@
 package ca.polymtl.inf8405.sevenwonders;
 
-
-//import PlayerStateView;
-
 import java.util.List;
 
-import ca.polymtl.inf8405.sevenwonders.R;
 import ca.polymtl.inf8405.sevenwonders.controller.PlayerManager;
-import android.support.v4.app.Fragment;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
+
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.util.SparseArray;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
@@ -37,6 +30,7 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
 	 */
 	private PagerAdapter mPagerAdapter;
 
+
 	private static PlayerManager manager_;
 
 	@Override
@@ -50,7 +44,7 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
 
 		// Instantiate a ViewPager and a PagerAdapter.
 		mPager = (ViewPager) findViewById(R.id.Pager);
-		mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
+		mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(),manager_);
 		mPager.setAdapter(mPagerAdapter);
 		mPager.setCurrentItem(manager_.getMyId());
 		//mPager.requestDisallowInterceptTouchEvent(true);
@@ -74,42 +68,6 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
 //		}
 //	}
 	
-	/**
-	 * A simple pager adapter that represents all player objects, in
-	 * sequence.
-	 */
-	private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
-		private SparseArray<Fragment> registeredFragments = new SparseArray<Fragment>();
-		public ScreenSlidePagerAdapter(FragmentManager fm) {
-			super(fm);
-		}
-
-		@Override
-		public Fragment getItem(int position) {
-			boolean isMe = manager_.getPlayer(position).equals(manager_.getMe());
-			GameScreenFragment newFragment = new GameScreenFragment(manager_.getPlayer(position), 
-					manager_.getHand(), isMe); 
-			registeredFragments.put(position, newFragment);
-			return newFragment;
-		}
-
-		@Override
-		public int getCount() {
-			return manager_.getPlayers().size();
-		}
-		
-		public Fragment getRegisteredFragment(int position){
-			return registeredFragments.get(position);
-		}
-		
-		public void updateFragments(){
-			for (int i = 0 ; i < registeredFragments.size(); i++){
-				GameScreenFragment fragment = (GameScreenFragment)registeredFragments.get(i);
-				fragment.updateBoard(manager_.getPlayer(i));
-			}
-		}
-	}
-	
 	public static void showZoomPopup(View view, int selectedCardId, List<String> cardNames, 
 			boolean withButtonPanel){
 		PopupWindow popup = new PopupWindow();
@@ -130,6 +88,4 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
 		//updateBoard(manager_.getMe());
 		
 	}
-
-	
 }

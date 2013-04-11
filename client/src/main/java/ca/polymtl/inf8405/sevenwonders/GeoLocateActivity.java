@@ -10,12 +10,25 @@ import android.os.Bundle;
 import android.view.Window;
 import android.widget.TextView;
 import android.widget.Toast;
+import ca.polymtl.inf8405.sevenwonders.api.GameRoom;
+import ca.polymtl.inf8405.sevenwonders.api.GameRoomDef;
+import ca.polymtl.inf8405.sevenwonders.api.GeoLocation;
+
+import org.apache.thrift.TException;
+
+import java.util.List;
 
 public class GeoLocateActivity extends Activity implements LocationListener{
 
 	private TextView locationField;
 	private LocationManager locationManager;
 	private String provider;
+    private Receiver receiver;
+
+    public GeoLocateActivity(){
+        receiver = new Receiver( this );
+        receiver.start();
+    }
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -42,9 +55,27 @@ public class GeoLocateActivity extends Activity implements LocationListener{
 	    }
 	}
 
+    public void updateGameList(final List<GameRoom> rooms) {
+
+        TextView view = (TextView) findViewById(R.id.allGames);
+        view.clearComposingText();
+        view.setText("");
+        for( GameRoom room : rooms ) {
+            view.append( room.getId() );
+            view.append( "\n" );
+        }
+    }
+
+    public void createGame( View view ) throws TException {
+        Sender.getInstance().client.s_create( new GameRoomDef( "allo", new GeoLocation( "1","1" ) ) );
+    }
+
+    public void listGames( View view ) throws TException {
+        Sender.getInstance().client.s_listGamesRequest(new GeoLocation("1", "1"));
+    }
+
 	@Override
 	public void onLocationChanged(Location location) {
-		// TODO Auto-generated method stub
 	    locationField.setText("Your current location (long-lat) = " +
 	    		String.valueOf(location.getLongitude()) + " ; " 
 	    		+ String.valueOf(location.getLatitude()));
@@ -52,20 +83,16 @@ public class GeoLocateActivity extends Activity implements LocationListener{
 
 	@Override
 	public void onProviderDisabled(String arg0) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void onProviderEnabled(String arg0) {
-		// TODO Auto-generated method stub
 		Toast.makeText(this, "Enabled new provider " + provider,
 		        Toast.LENGTH_SHORT).show();
 	}
 
 	@Override
 	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
-		// TODO Auto-generated method stub
 		Toast.makeText(this, "Disabled provider " + provider,
 		        Toast.LENGTH_SHORT).show();
 	}

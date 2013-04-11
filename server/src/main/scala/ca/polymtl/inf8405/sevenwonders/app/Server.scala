@@ -1,6 +1,8 @@
 package ca.polymtl.inf8405.sevenwonders
 package app
 
+import api.Config
+
 import org.apache.thrift._
 import transport.TServerSocket
 import server.TThreadPoolServer
@@ -16,7 +18,7 @@ class ServerImpl( system: ActorSystem ) {
   val lobby: GameLobby = TypedActor( system ).typedActorOf( TypedProps( classOf[GameLobby], new GameLobbyImpl( system ) ) )
   val dispatcher: Dispatcher = TypedActor( system ).typedActorOf( TypedProps( classOf[Dispatcher], new DispatcherImpl( system, lobby ) ) )
 
-  val serverTransport = new TServerSocket( 8001 )
+  val serverTransport = new TServerSocket( Config.port )
   val serverArgs = new TThreadPoolServer.Args( serverTransport )
   serverArgs.processorFactory( new MessageProcessorFactory( dispatcher ) )
   val server = new TThreadPoolServer( serverArgs )

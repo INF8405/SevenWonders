@@ -41,6 +41,8 @@ class DispatcherImpl(
       clients( ip ).processor
     } else {
 
+      println( "new connection " + ip )
+
       val me = TypedActor.self[Dispatcher]
       val client: GameClient = TypedActor( system ).typedActorOf(TypedProps(
         classOf[GameClient],

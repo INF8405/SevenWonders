@@ -16,5 +16,30 @@
             android:text="Latitude: Unknow"
             android:textSize="20dip">
     </TextView>
-    
+
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Create game"
+            android:layout_centerInParent="true"
+            android:id="@+id/createGame"
+            android:state_pressed="true"
+            android:onClick="createGame"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="List games"
+            android:layout_centerInParent="true"
+            android:id="@+id/listGames"
+            android:layout_above="@id/createGame"
+            android:state_pressed="true"
+            android:onClick="listGames"/>
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Games"
+            android:layout_above="@id/listGames"
+            android:id="@+id/allGames"/>
+
 </RelativeLayout>
