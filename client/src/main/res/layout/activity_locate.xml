@@ -16,6 +16,7 @@
             android:text="Latitude: Unknow"
             android:textSize="20dip">
     </TextView>
+    
 
     <Button
             android:layout_width="wrap_content"

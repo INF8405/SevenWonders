@@ -32,7 +32,7 @@ public class ScreenSlidePagerActivity extends FragmentActivity {
 
 
 	private static PlayerManager manager_;
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

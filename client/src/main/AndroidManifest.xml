@@ -43,6 +43,11 @@
             android:name="ca.polymtl.inf8405.sevenwonders.GeoLocateActivity"
             android:label="@string/title_activity_geolocate" >
         </activity>
+        <activity
+            android:screenOrientation="landscape"
+            android:name="ca.polymtl.inf8405.sevenwonders.ListGameRoomActivity"
+            android:label="@string/title_activity_geolocate" >
+        </activity>
     </application>
 
 </manifest>
