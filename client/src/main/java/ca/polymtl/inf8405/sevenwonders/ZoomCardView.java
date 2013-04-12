@@ -40,7 +40,8 @@ public class ZoomCardView extends RelativeLayout{
 	 * @param current: the id of the current card
 	 * @param withButtonPanel: if we want to display the button panel inside of the zoom view
 	 */
-	private void init(Context context, List<String> cardNames, int current, boolean withButtonPanel){
+	private void init(Context context, List<String> cardNames, int current, boolean withButtonPanel,
+			boolean canPlayWonder){
 		current_ = current;
 		allCardNames_ = cardNames;
 
@@ -107,20 +108,23 @@ public class ZoomCardView extends RelativeLayout{
 			Button wonders = new Button(context);
 			wonders.setLayoutParams(bl);
 			wonders.setText("Wonders");
-			wonders.setOnTouchListener(new OnTouchListener() {				
-				@Override
-				public boolean onTouch(View arg0, MotionEvent event) {
-					int action = event.getActionMasked();
-					if (action == MotionEvent.ACTION_DOWN){
-						GameScreenActivity screen = (GameScreenActivity)sefl_.getContext();
-						FragmentManager manager = screen.getFragmentManager();
-						TradePopup tv = new TradePopup();
-						tv.show(manager, "abc");
-						closeMe();
+			if (canPlayWonder)
+				wonders.setOnTouchListener(new OnTouchListener() {				
+					@Override
+					public boolean onTouch(View arg0, MotionEvent event) {
+						int action = event.getActionMasked();
+						if (action == MotionEvent.ACTION_DOWN){
+							GameScreenActivity screen = (GameScreenActivity)sefl_.getContext();
+							FragmentManager manager = screen.getFragmentManager();
+							TradePopup tv = new TradePopup();
+							tv.show(manager, "abc");
+							closeMe();
+						}
+						return false;
 					}
-					return false;
-				}
-			});
+				});
+			else 
+				wonders.setActivated(false);
 
 			LinearLayout ln = new LinearLayout(context);
 			ln.setOrientation(LinearLayout.VERTICAL);
@@ -159,9 +163,9 @@ public class ZoomCardView extends RelativeLayout{
 	}
 
 	public ZoomCardView(Context context, List<String> cardNames, int current, 
-			boolean withButtonPanel){
+			boolean withButtonPanel, boolean canPlayWonder){
 		super(context);
-		init(context, cardNames, current, withButtonPanel);
+		init(context, cardNames, current, withButtonPanel, canPlayWonder);
 	}
 
 	public ZoomCardView(Context context, AttributeSet attrs) {

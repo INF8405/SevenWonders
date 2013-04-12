@@ -32,7 +32,7 @@ public class ResourceView extends View implements CardView {
 					for (Object o: cards_.keySet().toArray())
 						cardNames.add((String)o);
 
-					GameScreenActivity.showZoomPopup(sefl_, 0, cardNames, false);
+					GameScreenActivity.showZoomPopup(sefl_, 0, cardNames, false,false);
 				}
 				return false;
 			}

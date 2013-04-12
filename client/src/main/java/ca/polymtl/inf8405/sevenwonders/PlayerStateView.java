@@ -1,5 +1,6 @@
 package ca.polymtl.inf8405.sevenwonders;
 
+import ca.polymtl.inf8405.sevenwonders.api.Player;
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
 import ca.polymtl.inf8405.sevenwonders.database.Database;
 import android.content.Context;
@@ -15,12 +16,13 @@ import java.util.*;
 public class PlayerStateView extends View{
 
 	private HashMap<String, Bitmap> cardsInHand_;
-	private String civilisation_;
+	private Player player_;
 	private static float cardWidth_ = 0;
 	private static float cardHeight_ = 0;
-	private View seft_ = this;
+	private View self_ = this;
 
 	private void init(Context context){
+		// Image by default
 		setBackgroundResource(R.drawable.seven_wonders_bg);
 		cardsInHand_ = new HashMap<String, Bitmap>();
 		setOnTouchListener(new OnTouchListener() {
@@ -35,7 +37,8 @@ public class PlayerStateView extends View{
 
 				int selectedCardId = findSelectedCard(evt.getX(), evt.getY());
 				if (selectedCardId != -1)
-					GameScreenActivity.showZoomPopup(seft_, selectedCardId, cardNames, true);
+					GameScreenActivity.showZoomPopup(self_, selectedCardId, cardNames, true, 
+							player_.canPlayWonder);
 				return false;
 			}
 		});
@@ -92,10 +95,10 @@ public class PlayerStateView extends View{
 		}
 	}
 	
-	public void setCivilisation(String civiName){
+	public void setPlayer(Player player){
 		invalidate();
-		civilisation_ = civiName;
-		setBackgroundResource(Database.getInstance().getCivilisationBitmapId(civiName));
+		player_ = player;
+		setBackgroundResource(Database.getInstance().getCivilisationBitmapId(player_.civilisation));
 	}
 
 	public void play(String cardName){

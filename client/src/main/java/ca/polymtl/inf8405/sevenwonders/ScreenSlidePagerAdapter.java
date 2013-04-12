@@ -43,6 +43,7 @@ public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
         for( int i = 0; i < fragments.size(); i++ ){
             fragments.get(i).update(players.get(i), state.getHand());
         }
+        // TODO: Update scoreboard View
     }
 
     private int count_;

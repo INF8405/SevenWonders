@@ -51,9 +51,11 @@ public class GameScreenActivity extends FragmentActivity {
 		SCREEN_HEIGTH = size.y;
 	}
 
-	public static void showZoomPopup(View view, int selectedCardId, List<String> cardNames, boolean withButtonPanel) {
+	public static void showZoomPopup(View view, int selectedCardId, List<String> cardNames, 
+			boolean withButtonPanel, boolean canPlayWonder) {
 		PopupWindow popup = new PopupWindow();
-		popup.setContentView(new ZoomCardView(view.getContext(), cardNames, selectedCardId, withButtonPanel));
+		popup.setContentView(new ZoomCardView(view.getContext(), cardNames, selectedCardId, 
+				withButtonPanel, canPlayWonder));
 		popup.showAtLocation(view, Gravity.CENTER, 0, 0);
 		popup.update(0, 0, SCREEN_WIDTH*2/3, SCREEN_HEIGTH/2);
 	}

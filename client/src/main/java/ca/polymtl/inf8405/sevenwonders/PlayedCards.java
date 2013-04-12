@@ -47,7 +47,7 @@ public class PlayedCards extends View implements CardView {
 
 					int selectedCardId = findSelectedCard(evt.getX(), evt.getY());
 					if (selectedCardId != -1)
-						GameScreenActivity.showZoomPopup(self_, selectedCardId, cardNames, false);
+						GameScreenActivity.showZoomPopup(self_, selectedCardId, cardNames, false, false);
 				}
 				return false;
 			}
