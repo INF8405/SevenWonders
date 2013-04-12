@@ -4,7 +4,16 @@ package app
 import ApiHelper._
 import model.SevenWonders._
 
-import ca.polymtl.inf8405.sevenwonders.api.{Player => TPlayer, GameState => TGameState, Resource => TResource, CardCategory, Hand, NeighborReference}
+import ca.polymtl.inf8405.sevenwonders.api.{
+  Player => TPlayer,
+  GameState => TGameState,
+  Resource => TResource,
+  Card => TCard,
+  CardCategory,
+  Hand,
+  NeighborReference,
+  Civilisation => TCivilisation
+}
 
 import collection.mutable.{ Set => MSet, Map => MMap }
 import java.util.{ List => JList, Map => JMap, Set => JSet }
@@ -73,21 +82,23 @@ class GameImpl( system: ActorSystem ) extends TGame {
 
     def toThriftPlayer(p: Player ): TPlayer = {
       val bridgeCategory: Map[Class[_ <: Card], CardCategory] = Map(
-        classOf[ScienceCard] -> CardCategory.Science,
-        classOf[MilitaryCard] -> CardCategory.Military,
-        classOf[RawMaterialCard] -> CardCategory.RawMaterial,
-        classOf[ManufacturedGoodCard] -> CardCategory.ManufacturedGoods,
-        classOf[CivilianCard] -> CardCategory.Civilian,
-        classOf[CommercialCard] -> CardCategory.Commercial,
-        classOf[GuildCard] -> CardCategory.Guild
+        classOf[ScienceCard] -> CardCategory.SCIENCE,
+        classOf[MilitaryCard] -> CardCategory.MILITARY,
+        classOf[RawMaterialCard] -> CardCategory.RAW_MATERIAL,
+        classOf[ManufacturedGoodCard] -> CardCategory.MANUFACTURED_GOOD,
+        classOf[CivilianCard] -> CardCategory.CIVILIAN,
+        classOf[CommercialCard] -> CardCategory.COMMERCIAL,
+        classOf[GuildCard] -> CardCategory.GUILD
       )
 
       val tableau: JMap[CardCategory,JList[TCard]] =
-        p.played.groupBy( _.getClass ).map{ case ( ( clazz, cards ) ) => ( bridgeCategory(clazz), (cards.map( _.name ).toList): JList[TCard] ) }
+        p.played.groupBy( _.getClass ).map{ case ( ( clazz, cards ) ) => {
+          ( bridgeCategory(clazz), (cards.map( card => TCard.valueOf( card.name ) ).toList): JList[TCard] )
+        }}
 
       new TPlayer(
         tableau,
-        player.civilization.name,
+        TCivilisation.valueOf(player.civilization.name),
         player.battleMarkers.map( _.vicPoints: Integer ).toList: JList[Integer],
         player.coins,
         player.score( game.getNeighboorsStuff( player ) ),
@@ -99,21 +110,21 @@ class GameImpl( system: ActorSystem ) extends TGame {
     // Playables
     val neighborProductions = getNeighborProductions( player )
     val playableCards = player.playableCards( neighborProductions )
-    val playables: Map[TCard,Set[Trade]] = playableCards.map( card => ( card.name, player.possibleTrades( card, neighborProductions ) ) ).toMap
+    val playables: Map[TCard,Set[Trade]] = playableCards.map( card => ( TCard.valueOf( card.name ), player.possibleTrades( card, neighborProductions ) ) ).toMap
 
     val bridgeRessource: Map[Resource, TResource] = Map(
-      Clay -> TResource.Clay,
-      Wood -> TResource.Wood,
-      Ore -> TResource.Ore,
-      Stone -> TResource.Stone,
-      Glass -> TResource.Glass,
-      Paper -> TResource.Paper,
-      Tapestry -> TResource.Tapestry
+      Clay -> TResource.CLAY,
+      Wood -> TResource.WOOD,
+      Ore -> TResource.ORE,
+      Stone -> TResource.STONE,
+      Glass -> TResource.GLASS,
+      Paper -> TResource.PAPER,
+      Tapestry -> TResource.TAPESTRY
     )
 
     val bridgeNeighbor = Map(
-      Left -> NeighborReference.Left,
-      Right -> NeighborReference.Right
+      Left -> NeighborReference.LEFT,
+      Right -> NeighborReference.RIGHT
     )
 
     val tPlayables = playables.mapValues(
@@ -129,7 +140,7 @@ class GameImpl( system: ActorSystem ) extends TGame {
     val ( before, me :: after ) = game.players.toList.span( _ == player )
     val players = me :: before.reverse ::: after.reverse
 
-    val unplayables = (player.hand - playableCards).map( _.name ).toList : JList[String]
+    val unplayables = (player.hand - playableCards).map( card => TCard.valueOf( card.name ) ).toList : JList[TCard]
 
     new TGameState(
       new Hand( tPlayables, unplayables ),

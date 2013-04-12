@@ -3,6 +3,7 @@ package app
 
 import api._
 import api.SevenWondersApi.Client
+import api.{ Card => TCard }
 
 import org.apache.thrift.transport.TTransport
 import org.apache.thrift.protocol.TBinaryProtocol
@@ -16,7 +17,6 @@ import java.util
 
 object ApiHelper {
   type GameId = String
-  type TCard = String
   type TPlayer = InetAddress
   type TTrade = JMap[Resource, JList[NeighborReference]]
 }
