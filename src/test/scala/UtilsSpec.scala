@@ -1,3 +1,5 @@
+package ca.polymtl.inf8405.sevenwonders.model
+
 import org.specs2.mutable._
 import utils.Utils
 import Utils._

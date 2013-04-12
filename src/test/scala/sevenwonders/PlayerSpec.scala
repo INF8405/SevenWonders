@@ -1,8 +1,8 @@
-package sevenwonders
+package ca.polymtl.inf8405.sevenwonders.model
 
 import collection.MultiMap
 import org.specs2.mutable._
-import com.github.jedesah.SevenWonders._
+import SevenWonders._
 
 import collection.MultiSet
 

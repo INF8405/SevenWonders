@@ -1,3 +1,4 @@
+package ca.polymtl.inf8405.sevenwonders.model
 package collection
 
 trait MultiMap[A, B] /*extends Collection[(A, B)]*/ {
@@ -8,6 +9,7 @@ trait MultiMap[A, B] /*extends Collection[(A, B)]*/ {
   def contains(key: A): Boolean
   def +(elem: (A, B)): MultiMap[A, B]
   def size: Int = if (isEmpty) 0 else 1 + tail.size
+  def toMap: Map[A,List[B]]
 }
 
 object MultiMap {
@@ -35,6 +37,7 @@ class DefaultMultiMap[A, B](private val impl: Map[A, MultiSet[B]]) extends Multi
     case other: DefaultMultiMap[A, B] => other.impl == impl
     case _ => false
   }
+  def toMap = impl.mapValues(_.toList)
 }
 
 object DefaultMultiMap {

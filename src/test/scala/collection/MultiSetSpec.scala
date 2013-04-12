@@ -1,7 +1,9 @@
-package collection
+package ca.polymtl.inf8405.sevenwonders.model
+
+import collection.MultiSet
 
 import org.specs2.mutable._
-import com.github.jedesah.SevenWonders._
+import SevenWonders._
 
 class MultiSetSpec extends Specification {
   "MultiSet" should {

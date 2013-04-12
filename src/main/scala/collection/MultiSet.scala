@@ -1,3 +1,4 @@
+package ca.polymtl.inf8405.sevenwonders.model
 package collection
 
 import scala.util.Random

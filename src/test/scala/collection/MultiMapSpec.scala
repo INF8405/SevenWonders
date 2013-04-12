@@ -1,3 +1,4 @@
+package ca.polymtl.inf8405.sevenwonders.model
 package collection
 
 import org.specs2.mutable._
@@ -28,6 +29,11 @@ class MultiMapSpec extends Specification {
     "tail" in {
       val test = MultiMap(1 -> 5, 1 -> 5)
       test.tail ==== MultiMap(1 -> 5)
+    }
+
+    "toMap" in {
+      val test = MultiMap(1 -> 5, 1 -> 5)
+      test.toMap === Map( 1 -> List( 5, 5 ) )
     }
   }
 }

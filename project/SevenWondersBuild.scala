@@ -7,12 +7,12 @@ object SevenWondersBuild extends Build {
     id = "main",
     base = file("."),
     settings = Project.defaultSettings ++ Seq(
-      name := "7 Wonders",
+      name := "sevenwonders-model",
       organization := "ca.polymtl.inf8405",
-      version := "0.1-SNAPSHOT",
+      version := "0.1.0",
       scalaVersion := "2.10.1",
       libraryDependencies ++= Seq(
-	"org.specs2" %% "specs2" % "1.14" % "test"
+        "org.specs2" %% "specs2" % "1.14" % "test"
       ),
       scalacOptions in Compile := Seq( "-feature" )
     )
