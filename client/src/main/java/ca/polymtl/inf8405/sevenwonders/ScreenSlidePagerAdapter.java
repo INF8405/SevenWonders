@@ -4,42 +4,47 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.util.SparseArray;
-import ca.polymtl.inf8405.sevenwonders.controller.PlayerManager;
+import ca.polymtl.inf8405.sevenwonders.api.GameState;
+import ca.polymtl.inf8405.sevenwonders.api.Player;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A simple pager adapter that represents all player objects, in
  * sequence.
  */
 public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
-	private SparseArray<Fragment> registeredFragments = new SparseArray<Fragment>();
-    private PlayerManager manager_;
-	public ScreenSlidePagerAdapter(FragmentManager fm,PlayerManager manager) {
-		super(fm);
-        manager_ = manager;
-	}
+
+	public ScreenSlidePagerAdapter(FragmentManager fm, int count ) {
+        super(fm);
+        count_ = count;
+    }
 
 	@Override
 	public Fragment getItem(int position) {
-		boolean isMe = manager_.getPlayer(position).equals(manager_.getMe());
-		GameScreenFragment newFragment = new GameScreenFragment(manager_.getPlayer(position), 
-				manager_.getHand(), isMe); 
-		registeredFragments.put(position, newFragment);
-		return newFragment;
+        GameScreenFragment fragment = fragments.get( position, null );
+        if( fragment == null ){
+            fragment = new GameScreenFragment(position);
+            fragments.append(position,fragment);
+        }
+		return fragment;
 	}
 
 	@Override
 	public int getCount() {
-		return manager_.getPlayers().size();
+		return count_;
 	}
-	
-	public Fragment getRegisteredFragment(int position){
-		return registeredFragments.get(position);
-	}
-	
-	public void updateFragments(){
-		for (int i = 0 ; i < registeredFragments.size(); i++){
-			GameScreenFragment fragment = (GameScreenFragment)registeredFragments.get(i);
-			fragment.updateBoard(manager_.getPlayer(i));
-		}
-	}
+
+    public void setState( final GameState state ) {
+        List<Player> players = state.getPlayers();
+        for( int i = 0; i < fragments.size(); i++ ){
+            fragments.get(i).update(players.get(i), state.getHand());
+        }
+    }
+
+    private int count_;
+    private SparseArray<GameScreenFragment> fragments = new SparseArray<GameScreenFragment>();
 }

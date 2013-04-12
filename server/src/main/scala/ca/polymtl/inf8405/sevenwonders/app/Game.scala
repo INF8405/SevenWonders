@@ -4,10 +4,12 @@ package app
 import ApiHelper._
 import model.SevenWonders._
 
-import ca.polymtl.inf8405.sevenwonders.api.{Player => TPlayer, GameState => TGameState, Hand, Resource => TResource, NeighborReference}
+import ca.polymtl.inf8405.sevenwonders.api.{Player => TPlayer, GameState => TGameState, Resource => TResource, CardCategory, Hand, NeighborReference}
 
 import collection.mutable.{ Set => MSet, Map => MMap }
 import java.util.{ List => JList, Map => JMap, Set => JSet }
+import akka.actor.ActorSystem
+import scala.concurrent.Future
 
 trait TGame {
 
@@ -20,26 +22,35 @@ trait TGame {
   def discard( card: TCard )
 }
 
-class GameImpl extends TGame {
+class GameImpl( system: ActorSystem ) extends TGame {
 
   import collection.JavaConversions._
+  import system.dispatcher
 
-  def join( player: GameClient ){
-    players.add( player )
+  def join( client: GameClient ){
+    client.username foreach { user => {
+
+      Future.sequence(players.map(_.username())).foreach( users => {
+          client.c_connected( users.toList )
+        }
+      )
+      players.add( client )
+      broadcast { _.c_joined( user ) }
+    }}
   }
 
   def disconnect( player: GameClient ){
     players.remove( player )
-
   }
 
   def start(){
+    println(s"start player sizes: ${players.size}")
     val game = beginGame( players.size, playWithCities = false )
     playerBridge = game.players.zip( players ).map( _.swap ).toMap
     gameImpl = Some( game )
 
     playerBridge.foreach{ case ( client, player ) => {
-      client.c_sendState( toThriftState( player, game ) )
+      client.c_begin( toThriftState( player, game ) )
     }}
   }
 
@@ -61,10 +72,18 @@ class GameImpl extends TGame {
     }
 
     def toThriftPlayer(p: Player ): TPlayer = {
-      val bridge: Map[Class[_ <: Card], String] = Map( classOf[ScienceCard] -> "Science" )
+      val bridgeCategory: Map[Class[_ <: Card], CardCategory] = Map(
+        classOf[ScienceCard] -> CardCategory.Science,
+        classOf[MilitaryCard] -> CardCategory.Military,
+        classOf[RawMaterialCard] -> CardCategory.RawMaterial,
+        classOf[ManufacturedGoodCard] -> CardCategory.ManufacturedGoods,
+        classOf[CivilianCard] -> CardCategory.Civilian,
+        classOf[CommercialCard] -> CardCategory.Commercial,
+        classOf[GuildCard] -> CardCategory.Guild
+      )
 
-      val tableau: JMap[String,JList[String]] =
-        p.played.groupBy( _.getClass ).map{ case ( ( clazz, cards ) ) => ( bridge(clazz), (cards.map( _.name ).toList): JList[String] ) }
+      val tableau: JMap[CardCategory,JList[TCard]] =
+        p.played.groupBy( _.getClass ).map{ case ( ( clazz, cards ) ) => ( bridgeCategory(clazz), (cards.map( _.name ).toList): JList[TCard] ) }
 
       new TPlayer(
         tableau,
@@ -104,7 +123,7 @@ class GameImpl extends TGame {
             ( bridgeRessource(resource), neighbors.map( bridgeNeighbor ).toList : JList[NeighborReference] )
         } : JMap[TResource, JList[NeighborReference]]
       ) : JSet[JMap[TResource, JList[NeighborReference]]]
-    ): JMap[String,JSet[JMap[TResource, JList[NeighborReference]]]]
+    ): JMap[TCard,JSet[JMap[TResource, JList[NeighborReference]]]]
 
     // players
     val ( before, me :: after ) = game.players.toList.span( _ == player )

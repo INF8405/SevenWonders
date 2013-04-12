@@ -1,19 +1,13 @@
 package ca.polymtl.inf8405.sevenwonders;
 
-import ca.polymtl.inf8405.sevenwonders.R;
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
-import ca.polymtl.inf8405.sevenwonders.model.*;
 import android.content.Context;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
-import android.widget.PopupWindow;
 
 import java.util.*;
 
@@ -39,7 +33,7 @@ public class PlayerStateView extends View{
 
 				int selectedCardId = findSelectedCard(evt.getX(), evt.getY());
 				if (selectedCardId != -1)
-					ScreenSlidePagerActivity.showZoomPopup(seft_, selectedCardId, cardNames, true);
+					GameScreenActivity.showZoomPopup(seft_, selectedCardId, cardNames, true);
 				return false;
 			}
 		});

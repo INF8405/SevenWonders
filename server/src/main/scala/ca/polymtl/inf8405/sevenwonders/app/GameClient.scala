@@ -12,6 +12,7 @@ import java.util.{ List => JList, Map => JMap }
 import api.Resource
 import akka.actor.{ActorSystem, TypedActor}
 import scala.concurrent._
+import java.util
 
 object ApiHelper {
   type GameId = String
@@ -34,14 +35,17 @@ class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLob
   private val client = new Client( new TBinaryProtocol( transport ) )
 
   def s_listGamesRequest(geo: GeoLocation) {
-    println("request")
-    lobby.list.foreach( client.c_listGamesResponse( _ ) )
+    println("client request")
+    lobby.list.foreach( l => {
+      println(s"client list ${l.size}")
+      client.c_listGamesResponse( l )
+    })
   }
 
   def c_listGamesResponse(rooms: JList[GameRoom]) { }
 
   def s_create( definition: GameRoomDef ) {
-    lobby.create( definition, TypedActor.self ).foreach( g => game = Some(g) )
+    dispatch.create( definition, TypedActor.self ).foreach( g => game = Some(g) )
   }
 
   def s_join( id: GameId ) {
@@ -68,15 +72,23 @@ class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLob
   }
 
   def s_pong() {
-    println( s"pong ${ip.getHostAddress}" )
     dispatch.pong( ip )
   }
 
   def c_joined( user: String) {
     client.c_joined( user )
   }
+
+  def c_connected(users: JList[String]) {
+    println(s"client connected ${users.size}")
+    client.c_connected(users)
+  }
+
   def c_left(user: String) {
     client.c_left( user )
+  }
+  def c_begin(state: GameState) {
+    client.c_begin( state )
   }
   def c_sendState(state: GameState) {
     client.c_sendState( state )

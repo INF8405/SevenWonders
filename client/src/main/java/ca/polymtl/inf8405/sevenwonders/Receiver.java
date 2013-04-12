@@ -52,6 +52,12 @@ public class Receiver extends Api {
         }
 	}
 
+    @Override public void c_connected(List<String> users) throws TException {
+        for( Api observer : observers ) {
+            observer.c_connected(users);
+        }
+    }
+
 	public void c_left(String user) throws TException {
         for( Api observer : observers ) {
             observer.c_left(user);
@@ -71,7 +77,7 @@ public class Receiver extends Api {
 	}
 
 	public void c_ping() throws TException{
-		Sender.getInstance().client.s_pong();
+		Sender.getInstance().s_pong();
 	}
 
     private List<Api> observers = new LinkedList<Api>();

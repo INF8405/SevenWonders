@@ -1,19 +1,25 @@
 package ca.polymtl.inf8405.sevenwonders;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
+
+import org.apache.thrift.TException;
 
 public class GameRoomActivity extends Activity{
-	private static ArrayAdapter adapter_;
-    private static ArrayList<String> players_ = new ArrayList<String>();
-	
+
+    public GameRoomActivity() {
+        Receiver.getInstance().addObserver( new ApiDelegate() );
+    }
+
 	@Override
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
@@ -25,10 +31,49 @@ public class GameRoomActivity extends Activity{
 		adapter_ = new ArrayAdapter<String>(this, R.layout.gameroom_item,players_);
 		listView.setAdapter(adapter_);
 		listView.setTextFilterEnabled(true);
+
+        String gameid =  getIntent().getStringExtra(ListGameRoomActivity.GAMEID_MESSAGE);
+        if( !gameid.equals("") ){
+            try {
+                Sender.getInstance().s_join( gameid );
+            } catch ( TException e ) {
+                Log.e( "ListGameRoomActivity", e.getMessage() );
+            }
+        }
 	}
 	
-	public void play(View view){
-		// TODO: Update player list
-		Toast.makeText(getApplicationContext(), "Joined", Toast.LENGTH_SHORT).show();
+	public void play(View view) throws TException {
+
+        Sender.getInstance().s_start();
+
+        Intent intent = new Intent(this, GameScreenActivity.class);
+        startActivity(intent);
 	}
+
+    private class ApiDelegate extends Api {
+        @Override public void c_joined(final String user) throws TException {
+            runOnUiThread( new Runnable() {
+                @Override
+                public void run() {
+                    players_.add(user);
+                    adapter_.notifyDataSetChanged();
+                }
+            });
+        }
+        @Override public void c_connected(final List<String> users) throws TException {
+            runOnUiThread( new Runnable() {
+                @Override
+                public void run() {
+                    for( String user: users ){
+                        players_.add(user);
+                    }
+//                    players_.addAll(users);
+                    adapter_.notifyDataSetChanged();
+                }
+            });
+        }
+    }
+
+    private static ArrayAdapter adapter_;
+    private static ArrayList<String> players_ = new ArrayList<String>();
 }

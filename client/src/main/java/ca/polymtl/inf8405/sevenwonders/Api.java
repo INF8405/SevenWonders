@@ -10,11 +10,12 @@ public class Api implements SevenWondersApi.Iface {
 
     @Override public void c_listGamesResponse(List<GameRoom> rooms) throws TException {}
     @Override public void c_joined(String user) throws TException {}
-    @Override public void c_left(String user) throws TException { }
-    @Override public void c_sendState(GameState state) throws TException { }
+    @Override public void c_connected(List<String> users) throws TException {}
+    @Override public void c_left(String user) throws TException {}
+    @Override public void c_begin(GameState state) throws TException {}
+    @Override public void c_sendState(GameState state) throws TException {}
     @Override public void c_sendEndState(GameState state, List<Map<String, Integer>> detail) throws TException {}
-    @Override public void c_ping() throws TException { }
-
+    @Override public void c_ping() throws TException {}
 
     // Server calls this should not be implemented
     @Override final public void s_listGamesRequest(GeoLocation geo) throws TException {}

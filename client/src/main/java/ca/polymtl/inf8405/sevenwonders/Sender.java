@@ -7,8 +7,8 @@ public class Sender{
     private Sender(){};
 
 	private static Sender instance = new Sender();
-    public static Sender getInstance() {
-		return instance;
+    public static SevenWondersApi.Client getInstance() {
+		return instance.client;
 	}
 
     public SevenWondersApi.Client client = new SevenWondersApi.Client(ServerApi.getInstance().protocol);

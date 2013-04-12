@@ -1,15 +1,19 @@
 package ca.polymtl.inf8405.sevenwonders.app
 
 import akka.actor._
-import ca.polymtl.inf8405.sevenwonders.api.SevenWondersApi
+import ca.polymtl.inf8405.sevenwonders.api.{GeoLocation, GameRoomDef, SevenWondersApi}
 import java.net.InetAddress
 import org.apache.thrift.transport.{TSocket, TTransport}
 
 import scala.concurrent.duration._
+import scala.concurrent.Future
+import org.apache.thrift.TException
 
 trait Dispatcher {
   protected val system: ActorSystem
   protected val lobby: GameLobby
+  def create( game: GameRoomDef, player: GameClient ): Future[TGame]
+  def created(): Unit
   def pong( ip: InetAddress ): Unit
   def disconnect( ip: InetAddress ): Unit
   def getOrAddProcessor( transport: TTransport ): SevenWondersApi.Processor[GameClient]
@@ -28,11 +32,21 @@ class DispatcherImpl(
     clients.remove( ip )
   }
 
+  def create( game: GameRoomDef, player: GameClient ): Future[TGame] = {
+    lobby.create( game, player, TypedActor.self )
+  }
+
+  def created() {
+    clients foreach { case ( _, c ) => {
+      println("create request")
+      c.client.s_listGamesRequest( new GeoLocation(0,0) )
+    }}
+  }
+
   /* This is kind of a thrift hack
    * if we receive a ip we instanciate a thrift client
    * so we can communicate in both directions
    */
-
   def getOrAddProcessor( transport: TTransport ) = {
     val socket = transport.asInstanceOf[TSocket]
     val ip = socket.getSocket.getInetAddress
@@ -62,10 +76,14 @@ class DispatcherImpl(
   import system.dispatcher
 
   system.scheduler.schedule( delta, delta ){
-    clients map{ case ( ip, c ) => {
+    clients foreach { case ( ip, c ) => {
       if( c.alive ) {
         c.alive = false
-        c.client.c_ping()
+        try{
+          c.client.c_ping()
+        } catch {
+          case e: TException => disconnect( ip )
+        }
       } else {
         disconnect( ip )
       }

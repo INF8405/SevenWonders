@@ -5,18 +5,15 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
-import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.PopupWindow;
 
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
-import ca.polymtl.inf8405.sevenwonders.model.Card;
 
 import java.util.*;
 
-public class PlayedCards extends View {
+public class PlayedCards extends View implements CardView {
 	private HashMap<String, Bitmap> cards_;
 	private static float CARD_WIDTH = 0;
 	private static float CARD_HEIGHT = 0;
@@ -50,7 +47,7 @@ public class PlayedCards extends View {
 
 					int selectedCardId = findSelectedCard(evt.getX(), evt.getY());
 					if (selectedCardId != -1)
-						ScreenSlidePagerActivity.showZoomPopup(self_, selectedCardId, cardNames, false);
+						GameScreenActivity.showZoomPopup(self_, selectedCardId, cardNames, false);
 				}
 				return false;
 			}

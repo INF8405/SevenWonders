@@ -4,18 +4,15 @@ import java.util.*;
 
 
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
-import ca.polymtl.inf8405.sevenwonders.model.Card;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.util.AttributeSet;
-import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.PopupWindow;
 
-public class ResourceView extends View{
+public class ResourceView extends View implements CardView {
 
 	private ResourceView sefl_ = this;
 	private float CARD_RATIO = 1;
@@ -35,7 +32,7 @@ public class ResourceView extends View{
 					for (Object o: cards_.keySet().toArray())
 						cardNames.add((String)o);
 
-					ScreenSlidePagerActivity.showZoomPopup(sefl_,0, cardNames, false);
+					GameScreenActivity.showZoomPopup(sefl_, 0, cardNames, false);
 				}
 				return false;
 			}

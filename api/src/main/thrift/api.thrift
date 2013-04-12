@@ -15,12 +15,39 @@ enum NeighborReference {
     Right = 1
 }
 
+enum CardCategory {
+    Science = 0,
+    Military = 1,
+    RawMaterial = 2,
+    ManufacturedGoods = 3,
+    Civilian = 4,
+    Commercial = 5,
+    Guild = 6
+}
+
+/*
+enum Civilisation {
+    RhodesA = 0,
+    RhodesB = 1,
+    AlexandriaA = 2,
+    AlexandriaB = 3,
+    EphesusA = 4,
+    EphesusB = 5,
+    BabylonA = 6,
+    BabylonB = 7,
+    OlympiaA = 8,
+    OlympiaB = 9,
+    HalicarnassusA = 10,
+    HalicarnassusB = 11,
+    GizaA = 12,
+    GizaB = 13
+}*/
+
 typedef string GameId
 typedef string Username
 typedef string Card
 typedef list<map<string,i32>> ScoreDetail
 typedef i32 BattleMarker
-typedef string CardCategory
 typedef map<Resource,list<NeighborReference>> Trade
 
 struct GeoLocation {
@@ -65,9 +92,11 @@ service SevenWondersApi {
 	oneway void s_create( 1: GameRoomDef definition ),
 	oneway void s_join( 1: GameId id ),
 	oneway void c_joined( 1: Username user ),
+    oneway void c_connected( 1: list<Username> users ),
 	oneway void c_left( 1: Username user ),
 	oneway void s_start( ),
 
+    oneway void c_begin( 1: GameState state ),
 	oneway void c_sendState( 1: GameState state ),
 
 	oneway void s_playCard( 1: Card card, 2: Trade trade ),

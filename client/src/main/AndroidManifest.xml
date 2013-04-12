@@ -25,17 +25,12 @@
         </activity>
         <activity
             android:screenOrientation="landscape"
-            android:name="ca.polymtl.inf8405.sevenwonders.GameScreen"
-            android:label="@string/title_activity_game_screen" >
-        </activity>
-        <activity
-            android:screenOrientation="landscape"
             android:name="ca.polymtl.inf8405.sevenwonders.TestActivity"
             android:label="@string/title_activity_game_screen" >
         </activity>
         <activity
             android:screenOrientation="landscape"
-            android:name="ca.polymtl.inf8405.sevenwonders.ScreenSlidePagerActivity"
+            android:name=".GameScreenActivity"
             android:label="@string/title_activity_game_screen" >
         </activity>
         <activity

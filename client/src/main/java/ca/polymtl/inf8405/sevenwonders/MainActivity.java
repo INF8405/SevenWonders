@@ -1,7 +1,5 @@
 package ca.polymtl.inf8405.sevenwonders;
 
-import ca.polymtl.inf8405.sevenwonders.R;
-import ca.polymtl.inf8405.sevenwonders.database.Database;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Intent;
@@ -18,13 +16,12 @@ public class MainActivity extends Activity {
 	}
 
 	public void play(View view){
-		Intent intent = new Intent(this, ScreenSlidePagerActivity.class);
+		Intent intent = new Intent(this, GameScreenActivity.class);
 		startActivity(intent);
 	}
 	
 	public void test(View view){
-		Intent intent = new Intent(this, GameRoomActivity.class);
-		startActivity(intent);
+
 	}
 	
 	public void joinGameRoom(View view){

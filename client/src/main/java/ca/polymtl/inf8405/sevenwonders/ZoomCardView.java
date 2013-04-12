@@ -3,11 +3,9 @@ package ca.polymtl.inf8405.sevenwonders;
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
 import ca.polymtl.inf8405.sevenwonders.controller.OnFlingGestureListener;
 
-import android.app.AlertDialog;
 import android.app.FragmentManager;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Color;
 //import android.support.v4.app.FragmentManager;
 import android.util.AttributeSet;
@@ -19,7 +17,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.RelativeLayout.LayoutParams;
 
 import java.util.*;
 
@@ -96,7 +93,7 @@ public class ZoomCardView extends RelativeLayout{
 			play.setOnTouchListener(new OnTouchListener() {
 				@Override
 				public boolean onTouch(View arg0, MotionEvent arg1) {
-					ScreenSlidePagerActivity screen = (ScreenSlidePagerActivity)sefl_.getContext();
+					GameScreenActivity screen = (GameScreenActivity)sefl_.getContext();
 					screen.play(allCardNames_.get(current_));
 					closeMe();
 					return false;
@@ -115,7 +112,7 @@ public class ZoomCardView extends RelativeLayout{
 				public boolean onTouch(View arg0, MotionEvent event) {
 					int action = event.getActionMasked();
 					if (action == MotionEvent.ACTION_DOWN){
-						ScreenSlidePagerActivity screen = (ScreenSlidePagerActivity)sefl_.getContext();
+						GameScreenActivity screen = (GameScreenActivity)sefl_.getContext();
 						FragmentManager manager = screen.getFragmentManager();
 						TradePopup tv = new TradePopup();
 						tv.show(manager, "abc");

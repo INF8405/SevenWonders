@@ -1,8 +1,12 @@
 package ca.polymtl.inf8405.sevenwonders;
 
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
-import ca.polymtl.inf8405.sevenwonders.model.Player;
+import ca.polymtl.inf8405.sevenwonders.api.CardCategory;
+
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -10,77 +14,72 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
+import ca.polymtl.inf8405.sevenwonders.api.Hand;
+import ca.polymtl.inf8405.sevenwonders.api.Player;
 
-public class GameScreenFragment  extends Fragment{
-	
-	private static final int BOARD_VIEW_WEIGHT = 3;
-	private static final int STATE_VIEW_WEIGHT = 2;
+public class GameScreenFragment extends Fragment {
 
-	private Player player_;
-	private List<String> hand_;
-	private boolean isMe_ = false;
+    public GameScreenFragment( int position ) {
+        this.position = position;
 
-	private ViewGroup rootView_;
-
-	public GameScreenFragment(Player player, List<String> hand, boolean isMe){
-		player_ = player;
-		hand_ = hand;
-		isMe_ = isMe;
-	}
+        categoryToView_.put( CardCategory.Civilian, (CardView) rootView_.findViewById(R.id.BlueCard) );
+        categoryToView_.put( CardCategory.Commercial, (CardView) rootView_.findViewById(R.id.YellowCard));
+        categoryToView_.put( CardCategory.Guild, (CardView) rootView_.findViewById(R.id.GillCard));
+        categoryToView_.put( CardCategory.ManufacturedGoods, (CardView) rootView_.findViewById(R.id.AdvancedResourceView));
+        categoryToView_.put( CardCategory.Military, (CardView) rootView_.findViewById(R.id.RedCard));
+        categoryToView_.put( CardCategory.RawMaterial, (CardView) rootView_.findViewById(R.id.BasicResourceView));
+        categoryToView_.put( CardCategory.Science, (CardView) rootView_.findViewById(R.id.GreenCard));
+    }
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
-		rootView_ = (ViewGroup) inflater.inflate(
-				R.layout.activity_game_screen, container, false);
+	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-		updateBoard(player_);
+        rootView_ = (ViewGroup) inflater.inflate( R.layout.activity_game_screen, container, false);
 
 		// Set handView height
 		LinearLayout boardView = (LinearLayout)rootView_.findViewById(R.id.TopBoardView);
 		LayoutParams params = boardView.getLayoutParams();
-		params.height = (int)(ScreenSlidePagerActivity.SCREEN_HEIGTH * BOARD_VIEW_WEIGHT / (STATE_VIEW_WEIGHT + BOARD_VIEW_WEIGHT));
+		params.height = (int)(GameScreenActivity.SCREEN_HEIGTH * BOARD_VIEW_WEIGHT / (STATE_VIEW_WEIGHT + BOARD_VIEW_WEIGHT));
 
 		PlayerStateView handView = (PlayerStateView)rootView_.findViewById(R.id.PlayerStateView);
-		handView.setCardSize(ScreenSlidePagerActivity.SCREEN_HEIGTH * STATE_VIEW_WEIGHT 
-				/ (STATE_VIEW_WEIGHT + BOARD_VIEW_WEIGHT));
-		// set hand cards for me
-		handView.setCards(hand_);
-		if (!isMe_)
-			handView.setAlpha((float)0.5);
+		handView.setCardSize(GameScreenActivity.SCREEN_HEIGTH * STATE_VIEW_WEIGHT / (STATE_VIEW_WEIGHT + BOARD_VIEW_WEIGHT));
 
-//		LinearLayout layout = (LinearLayout)rootView_.findViewById(R.id.TopBoardView);
-//		layout.setOnTouchListener(new OnTouchListener() {
-//			@Override
-//			public boolean onTouch(View v, MotionEvent event) {
-//				List<String> cardNames = new ArrayList<String>();
-//				cardNames.add("0");
-//				cardNames.add("1");
-//				cardNames.add("2");
-//				GameScreen.showZoomPopup(v, 0, cardNames, true);	
-//				return false;
-//			}
-//		});
+		if (isOpponent()){ handView.setAlpha((float)0.5); }
 
 		return rootView_;
 	}
 
-	public void updateBoard(Player currentPlayer){
-		PlayedCards green = (PlayedCards) rootView_.findViewById(R.id.GreenCard);
-		PlayedCards red = (PlayedCards) rootView_.findViewById(R.id.RedCard);
-		PlayedCards blue = (PlayedCards) rootView_.findViewById(R.id.BlueCard);
-		PlayedCards yellow = (PlayedCards) rootView_.findViewById(R.id.YellowCard);
-		PlayedCards gill = (PlayedCards) rootView_.findViewById(R.id.GillCard);
-		ResourceView basicResources = (ResourceView)rootView_.findViewById(R.id.BasicResourceView);
-		ResourceView advancedResources = (ResourceView)rootView_.findViewById(R.id.AdvancedResourceView);
+    public void update(Player player, Hand hand ){
 
-		green.setCards(currentPlayer.getPlayedCards("science"));
-		red.setCards(currentPlayer.getPlayedCards("military"));
-		blue.setCards(currentPlayer.getPlayedCards("culture"));
-		yellow.setCards(currentPlayer.getPlayedCards("trade"));
-		gill.setCards(currentPlayer.getPlayedCards("gill"));
-		basicResources.setCards(currentPlayer.getPlayedCards("basicRessource"));
-		advancedResources.setCards(currentPlayer.getPlayedCards("advancedRessource"));
-	}
-	
+        PlayerStateView handView = (PlayerStateView)rootView_.findViewById(R.id.PlayerStateView);
+
+        List<String> cards = new LinkedList<String>(); // Fixme: unplayables vs playables
+        cards.addAll(hand.getPlayables().keySet());
+        cards.addAll(hand.getUnplayables());
+        handView.setCards(cards);
+
+        // Fixme: Implement me duc !
+        //player.battleMarkers
+        //player.canPlayWonder
+        //player.civilisation
+        //player.coins
+        //player.score
+        //player.wonderStaged
+
+        for( Map.Entry<CardCategory,List<String>> entry : player.getTableau().entrySet() ) {
+            categoryToView_.get(entry.getKey()).setCards( entry.getValue());
+        }
+    }
+
+    private static final int BOARD_VIEW_WEIGHT = 3;
+    private static final int STATE_VIEW_WEIGHT = 2;
+
+    private int position;
+
+    private boolean isOpponent() {
+        return position != 0; // Fixme
+    }
+
+    private ViewGroup rootView_;
+    private Map<CardCategory,CardView> categoryToView_ = new HashMap<CardCategory, CardView>();
 }

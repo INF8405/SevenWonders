@@ -5,6 +5,7 @@ import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -26,6 +27,8 @@ import org.apache.thrift.TException;
 
 public class ListGameRoomActivity extends Activity implements LocationListener{
 
+    public static String GAMEID_MESSAGE = "ListGameRoomActivity_GameId";
+
     public ListGameRoomActivity() {
         Receiver.getInstance().addObserver( new ApiDelegate() );
     }
@@ -44,15 +47,9 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
 		listView.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                try {
-                    Sender.getInstance().client.s_join(rooms_.get(position).room.id);
-
-                    Toast.makeText(getApplicationContext(), ((TextView) view).getText(), Toast.LENGTH_SHORT).show();
-
-                } catch ( TException e ) {
-                    Log.e( "ListGameRoomActivity", e.getMessage() );
-                }
-
+            Intent intent = new Intent(self, GameRoomActivity.class);
+            intent.putExtra(GAMEID_MESSAGE,rooms_.get(position).room.id);
+            startActivity(intent);
 			}
 		});
 
@@ -72,17 +69,24 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
 
 	public void createGame(View view) throws TException {
 
-        GeoLocation geo = new GeoLocation(location.getLatitude(), location.getLongitude());
-        Sender.getInstance().client.s_create(new GameRoomDef("allo", geo));
-        Sender.getInstance().client.s_listGamesRequest(geo);
+        Intent intent = new Intent(this, GameRoomActivity.class);
+        startActivity(intent);
+
+        Sender.getInstance().s_create(new GameRoomDef("-", geo));
 	}
 
-	//////////////////////////// Location Listener ///////////////////////////////////// 
+	//////////////////////////// Location Listener /////////////////////////////////////
 	@Override
 	public void onLocationChanged(Location location) {
 
         locationSet = true;
-        this.location = location;
+        geo = new GeoLocation(location.getLatitude(), location.getLongitude());
+
+        try {
+            Sender.getInstance().s_listGamesRequest(geo);
+        } catch ( TException e ) {
+            Log.e("ListGameRoom", e.getMessage() );
+        }
 	}
 
 	@Override public void onProviderDisabled(String a) { }
@@ -121,5 +125,6 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
     private LocationManager locationManager_;
 
     private boolean locationSet = false;
-    private Location location;
+    private GeoLocation geo = new GeoLocation(0,0);
+    private ListGameRoomActivity self = this;
 }
