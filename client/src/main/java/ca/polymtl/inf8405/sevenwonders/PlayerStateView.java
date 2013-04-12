@@ -1,6 +1,7 @@
 package ca.polymtl.inf8405.sevenwonders;
 
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
+import ca.polymtl.inf8405.sevenwonders.database.Database;
 import android.content.Context;
 
 import android.graphics.Bitmap;
@@ -14,12 +15,13 @@ import java.util.*;
 public class PlayerStateView extends View{
 
 	private HashMap<String, Bitmap> cardsInHand_;
+	private String civilisation_;
 	private static float cardWidth_ = 0;
 	private static float cardHeight_ = 0;
 	private View seft_ = this;
 
 	private void init(Context context){
-		setBackgroundResource(R.drawable.civilization1);
+		setBackgroundResource(R.drawable.seven_wonders_bg);
 		cardsInHand_ = new HashMap<String, Bitmap>();
 		setOnTouchListener(new OnTouchListener() {
 			@Override
@@ -89,9 +91,14 @@ public class PlayerStateView extends View{
 			cardsInHand_.put(card, cardBm );
 		}
 	}
+	
+	public void setCivilisation(String civiName){
+		invalidate();
+		civilisation_ = civiName;
+		setBackgroundResource(Database.getInstance().getCivilisationBitmapId(civiName));
+	}
 
 	public void play(String cardName){
-		
 		cardsInHand_.remove(cardName);
 	}
 

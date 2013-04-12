@@ -37,6 +37,13 @@ public class GameScreenActivity extends FragmentActivity {
 
 		//mPager.requestDisallowInterceptTouchEvent(true);
 		
+		// TESTING: Test UI without server - Duc - I'll kill you if u try to remove theses lines Gui!
+		mPager = (ViewPager) findViewById(R.id.Pager);
+        mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), 3);
+        mPager.setAdapter(mPagerAdapter);
+        mPager.setCurrentItem(0);
+        // End Testing code - Comment it when testing with server
+
 		// Get ScreenSize
 		Point size = new Point();
 		getWindowManager().getDefaultDisplay().getSize(size);

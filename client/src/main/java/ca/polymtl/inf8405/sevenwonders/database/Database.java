@@ -8,12 +8,37 @@ import android.util.Log;
 import ca.polymtl.inf8405.sevenwonders.R;
 
 public class Database {
-	private static HashMap<String, Integer> cardMapper_;
+	private static Map<String, Integer> cardMapper_;
+	private static Map<String, Integer> civilisationMapper_;
 	private static Database instance_;
 
 	private Database(){
-		cardMapper_ = new HashMap<String, Integer>();
+		setupCardMapper();
+		setupCivilisation();
+	}
 
+	public static Database getInstance(){
+		if (instance_ == null)
+			instance_ = new Database();
+		return instance_;
+	}
+
+	public Integer getBitmapId(String cardName){
+		if (cardMapper_.containsKey(cardName))
+			return cardMapper_.get(cardName);
+		else
+			return 0;
+	}
+	
+	public Integer getCivilisationBitmapId(String civilisationName){
+		if (civilisationMapper_.containsKey(civilisationName))
+			return civilisationMapper_.get(civilisationName);
+		else
+			return 0;
+	}
+	
+	private static void setupCardMapper(){
+		cardMapper_ = new HashMap<String, Integer>();
 		// Setup all cards here
 		cardMapper_.put("0", R.drawable.altar);
 		cardMapper_.put("1", R.drawable.apothecary);
@@ -40,17 +65,19 @@ public class Database {
 		cardMapper_.put("22", R.drawable.workshop);
 	}
 
-	public static Database getInstance(){
-		if (instance_ == null)
-			instance_ = new Database();
-		return instance_;
+	private static void setupCivilisation(){
+		civilisationMapper_ = new HashMap<String, Integer>();
+		civilisationMapper_.put("0", R.drawable.alexandria_a);
+		civilisationMapper_.put("1", R.drawable.alexandria_b);
+		civilisationMapper_.put("2", R.drawable.babylon_a);
+		civilisationMapper_.put("3", R.drawable.babylon_b);
+		civilisationMapper_.put("4", R.drawable.ephesos_a);
+		civilisationMapper_.put("5", R.drawable.ephesos_b);
+		civilisationMapper_.put("6", R.drawable.halikarnassos_a);
+		civilisationMapper_.put("7", R.drawable.halikarnassos_b);
+		civilisationMapper_.put("8", R.drawable.olympia_a);
+		civilisationMapper_.put("9", R.drawable.olympia_b);
+		civilisationMapper_.put("10", R.drawable.rhodos_a);
+		civilisationMapper_.put("11", R.drawable.rhodos_b);
 	}
-
-	public Integer getBitmapId(String cardName){
-		if (cardMapper_.containsKey(cardName))
-			return cardMapper_.get(cardName);
-		else
-			return 0;
-	}
-
 }
