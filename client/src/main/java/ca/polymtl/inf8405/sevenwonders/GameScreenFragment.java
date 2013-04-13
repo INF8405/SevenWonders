@@ -5,7 +5,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import ca.polymtl.inf8405.sevenwonders.api.Card;
 import ca.polymtl.inf8405.sevenwonders.api.CardCategory;
+import static ca.polymtl.inf8405.sevenwonders.api.CardCategory.*;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -42,40 +44,51 @@ public class GameScreenFragment extends Fragment {
 		if (isOpponent()){ handView.setAlpha((float)0.5); }
 
 		if (categoryToView_.size() == 0){
-			categoryToView_.put( CardCategory.Civilian, (CardView) rootView_.findViewById(R.id.BlueCard) );
-			categoryToView_.put( CardCategory.Commercial, (CardView) rootView_.findViewById(R.id.YellowCard));
-			categoryToView_.put( CardCategory.Guild, (CardView) rootView_.findViewById(R.id.GillCard));
-			categoryToView_.put( CardCategory.ManufacturedGoods, (CardView) rootView_.findViewById(R.id.AdvancedResourceView));
-			categoryToView_.put( CardCategory.Military, (CardView) rootView_.findViewById(R.id.RedCard));
-			categoryToView_.put( CardCategory.RawMaterial, (CardView) rootView_.findViewById(R.id.BasicResourceView));
-			categoryToView_.put( CardCategory.Science, (CardView) rootView_.findViewById(R.id.GreenCard));
+			categoryToView_.put( CIVILIAN, (CardView) rootView_.findViewById(R.id.BlueCard) );
+			categoryToView_.put( COMMERCIAL, (CardView) rootView_.findViewById(R.id.YellowCard));
+			categoryToView_.put( GUILD, (CardView) rootView_.findViewById(R.id.GillCard));
+			categoryToView_.put( MANUFACTURED_GOOD, (CardView) rootView_.findViewById(R.id.AdvancedResourceView));
+			categoryToView_.put( MILITARY, (CardView) rootView_.findViewById(R.id.RedCard));
+			categoryToView_.put( RAW_MATERIAL, (CardView) rootView_.findViewById(R.id.BasicResourceView));
+			categoryToView_.put( SCIENCE, (CardView) rootView_.findViewById(R.id.GreenCard));
 		}
-		
+
+		doUpdate();
+
 		return rootView_;
 	}
 
-	public void update(Player player, Hand hand ){
+	private void doUpdate() {
+        PlayerStateView handView = (PlayerStateView)rootView_.findViewById(R.id.PlayerStateView);
 
-		PlayerStateView handView = (PlayerStateView)rootView_.findViewById(R.id.PlayerStateView);
+        List<Card> cards = new LinkedList<Card>(); // Fixme: unplayables vs playables
+        cards.addAll(hand_.getPlayables().keySet());
+        cards.addAll(hand_.getUnplayables());
+        handView.setCards(cards);
+        handView.setCivilisation(player_.civilisation);
 
-		List<String> cards = new LinkedList<String>(); // Fixme: unplayables vs playables
-		cards.addAll(hand.getPlayables().keySet());
-		cards.addAll(hand.getUnplayables());
-		handView.setCards(cards);
-		handView.setCivilisation(player.civilisation);
-		
-		// Fixme: Implement me duc !
-		//player.civilisation
-		//player.canPlayWonder
-		//player.battleMarkers
-		//player.coins
-		//player.score
-		//player.wonderStaged
+        // Fixme: Implement me duc !
+        //player.civilisation
+        //player.canPlayWonder
+        //player.battleMarkers
+        //player.coins
+        //player.score
+        //player.wonderStaged
 
-		for( Map.Entry<CardCategory,List<String>> entry : player.getTableau().entrySet() ) {
-			categoryToView_.get(entry.getKey()).setCards( entry.getValue());
-		}
+        for( Map.Entry<CardCategory,List<Card>> entry : player_.getTableau().entrySet() ) {
+            categoryToView_.get(entry.getKey()).setCards( entry.getValue());
+        }
 	}
+
+	public void init(Player player, Hand hand){
+        player_ = player;
+        hand_ = hand;
+	}
+
+    public void update(Player player, Hand hand){
+        init(player,hand);
+        doUpdate();
+    }
 
 	private static final int BOARD_VIEW_WEIGHT = 3;
 	private static final int STATE_VIEW_WEIGHT = 2;
@@ -86,6 +99,9 @@ public class GameScreenFragment extends Fragment {
 		return position != 0; // Fixme
 	}
 
-	private ViewGroup rootView_;
+	private static ViewGroup rootView_;
 	private static Map<CardCategory,CardView> categoryToView_ = new HashMap<CardCategory, CardView>();
+
+	private Player player_;
+	private static Hand hand_;
 }

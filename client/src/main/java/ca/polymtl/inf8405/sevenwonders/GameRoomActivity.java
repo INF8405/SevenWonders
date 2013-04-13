@@ -42,10 +42,7 @@ public class GameRoomActivity extends Activity{
         }
 	}
 	
-	public void play(View view) throws TException {
-
-        Sender.getInstance().s_start();
-
+	public void play(View view) {
         Intent intent = new Intent(this, GameScreenActivity.class);
         startActivity(intent);
 	}

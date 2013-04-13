@@ -27,16 +27,16 @@ public class Database {
 		return instance_;
 	}
 
-	public Integer getBitmapId(String cardName){
-		if (cardMapper_.containsKey(cardName))
-			return cardMapper_.get(cardName);
+	public Integer getBitmapId(Card card){
+		if (cardMapper_.containsKey(card))
+			return cardMapper_.get(card);
 		else
 			return 0;
 	}
 	
-	public Integer getCivilisationBitmapId(String civilisationName){
-		if (civilisationMapper_.containsKey(civilisationName))
-			return civilisationMapper_.get(civilisationName);
+	public Integer getCivilisationBitmapId(Civilisation civilisation){
+		if (civilisationMapper_.containsKey(civilisation))
+			return civilisationMapper_.get(civilisation);
 		else
 			return 0;
 	}
@@ -88,74 +88,74 @@ public class Database {
         // === Age II ===
 
         // Commercial
-        cardMapper_.put(CARAVANSERY, R.drawable.caravansery);
-        cardMapper_.put(FORUM, R.drawable.forum);
-        cardMapper_.put(BAZAR, R.drawable.bazar);
-        cardMapper_.put(VINEYARD, R.drawable.vineyard);
-
-        // Military
-        cardMapper_.put(WALLS, R.drawable.walls);
-        cardMapper_.put(ARCHERY_RANGE, R.drawable.archery_range);
-        cardMapper_.put(TRAINING_GROUND, R.drawable.training_ground);
-        cardMapper_.put(STABLES, R.drawable.stables);
-
-        // Science
-        cardMapper_.put(SCHOOL, R.drawable.school);
-        cardMapper_.put(LIBRARY, R.drawable.library);
-        cardMapper_.put(LABORATORY, R.drawable.laboratory);
-        cardMapper_.put(DISPENSARY, R.drawable.dispensary);
-
-        // Civilian
-        cardMapper_.put(AQUEDUCT, R.drawable.aqueduct);
-        cardMapper_.put(STATUE, R.drawable.statue);
-        cardMapper_.put(TEMPLE, R.drawable.temple);
-        cardMapper_.put(COURTHOUSE, R.drawable.courthouse);
-
-        // Raw Material
-        cardMapper_.put(FOUNDRY, R.drawable.foundry);
-        cardMapper_.put(QUARRY, R.drawable.quarry);
-        cardMapper_.put(BRICKYARD, R.drawable.brickyard);
-        cardMapper_.put(SAWMILL, R.drawable.sawmill);
-
-        // === Age III ===
-
-        // Commercial
-        cardMapper_.put(ARENA, R.drawable.arena);
-        cardMapper_.put(CHAMBER_OF_COMMERCE, R.drawable.chamber_of_commerce);
-        cardMapper_.put(LIGHTHOUSE, R.drawable.lighthouse);
-        cardMapper_.put(HAVEN, R.drawable.haven);
-
-        // Military
-        cardMapper_.put(CIRCUS, R.drawable.circus);
-        cardMapper_.put(FORTIFICATIONS, R.drawable.fortifications);
-        cardMapper_.put(ARSENAL, R.drawable.arsenal);
-        cardMapper_.put(SIEGE_WORKSHOP, R.drawable.siege_workshop);
-
-        // Science
-        cardMapper_.put(OBSERVATORY, R.drawable.observatory);
-        cardMapper_.put(ACADEMY, R.drawable.academy);
-        cardMapper_.put(LODGE, R.drawable.lodge);
-        cardMapper_.put(UNIVERSITY, R.drawable.university);
-        cardMapper_.put(STUDY, R.drawable.study);
-
-        // Civilian
-        cardMapper_.put(TOWN_HALL, R.drawable.townhall);
-        cardMapper_.put(PALACE, R.drawable.palace);
-        cardMapper_.put(PANTHEON, R.drawable.pantheon);
-        cardMapper_.put(GARDENS, R.drawable.gardens);
-        cardMapper_.put(SENATE, R.drawable.senate);
-
-        // Guilds
-        cardMapper_.put(STRATEGISTS_GUILD, R.drawable.stategists_guild);
-        cardMapper_.put(TRADERS_GUILD, R.drawable.traders_guild);
-        cardMapper_.put(MAGISTRATES_GUILD, R.drawable.magistrates_guild);
-        cardMapper_.put(SHIPOWNERS_GUILD, R.drawable.shipowners_guild);
-        cardMapper_.put(CRAFTMENS_GUILD, R.drawable.craftmens_guild);
-        cardMapper_.put(WORKERS_GUILD, R.drawable.workers_guild);
-        cardMapper_.put(PHILOSOPHERS_GUILD, R.drawable.philosophers_guild);
-        cardMapper_.put(SCIENTISTS_GUILD, R.drawable.scientists_guild);
-        cardMapper_.put(SPIES_GUILD, R.drawable.spies_guild);
-        cardMapper_.put(BUILDERS_GUILD, R.drawable.builders_guild);
+//        cardMapper_.put(CARAVANSERY, R.drawable.caravansery);
+//        cardMapper_.put(FORUM, R.drawable.forum);
+//        cardMapper_.put(BAZAR, R.drawable.bazar);
+//        cardMapper_.put(VINEYARD, R.drawable.vineyard);
+//
+//        // Military
+//        cardMapper_.put(WALLS, R.drawable.walls);
+//        cardMapper_.put(ARCHERY_RANGE, R.drawable.archery_range);
+//        cardMapper_.put(TRAINING_GROUND, R.drawable.training_ground);
+//        cardMapper_.put(STABLES, R.drawable.stables);
+//
+//        // Science
+//        cardMapper_.put(SCHOOL, R.drawable.school);
+//        cardMapper_.put(LIBRARY, R.drawable.library);
+//        cardMapper_.put(LABORATORY, R.drawable.laboratory);
+//        cardMapper_.put(DISPENSARY, R.drawable.dispensary);
+//
+//        // Civilian
+//        cardMapper_.put(AQUEDUCT, R.drawable.aqueduct);
+//        cardMapper_.put(STATUE, R.drawable.statue);
+//        cardMapper_.put(TEMPLE, R.drawable.temple);
+//        cardMapper_.put(COURTHOUSE, R.drawable.courthouse);
+//
+//        // Raw Material
+//        cardMapper_.put(FOUNDRY, R.drawable.foundry);
+//        cardMapper_.put(QUARRY, R.drawable.quarry);
+//        cardMapper_.put(BRICKYARD, R.drawable.brickyard);
+//        cardMapper_.put(SAWMILL, R.drawable.sawmill);
+//
+//        // === Age III ===
+//
+//        // Commercial
+//        cardMapper_.put(ARENA, R.drawable.arena);
+//        cardMapper_.put(CHAMBER_OF_COMMERCE, R.drawable.chamber_of_commerce);
+//        cardMapper_.put(LIGHTHOUSE, R.drawable.lighthouse);
+//        cardMapper_.put(HAVEN, R.drawable.haven);
+//
+//        // Military
+//        cardMapper_.put(CIRCUS, R.drawable.circus);
+//        cardMapper_.put(FORTIFICATIONS, R.drawable.fortifications);
+//        cardMapper_.put(ARSENAL, R.drawable.arsenal);
+//        cardMapper_.put(SIEGE_WORKSHOP, R.drawable.siege_workshop);
+//
+//        // Science
+//        cardMapper_.put(OBSERVATORY, R.drawable.observatory);
+//        cardMapper_.put(ACADEMY, R.drawable.academy);
+//        cardMapper_.put(LODGE, R.drawable.lodge);
+//        cardMapper_.put(UNIVERSITY, R.drawable.university);
+//        cardMapper_.put(STUDY, R.drawable.study);
+//
+//        // Civilian
+//        cardMapper_.put(TOWN_HALL, R.drawable.townhall);
+//        cardMapper_.put(PALACE, R.drawable.palace);
+//        cardMapper_.put(PANTHEON, R.drawable.pantheon);
+//        cardMapper_.put(GARDENS, R.drawable.gardens);
+//        cardMapper_.put(SENATE, R.drawable.senate);
+//
+//        // Guilds
+//        cardMapper_.put(STRATEGISTS_GUILD, R.drawable.stategists_guild);
+//        cardMapper_.put(TRADERS_GUILD, R.drawable.traders_guild);
+//        cardMapper_.put(MAGISTRATES_GUILD, R.drawable.magistrates_guild);
+//        cardMapper_.put(SHIPOWNERS_GUILD, R.drawable.shipowners_guild);
+//        cardMapper_.put(CRAFTMENS_GUILD, R.drawable.craftmens_guild);
+//        cardMapper_.put(WORKERS_GUILD, R.drawable.workers_guild);
+//        cardMapper_.put(PHILOSOPHERS_GUILD, R.drawable.philosophers_guild);
+//        cardMapper_.put(SCIENTISTS_GUILD, R.drawable.scientists_guild);
+//        cardMapper_.put(SPIES_GUILD, R.drawable.spies_guild);
+//        cardMapper_.put(BUILDERS_GUILD, R.drawable.builders_guild);
 	}
 
 	private static void setupCivilisation(){

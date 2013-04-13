@@ -1,5 +1,6 @@
 package ca.polymtl.inf8405.sevenwonders;
 
+import ca.polymtl.inf8405.sevenwonders.api.Card;
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
 import ca.polymtl.inf8405.sevenwonders.controller.OnFlingGestureListener;
 
@@ -24,7 +25,7 @@ public class ZoomCardView extends RelativeLayout{
 
 	private View sefl_ = this;
 	private OnFlingGestureListener flingGesture_;
-	private List<String> allCardNames_;
+	private List<Card> allCardNames_;
 	private int current_; // current card id
 
 	// Test - TO REMOVE
@@ -36,13 +37,13 @@ public class ZoomCardView extends RelativeLayout{
 	/**
 	 * Build the zoom view
 	 * @param context
-	 * @param cardNames: list of all cards will be displayed in the zoom view
+	 * @param cards: list of all cards will be displayed in the zoom view
 	 * @param current: the id of the current card
 	 * @param withButtonPanel: if we want to display the button panel inside of the zoom view
 	 */
-	private void init(Context context, List<String> cardNames, int current, boolean withButtonPanel){
+	private void init(Context context, List<Card> cards, int current, boolean withButtonPanel){
 		current_ = current;
-		allCardNames_ = cardNames;
+		allCardNames_ = cards;
 
 		setBackgroundColor(Color.DKGRAY);
 		setGravity(Gravity.RIGHT);
@@ -158,10 +159,10 @@ public class ZoomCardView extends RelativeLayout{
 		sefl_.setOnTouchListener(flingGesture_);
 	}
 
-	public ZoomCardView(Context context, List<String> cardNames, int current, 
+	public ZoomCardView(Context context, List<Card> cards, int current,
 			boolean withButtonPanel){
 		super(context);
-		init(context, cardNames, current, withButtonPanel);
+		init(context, cards, current, withButtonPanel);
 	}
 
 	public ZoomCardView(Context context, AttributeSet attrs) {

@@ -21,7 +21,8 @@ public class MainActivity extends Activity {
 	}
 	
 	public void test(View view){
-
+        Intent intent = new Intent(this, GameScreenActivity.class);
+        startActivity(intent);
 	}
 	
 	public void joinGameRoom(View view){

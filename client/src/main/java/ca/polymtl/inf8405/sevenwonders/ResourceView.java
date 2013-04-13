@@ -3,6 +3,7 @@ package ca.polymtl.inf8405.sevenwonders;
 import java.util.*;
 
 
+import ca.polymtl.inf8405.sevenwonders.api.Card;
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -16,11 +17,11 @@ public class ResourceView extends View implements CardView {
 
 	private ResourceView sefl_ = this;
 	private float CARD_RATIO = 1;
-	private HashMap<String, Bitmap> cards_;
+	private HashMap<Card, Bitmap> cards_;
 
 	private void init(Context context){
 		setBackgroundColor(Color.GREEN);
-		cards_ = new HashMap<String, Bitmap>();
+		cards_ = new HashMap<Card, Bitmap>();
 
 		setOnTouchListener(new OnTouchListener() {
 
@@ -28,11 +29,12 @@ public class ResourceView extends View implements CardView {
 			public boolean onTouch(View v, MotionEvent evt) {
 				if (cards_.size() > 0){
 					// Get all bitmap values
-					List<String> cardNames = new ArrayList<String>();
-					for (Object o: cards_.keySet().toArray())
-						cardNames.add((String)o);
+					List<Card> cards = new ArrayList<Card>();
+					for( Map.Entry<Card,Bitmap> entry : cards_.entrySet() ) {
+                        cards.add(entry.getKey());
+                    }
 
-					GameScreenActivity.showZoomPopup(sefl_, 0, cardNames, false);
+					GameScreenActivity.showZoomPopup(sefl_, 0, cards, false);
 				}
 				return false;
 			}
@@ -68,7 +70,7 @@ public class ResourceView extends View implements CardView {
 		}
 	}
 
-	public void addCard(String card){
+	public void addCard(Card card){
 		Bitmap cardBm;
 		if ( (getHeight() == 0) || (getWidth() == 0) ){
 			cardBm = CardLoader.getInstance().getBitmap(getContext(), card);
@@ -84,10 +86,10 @@ public class ResourceView extends View implements CardView {
 		cards_.put(card, cardBm);
 	}
 
-	public void setCards( List<String> cards){
+	public void setCards( List<Card> cards){
 		if (cards != null){
 			cards_.clear();
-			for (String card: cards){
+			for (Card card: cards){
 				addCard(card);
 			}
 		}

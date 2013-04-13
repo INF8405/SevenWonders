@@ -9,12 +9,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 
+import ca.polymtl.inf8405.sevenwonders.api.Card;
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
 
 import java.util.*;
 
 public class PlayedCards extends View implements CardView {
-	private HashMap<String, Bitmap> cards_;
+	private HashMap<Card, Bitmap> cards_;
 	private static float CARD_WIDTH = 0;
 	private static float CARD_HEIGHT = 0;
 	private static int MARGIN_LEFT = 0;
@@ -22,7 +23,7 @@ public class PlayedCards extends View implements CardView {
 	private PlayedCards self_ = this;
 
 	private void init(Context context){
-		cards_ = new HashMap<String, Bitmap>();
+		cards_ = new HashMap<Card, Bitmap>();
 
 		// Calcul card size and margin value based on the screen dimensions
 		int screenWidth = ((WindowManager)context
@@ -31,7 +32,7 @@ public class PlayedCards extends View implements CardView {
 		CARD_WIDTH = screenWidth / 8;
 		MARGIN_LEFT = (int)CARD_WIDTH / 6;
 
-		Bitmap cardBitmap = CardLoader.getInstance().getBitmap(getContext(), "0");
+		Bitmap cardBitmap = CardLoader.getInstance().getBitmap(getContext(), Card.ALTAR); // FIXME:: duc
 		CARD_HEIGHT = CARD_WIDTH * cardBitmap.getHeight() / cardBitmap.getWidth();
 		MARGIN_TOP = (int)CARD_HEIGHT / 6;
 
@@ -41,13 +42,14 @@ public class PlayedCards extends View implements CardView {
 				// TODO Auto-generated method stub
 				if (cards_.size() > 0){
 					// Get all bitmap key
-					List<String> cardNames = new ArrayList<String>();
-					for (Object o: cards_.keySet().toArray())
-						cardNames.add((String)o);
+					List<Card> cards = new ArrayList<Card>();
+					for( Map.Entry<Card,Bitmap> entry : cards_.entrySet() ) {
+                        cards.add(entry.getKey());
+                    }
 
 					int selectedCardId = findSelectedCard(evt.getX(), evt.getY());
 					if (selectedCardId != -1)
-						GameScreenActivity.showZoomPopup(self_, selectedCardId, cardNames, false);
+						GameScreenActivity.showZoomPopup(self_, selectedCardId, cards, false);
 				}
 				return false;
 			}
@@ -78,9 +80,9 @@ public class PlayedCards extends View implements CardView {
 		}
 	}
 
-	public void addCard( String card ){
+	public void addCard( Card card ){
 		if (cards_ == null)
-			cards_ = new HashMap<String, Bitmap>();
+			cards_ = new HashMap<Card, Bitmap>();
 		Bitmap resizedBitmap = Bitmap.createScaledBitmap(
 				CardLoader.getInstance().getBitmap(getContext(), card), 
 				(int)CARD_WIDTH, 
@@ -89,10 +91,10 @@ public class PlayedCards extends View implements CardView {
 		cards_.put(card, resizedBitmap);
 	}
 
-	public void setCards( List<String> cards){
+	public void setCards( List<Card> cards){
 		if (cards != null){
 			cards_.clear();
-			for (String card: cards){
+			for (Card card: cards){
 				addCard(card);
 			}
 		}

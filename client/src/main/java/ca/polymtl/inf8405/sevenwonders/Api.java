@@ -22,8 +22,8 @@ public class Api implements SevenWondersApi.Iface {
     @Override final public void s_create(GameRoomDef definition) throws TException {}
     @Override final public void s_join(String id) throws TException { }
     @Override final public void s_start() throws TException { }
-    @Override final public void s_playCard(String card, Map<Resource, List<NeighborReference>> trade) throws TException { }
+    @Override final public void s_playCard(Card card, Map<Resource, List<NeighborReference>> trade) throws TException { }
     @Override final public void s_playWonder(Map<Resource, List<NeighborReference>> trade) throws TException { }
-    @Override final public void s_discard(String card) throws TException { }
+    @Override final public void s_discard(Card card) throws TException { }
     @Override final public void s_pong() throws TException { }
 }

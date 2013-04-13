@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.PopupWindow;
 
+import ca.polymtl.inf8405.sevenwonders.api.Card;
 import ca.polymtl.inf8405.sevenwonders.api.GameState;
 import ca.polymtl.inf8405.sevenwonders.api.NeighborReference;
 import ca.polymtl.inf8405.sevenwonders.api.Resource;
@@ -26,7 +27,8 @@ public class GameScreenActivity extends FragmentActivity {
 	public static int SCREEN_WIDTH;
 
     public GameScreenActivity() {
-        Receiver.getInstance().addObserver( new ApiDelegate() );
+        ReceiverStub.getInstance().addObserver( new ApiDelegate() );
+//        Receiver.getInstance().addObserver( new ApiDelegate() ); FIxme: test
     }
 
 	@Override
@@ -38,10 +40,10 @@ public class GameScreenActivity extends FragmentActivity {
 		//mPager.requestDisallowInterceptTouchEvent(true);
 		
 		// TESTING: Test UI without server - Duc - I'll kill you if u try to remove theses lines Gui!
-		mPager = (ViewPager) findViewById(R.id.Pager);
-        mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), 3);
-        mPager.setAdapter(mPagerAdapter);
-        mPager.setCurrentItem(0);
+//		mPager = (ViewPager) findViewById(R.id.Pager);
+//        mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), 3);
+//        mPager.setAdapter(mPagerAdapter);
+//        mPager.setCurrentItem(0);
         // End Testing code - Comment it when testing with server
 
 		// Get ScreenSize
@@ -49,18 +51,38 @@ public class GameScreenActivity extends FragmentActivity {
 		getWindowManager().getDefaultDisplay().getSize(size);
 		SCREEN_WIDTH = size.x;
 		SCREEN_HEIGTH = size.y;
+
+        ReceiverStub.getInstance().simulate_c_begin(); // Fixme: test
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(10000);
+                    ReceiverStub.getInstance().simulate_c_sendState();
+                } catch ( InterruptedException e ) {
+
+                }
+            }
+        }).start();
+
+//        try {
+//            Sender.getInstance().s_start(); FIxme: test
+//        } catch ( TException e ) {
+//            Log.e("GameScreenActivity",e.getMessage());
+//        }
 	}
 
-	public static void showZoomPopup(View view, int selectedCardId, List<String> cardNames, boolean withButtonPanel) {
+	public static void showZoomPopup(View view, int selectedCardId, List<Card> cards, boolean withButtonPanel) {
 		PopupWindow popup = new PopupWindow();
-		popup.setContentView(new ZoomCardView(view.getContext(), cardNames, selectedCardId, withButtonPanel));
+		popup.setContentView(new ZoomCardView(view.getContext(), cards, selectedCardId, withButtonPanel));
 		popup.showAtLocation(view, Gravity.CENTER, 0, 0);
 		popup.update(0, 0, SCREEN_WIDTH*2/3, SCREEN_HEIGTH/2);
 	}
 
-	public void play(String cardName) {
+	public void play(Card card) {
         try {
-            Sender.getInstance().s_playCard( cardName, new HashMap<Resource, List<NeighborReference>>() ); // Fixme Trade
+            Sender.getInstance().s_playCard( card, new HashMap<Resource, List<NeighborReference>>() ); // Fixme Trade
         } catch ( TException e ){
             Log.e("Game", e.getMessage() );
         }
@@ -76,14 +98,14 @@ public class GameScreenActivity extends FragmentActivity {
                     mPager.setAdapter(mPagerAdapter);
                     mPager.setCurrentItem(0);
 
-                    setState(state);
+                    initState(state);
                 }
             });
         }
         @Override public void c_sendState(final GameState state) throws TException {
             runOnUiThread(new Runnable() {
                 @Override public void run() {
-                    setState( state );
+                    setState(state);
                 }
             });
         }
@@ -95,7 +117,11 @@ public class GameScreenActivity extends FragmentActivity {
             });
         }
 
-        private void setState( final GameState state ) {
+        private void initState(final GameState state) {
+            mPagerAdapter.initState(state);
+        }
+
+        private void setState(final GameState state) {
             mPagerAdapter.setState(state);
         }
     }

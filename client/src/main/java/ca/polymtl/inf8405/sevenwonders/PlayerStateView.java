@@ -1,5 +1,7 @@
 package ca.polymtl.inf8405.sevenwonders;
 
+import ca.polymtl.inf8405.sevenwonders.api.Card;
+import ca.polymtl.inf8405.sevenwonders.api.Civilisation;
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
 import ca.polymtl.inf8405.sevenwonders.database.Database;
 import android.content.Context;
@@ -14,28 +16,27 @@ import java.util.*;
 
 public class PlayerStateView extends View{
 
-	private HashMap<String, Bitmap> cardsInHand_;
-	private String civilisation_;
+	private HashMap<Card, Bitmap> cardsInHand_;
+	private Civilisation civilisation_;
 	private static float cardWidth_ = 0;
 	private static float cardHeight_ = 0;
 	private View seft_ = this;
 
 	private void init(Context context){
 		setBackgroundResource(R.drawable.seven_wonders_bg);
-		cardsInHand_ = new HashMap<String, Bitmap>();
+		cardsInHand_ = new HashMap<Card, Bitmap>();
 		setOnTouchListener(new OnTouchListener() {
 			@Override
 			public boolean onTouch(View view, MotionEvent evt) {
 				// Get all card names
-				List<String> cardNames = new ArrayList<String>();
-				Object[] allCards = cardsInHand_.keySet().toArray(); 
-				for (int i = 0 ; i < allCards.length; i++){
-					cardNames.add((String)allCards[i]);
-				}
+				List<Card> cards = new ArrayList<Card>();
+				for( Map.Entry<Card,Bitmap> entry : cardsInHand_.entrySet() ) {
+                    cards.add(entry.getKey());
+                }
 
 				int selectedCardId = findSelectedCard(evt.getX(), evt.getY());
 				if (selectedCardId != -1)
-					GameScreenActivity.showZoomPopup(seft_, selectedCardId, cardNames, true);
+					GameScreenActivity.showZoomPopup(seft_, selectedCardId, cards, true);
 				return false;
 			}
 		});
@@ -43,13 +44,11 @@ public class PlayerStateView extends View{
 
 	public PlayerStateView(Context context) {
 		super(context);
-		// TODO Auto-generated constructor stub
 		init(context);
 	}
 
 	public PlayerStateView(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		// TODO Auto-generated constructor stub
 		init(context);
 	}
 
@@ -61,24 +60,21 @@ public class PlayerStateView extends View{
 		int top = getHeight() / 6; // 40
 		int left = 0;
 
-		for(Object object: cardsInHand_.keySet().toArray()){
-			String cardName = (String)object;
-			if (cardsInHand_.containsKey(cardName)){
-				canvas.drawBitmap(cardsInHand_.get(cardName), left, top, null);
-				left += (int)cardWidth_;
-			}
+        for( Map.Entry<Card,Bitmap> entry : cardsInHand_.entrySet() ) {
+            canvas.drawBitmap(entry.getValue(), left, top, null);
+            left += (int)cardWidth_;
 		}
 	}
 
 	public void setCardSize(float viewHeight){
-		Bitmap cardSample = CardLoader.getInstance().getBitmap(getContext(), "0"); 
+		Bitmap cardSample = CardLoader.getInstance().getBitmap(getContext(), Card.TAVERN); // Fixme: ???
 		cardHeight_ = viewHeight * 2 / 3;
 		cardWidth_ = cardHeight_ * cardSample.getWidth() / cardSample.getHeight();
 	}
 
-	public void setCards(List<String> cards){
+	public void setCards(List<Card> cards){
 		Bitmap cardBm;
-		for (String card: cards){
+		for (Card card: cards){
 			if ((cardHeight_ == 0) && (cardWidth_ == 0)){
 				cardBm = CardLoader.getInstance().getBitmap(getContext(), card);
 			}
@@ -92,14 +88,10 @@ public class PlayerStateView extends View{
 		}
 	}
 	
-	public void setCivilisation(String civiName){
+	public void setCivilisation(Civilisation civilisation){
 		invalidate();
-		civilisation_ = civiName;
-		setBackgroundResource(Database.getInstance().getCivilisationBitmapId(civiName));
-	}
-
-	public void play(String cardName){
-		cardsInHand_.remove(cardName);
+		civilisation_ = civilisation;
+		setBackgroundResource(Database.getInstance().getCivilisationBitmapId(civilisation_));
 	}
 
 	private int findSelectedCard(float x, float y){

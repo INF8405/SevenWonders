@@ -7,10 +7,7 @@ import android.util.SparseArray;
 import ca.polymtl.inf8405.sevenwonders.api.GameState;
 import ca.polymtl.inf8405.sevenwonders.api.Player;
 
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A simple pager adapter that represents all player objects, in
@@ -18,19 +15,18 @@ import java.util.Map;
  */
 public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
 
-	public ScreenSlidePagerAdapter(FragmentManager fm, int count ) {
+	public ScreenSlidePagerAdapter(FragmentManager fm, int count) {
         super(fm);
         count_ = count;
+        for ( int position = 0; position < count_; position++ ){
+            GameScreenFragment fragment = new GameScreenFragment(position);
+            fragments.append(position,fragment);
+        }
     }
 
 	@Override
 	public Fragment getItem(int position) {
-        GameScreenFragment fragment = fragments.get( position, null );
-        if( fragment == null ){
-            fragment = new GameScreenFragment(position);
-            fragments.append(position,fragment);
-        }
-		return fragment;
+		return fragments.get( position, null );
 	}
 
 	@Override
@@ -38,11 +34,19 @@ public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
 		return count_;
 	}
 
-    public void setState( final GameState state ) {
+    public void initState(final GameState state) {
+        List<Player> players = state.getPlayers();
+        for( int i = 0; i < fragments.size(); i++ ){
+            fragments.get(i).init(players.get(i), state.getHand());
+        }
+    }
+
+    public void setState(final GameState state) {
         List<Player> players = state.getPlayers();
         for( int i = 0; i < fragments.size(); i++ ){
             fragments.get(i).update(players.get(i), state.getHand());
         }
+        notifyDataSetChanged();
     }
 
     private int count_;
