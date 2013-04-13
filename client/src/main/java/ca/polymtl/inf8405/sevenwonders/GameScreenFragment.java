@@ -1,5 +1,6 @@
 package ca.polymtl.inf8405.sevenwonders;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,9 +38,19 @@ public class GameScreenFragment extends Fragment {
 
 		PlayerStateView handView = (PlayerStateView)rootView_.findViewById(R.id.PlayerStateView);
 		handView.setCardSize(GameScreenActivity.SCREEN_HEIGTH * STATE_VIEW_WEIGHT / (STATE_VIEW_WEIGHT + BOARD_VIEW_WEIGHT));
-		// TESTING : Test UI without Server
+		// TESTING : Test UI without Server ////////////////////////////////
 //		int random = 0 + (int)(Math.random() * ((11 - 0) + 1));
-//		handView.setCivilisation(random+"");
+//		Player player = new Player();
+//		player.civilisation = random+"";
+//		player.canPlayWonder = true;
+//		handView.setPlayer(player);
+//		List<String> cards = new ArrayList<String>(7);
+//		for (int i = 0 ; i < 7; i++){
+//			random = 0 + (int)(Math.random() * ((21 - 0) + 1));
+//			cards.add(random+"");
+//		}
+//		handView.setCards(cards);
+		// END TESTING //////////////////////////////////////////////
 
 		if (isOpponent()){ handView.setAlpha((float)0.5); }
 
@@ -52,43 +63,32 @@ public class GameScreenFragment extends Fragment {
 			categoryToView_.put( RAW_MATERIAL, (CardView) rootView_.findViewById(R.id.BasicResourceView));
 			categoryToView_.put( SCIENCE, (CardView) rootView_.findViewById(R.id.GreenCard));
 		}
-
-		doUpdate();
-
+		
 		return rootView_;
 	}
 
-	private void doUpdate() {
-        PlayerStateView handView = (PlayerStateView)rootView_.findViewById(R.id.PlayerStateView);
+	public void update(Player player, Hand hand ){
 
-        List<Card> cards = new LinkedList<Card>(); // Fixme: unplayables vs playables
-        cards.addAll(hand_.getPlayables().keySet());
-        cards.addAll(hand_.getUnplayables());
-        handView.setCards(cards);
-        handView.setCivilisation(player_.civilisation);
+		PlayerStateView handView = (PlayerStateView)rootView_.findViewById(R.id.PlayerStateView);
 
-        // Fixme: Implement me duc !
-        //player.civilisation
-        //player.canPlayWonder
-        //player.battleMarkers
-        //player.coins
-        //player.score
-        //player.wonderStaged
-
-        for( Map.Entry<CardCategory,List<Card>> entry : player_.getTableau().entrySet() ) {
-            categoryToView_.get(entry.getKey()).setCards( entry.getValue());
-        }
+		List<Card> cards = new LinkedList<Card>(); // Fixme: unplayables vs playables
+		cards.addAll(hand.getPlayables().keySet());
+		cards.addAll(hand.getUnplayables());
+		handView.setCards(cards);
+		handView.setPlayer(player);
+		
+		// Fixme: Implement me duc !
+		//player.canPlayWonder - in PlayerStateView - DONE
+		//player.civilisation - in PlayerStateView & ScoreBoardView - DONE
+		//player.wonderStaged - in PlayerStateView & ScoreBoardView
+		//player.coins - in ScoreBoardView ( & PlayerStateView )
+		//player.battleMarkers - in ScoreBoardView
+		//player.score - in ScoreBoardView
+//
+//        for( Map.Entry<CardCategory,List<Card>> entry : player_.getTableau().entrySet() ) {
+//            categoryToView_.get(entry.getKey()).setCards( entry.getValue());
+//        }
 	}
-
-	public void init(Player player, Hand hand){
-        player_ = player;
-        hand_ = hand;
-	}
-
-    public void update(Player player, Hand hand){
-        init(player,hand);
-        doUpdate();
-    }
 
 	private static final int BOARD_VIEW_WEIGHT = 3;
 	private static final int STATE_VIEW_WEIGHT = 2;
@@ -101,7 +101,4 @@ public class GameScreenFragment extends Fragment {
 
 	private static ViewGroup rootView_;
 	private static Map<CardCategory,CardView> categoryToView_ = new HashMap<CardCategory, CardView>();
-
-	private Player player_;
-	private static Hand hand_;
 }

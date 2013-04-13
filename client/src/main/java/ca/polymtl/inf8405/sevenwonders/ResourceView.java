@@ -34,7 +34,8 @@ public class ResourceView extends View implements CardView {
                         cards.add(entry.getKey());
                     }
 
-					GameScreenActivity.showZoomPopup(sefl_, 0, cards, false);
+			
+					GameScreenActivity.showZoomPopup(sefl_, 0, cards, false,false);
 				}
 				return false;
 			}

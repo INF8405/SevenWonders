@@ -34,18 +34,12 @@ public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
 		return count_;
 	}
 
-    public void initState(final GameState state) {
-        List<Player> players = state.getPlayers();
-        for( int i = 0; i < fragments.size(); i++ ){
-            fragments.get(i).init(players.get(i), state.getHand());
-        }
-    }
-
     public void setState(final GameState state) {
         List<Player> players = state.getPlayers();
         for( int i = 0; i < fragments.size(); i++ ){
             fragments.get(i).update(players.get(i), state.getHand());
         }
+        // TODO: Update scoreboard View
         notifyDataSetChanged();
     }
 

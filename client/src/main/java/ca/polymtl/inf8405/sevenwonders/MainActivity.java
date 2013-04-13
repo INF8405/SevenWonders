@@ -21,7 +21,7 @@ public class MainActivity extends Activity {
 	}
 	
 	public void test(View view){
-        Intent intent = new Intent(this, GameScreenActivity.class);
+        Intent intent = new Intent(this, ScoreBoardActivity.class);
         startActivity(intent);
 	}
 	

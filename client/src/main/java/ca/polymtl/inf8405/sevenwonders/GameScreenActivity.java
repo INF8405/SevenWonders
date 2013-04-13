@@ -73,9 +73,10 @@ public class GameScreenActivity extends FragmentActivity {
 //        }
 	}
 
-	public static void showZoomPopup(View view, int selectedCardId, List<Card> cards, boolean withButtonPanel) {
+	public static void showZoomPopup(View view, int selectedCardId, List<Card> cards, boolean withButtonPanel, boolean canPlayWonder) {
+
 		PopupWindow popup = new PopupWindow();
-		popup.setContentView(new ZoomCardView(view.getContext(), cards, selectedCardId, withButtonPanel));
+		popup.setContentView(new ZoomCardView(view.getContext(), cards, selectedCardId, withButtonPanel,canPlayWonder));
 		popup.showAtLocation(view, Gravity.CENTER, 0, 0);
 		popup.update(0, 0, SCREEN_WIDTH*2/3, SCREEN_HEIGTH/2);
 	}
@@ -98,7 +99,7 @@ public class GameScreenActivity extends FragmentActivity {
                     mPager.setAdapter(mPagerAdapter);
                     mPager.setCurrentItem(0);
 
-                    initState(state);
+                    setState(state);
                 }
             });
         }
@@ -117,11 +118,7 @@ public class GameScreenActivity extends FragmentActivity {
             });
         }
 
-        private void initState(final GameState state) {
-            mPagerAdapter.initState(state);
-        }
-
-        private void setState(final GameState state) {
+        private void setState( final GameState state ) {
             mPagerAdapter.setState(state);
         }
     }
