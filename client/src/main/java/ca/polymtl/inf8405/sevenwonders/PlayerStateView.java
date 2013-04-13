@@ -8,6 +8,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -93,6 +94,7 @@ public class PlayerStateView extends View{
 			}
 			cardsInHand_.put(card, cardBm );
 		}
+		Log.wtf("StateView", "CardsInhand =" + cardsInHand_.size() ); 
 	}
 	
 	public void setPlayer(Player player){

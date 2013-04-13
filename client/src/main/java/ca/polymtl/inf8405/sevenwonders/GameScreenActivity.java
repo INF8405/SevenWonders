@@ -1,5 +1,6 @@
 package ca.polymtl.inf8405.sevenwonders;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,9 @@ import android.view.Window;
 import android.widget.PopupWindow;
 
 import ca.polymtl.inf8405.sevenwonders.api.GameState;
+import ca.polymtl.inf8405.sevenwonders.api.Hand;
 import ca.polymtl.inf8405.sevenwonders.api.NeighborReference;
+import ca.polymtl.inf8405.sevenwonders.api.Player;
 import ca.polymtl.inf8405.sevenwonders.api.Resource;
 import org.apache.thrift.TException;
 
@@ -38,10 +41,35 @@ public class GameScreenActivity extends FragmentActivity {
 		//mPager.requestDisallowInterceptTouchEvent(true);
 		
 		// TESTING: Test UI without server - Duc - I'll kill you if u try to remove theses lines Gui!
-		mPager = (ViewPager) findViewById(R.id.Pager);
-        mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), 3);
+        int random = 0 + (int)(Math.random() * ((11 - 0) + 1));
+		Player player = new Player();
+		player.civilisation = random+"";
+		player.canPlayWonder = true;
+		List<Player> players = new ArrayList<Player>();
+		players.add(player);
+		for(int i = 0 ; i < 3; i++){
+			player = new Player();
+			player.civilisation = i+"";
+			players.add(player);
+		}
+		
+		List<String> cards = new ArrayList<String>(7);
+		for (int i = 0 ; i < 7; i++){
+			random = 0 + (int)(Math.random() * ((21 - 0) + 1));
+			cards.add(random+"");
+		}
+		
+		Hand hand = new Hand();
+		hand.unplayables = cards;
+        GameState state = new GameState();
+        state.hand = hand;
+        state.players = players;
+        
+        mPager = (ViewPager) findViewById(R.id.Pager);
+        mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), players.size());
         mPager.setAdapter(mPagerAdapter);
         mPager.setCurrentItem(0);
+        mPagerAdapter.setState(state);
         // End Testing code - Comment it when testing with server
 
 		// Get ScreenSize
