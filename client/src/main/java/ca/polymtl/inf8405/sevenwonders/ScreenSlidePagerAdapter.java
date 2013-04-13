@@ -44,6 +44,11 @@ public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
 		return count_;
 	}
 
+	@Override
+	public int getItemPosition(Object object) {
+	    return POSITION_NONE;
+	}
+	
     public void setState( final GameState state ) {
     	players_ = state.players;
     	hand_ = state.hand;

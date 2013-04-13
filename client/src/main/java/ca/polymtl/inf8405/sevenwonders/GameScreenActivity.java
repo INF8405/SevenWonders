@@ -144,6 +144,7 @@ public class GameScreenActivity extends FragmentActivity {
 
         private void setState( final GameState state ) {
             mPagerAdapter.setState(state);
+            mPagerAdapter.notifyDataSetChanged();
         }
     }
 
