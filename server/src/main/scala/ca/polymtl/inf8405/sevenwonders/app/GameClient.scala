@@ -26,23 +26,17 @@ trait GameClient extends SevenWondersApi.Iface {
   def username(): Future[String]
 }
 
-class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLobby, dispatch: Dispatcher, system: ActorSystem ) extends GameClient
+class GameClientImpl( transport: TTransport, ip: InetAddress, lobby: GameLobby, dispatch: Dispatcher, system: ActorSystem ) extends GameClient
 {
   import ApiHelper._
   import collection.JavaConversions._
   import system.dispatcher
 
-  private val client = new Client( new TBinaryProtocol( transport ) )
-
   def s_listGamesRequest(geo: GeoLocation) {
-    println("client request")
     lobby.list.foreach( l => {
-      println(s"client list ${l.size}")
       client.c_listGamesResponse( l )
     })
   }
-
-  def c_listGamesResponse(rooms: JList[GameRoom]) { }
 
   def s_create( definition: GameRoomDef ) {
     dispatch.create( definition, TypedActor.self ).foreach( g => game = Some(g) )
@@ -72,7 +66,11 @@ class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLob
   }
 
   def s_pong() {
-    dispatch.pong( ip )
+    dispatch.pong( transport )
+  }
+
+  def c_listGamesResponse(rooms: JList[GameRoom]) {
+    client.c_listGamesResponse( rooms )
   }
 
   def c_joined( user: String) {
@@ -80,8 +78,7 @@ class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLob
   }
 
   def c_connected(users: JList[String]) {
-    println(s"client connected ${users.size}")
-    client.c_connected(users)
+    client.c_connected( users )
   }
 
   def c_left(user: String) {
@@ -103,13 +100,5 @@ class GameClientImpl( transport: TTransport, val ip: InetAddress, lobby: GameLob
   def username() = future { ip.toString }
 
   private var game: Option[TGame] = None
-
-  override def equals( other: Any ) = {
-    other match {
-      case a: GameClientImpl => a.ip == ip
-      case _ => false
-    }
-  }
-
-  override def hashCode = ip.hashCode
+  private val client = new Client( new TBinaryProtocol( transport ) )
 }

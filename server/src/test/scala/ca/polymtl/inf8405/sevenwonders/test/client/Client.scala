@@ -1,26 +1,23 @@
-package ca.polymtl.inf8405.sevenwonders.test.client
+package ca.polymtl.inf8405.sevenwonders
+package test.client
 
-import akka.actor.{TypedProps, TypedActor, ActorSystem}
-import org.apache.thrift.transport.{TNonblockingSocket, TSocket}
-import org.apache.thrift.protocol.TBinaryProtocol
-import ca.polymtl.inf8405.sevenwonders.api
-import api.SevenWondersApi
-import org.apache.thrift.async.TAsyncClientManager
+import api.{Config, SevenWondersApi}
 
-class Client( system: ActorSystem, dispatcher: Mock ) {
+import akka.actor.{ActorRef, ActorSystem}
+
+import org.apache.thrift._
+import transport.TSocket
+import protocol.TBinaryProtocol
+
+class Client( system: ActorSystem, probe: ActorRef, name: String, ignorePing: Boolean = true ) {
 
   val protocolFactory = new TBinaryProtocol.Factory
-  val transport = new TSocket("localhost", 8001)
+  val transport = new TSocket(Config.ip, Config.port)
   val protocol = new TBinaryProtocol(transport)
 
   val sender = new SevenWondersApi.Client(protocol)
 
-  val receiver = new ReceiverImpl(
-    sender,
-    protocol,
-    system,
-    dispatcher
-  )
+  val receiver = new ReceiverImpl( sender, protocol, system, probe, name, ignorePing )
 
   transport.open()
   receiver.start()

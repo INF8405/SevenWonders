@@ -53,7 +53,7 @@ class GameImpl( system: ActorSystem ) extends TGame {
   }
 
   def start(){
-    println(s"start player sizes: ${players.size}")
+
     val game = beginGame( players.size, playWithCities = false )
     playerBridge = game.players.zip( players ).map( _.swap ).toMap
     gameImpl = Some( game )

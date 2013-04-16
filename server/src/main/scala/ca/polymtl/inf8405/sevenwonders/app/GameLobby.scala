@@ -38,7 +38,6 @@ class GameLobbyImpl( system: ActorSystem ) extends GameLobby {
   }
 
   def list = {
-    println("lobby list")
     future {
       games.values.map( _._1 ).toList
     }
