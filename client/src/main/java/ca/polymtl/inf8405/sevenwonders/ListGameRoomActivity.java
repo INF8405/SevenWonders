@@ -25,13 +25,16 @@ import ca.polymtl.inf8405.sevenwonders.api.GameRoomDef;
 import ca.polymtl.inf8405.sevenwonders.api.GeoLocation;
 import org.apache.thrift.TException;
 
+import com.sun.net.ssl.internal.ssl.Provider;
+
 public class ListGameRoomActivity extends Activity implements LocationListener{
 
-    public static String GAMEID_MESSAGE = "ListGameRoomActivity_GameId";
+	public static String GAMEID_MESSAGE = "ListGameRoomActivity_GameId";
+	private static final int FIVE_MINUTES = 1000 * 60 * 5;
 
-    public ListGameRoomActivity() {
-        Receiver.getInstance().addObserver( new ApiDelegate() );
-    }
+	public ListGameRoomActivity() {
+		Receiver.getInstance().addObserver( new ApiDelegate() );
+	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState){
@@ -46,10 +49,9 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
 		listView.setTextFilterEnabled(true);
 		listView.setOnItemClickListener(new OnItemClickListener() {
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-            Intent intent = new Intent(self, GameRoomActivity.class);
-            intent.putExtra(GAMEID_MESSAGE,rooms_.get(position).room.id);
-            startActivity(intent);
+				Intent intent = new Intent(self, GameRoomActivity.class);
+				intent.putExtra(GAMEID_MESSAGE,rooms_.get(position).room.id);
+				startActivity(intent);
 			}
 		});
 
@@ -59,9 +61,12 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
 		// default
 		Criteria criteria = new Criteria();
 		String provider = locationManager_.getBestProvider(criteria, false);
+		locationManager_.requestLocationUpdates(provider, FIVE_MINUTES, 0, this);
+
 		Location location = locationManager_.getLastKnownLocation(provider);
+
 		if (location != null) {
-			onLocationChanged(location);
+			onLocationChanged(location); 
 		} else {
 			locationSet = false;
 		}
@@ -69,62 +74,75 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
 
 	public void createGame(View view) throws TException {
 
-        Intent intent = new Intent(this, GameRoomActivity.class);
-        startActivity(intent);
+		Intent intent = new Intent(this, GameRoomActivity.class);
+		startActivity(intent);
 
-        Sender.getInstance().s_create(new GameRoomDef("-", geo));
+		Sender.getInstance().s_create(new GameRoomDef("-", geo));
 	}
 
 	//////////////////////////// Location Listener /////////////////////////////////////
 	@Override
 	public void onLocationChanged(Location location) {
 
-        locationSet = true;
-        geo = new GeoLocation(location.getLatitude(), location.getLongitude());
-
-        try {
-            Sender.getInstance().s_listGamesRequest(geo);
-        } catch ( TException e ) {
-            Log.e("ListGameRoom", e.getMessage() );
-        }
+		locationSet = true;
+		geo = new GeoLocation(location.getLatitude(), location.getLongitude());
+		// Test geo location
+		TextView locationText = (TextView)findViewById(R.id.testTextView);
+		locationText.setText("Update location = " + location.getLatitude()+";"+location.getLongitude());
+		try {
+			Sender.getInstance().s_listGamesRequest(geo);
+		} catch ( TException e ) {
+			Log.e("ListGameRoom", e.getMessage() );
+		}
 	}
 
-	@Override public void onProviderDisabled(String a) { }
-	@Override public void onProviderEnabled(String a) { }
-	@Override public void onStatusChanged(String a, int b, Bundle c) { }
+	@Override public void onProviderDisabled(String provider) {
+		// Switch between GPS provider and Network provider
+		if (provider.equals(LocationManager.GPS_PROVIDER)){
+			provider = LocationManager.NETWORK_PROVIDER;
+			locationManager_.requestLocationUpdates(provider, FIVE_MINUTES, 0, this);
+		}
+		else {
+			provider = LocationManager.GPS_PROVIDER;
+			locationManager_.requestLocationUpdates(provider, FIVE_MINUTES, 0, this);
+		}
+		locationManager_.getLastKnownLocation(provider);
+	}
+	@Override public void onProviderEnabled(String provider) { 	}
+	@Override public void onStatusChanged(String provider, int status, Bundle extra) { 	}
 
-    private class ApiDelegate extends Api {
-        @Override public void c_listGamesResponse(final List<GameRoom> rooms) throws TException {
-            runOnUiThread( new Runnable() {
-                @Override
-                public void run() {
-                    rooms_.clear();
-                    for( GameRoom room : rooms ) {
-                        rooms_.add( new GameRoomAdapter( room ) );
-                    }
-                    adapter_.notifyDataSetChanged();
-                }
-            });
-        }
-    }
+	private class ApiDelegate extends Api {
+		@Override public void c_listGamesResponse(final List<GameRoom> rooms) throws TException {
+			runOnUiThread( new Runnable() {
+				@Override
+				public void run() {
+					rooms_.clear();
+					for( GameRoom room : rooms ) {
+						rooms_.add( new GameRoomAdapter( room ) );
+					}
+					adapter_.notifyDataSetChanged();
+				}
+			});
+		}
+	}
 
-    private class GameRoomAdapter {
-        public GameRoomAdapter( GameRoom room ) {
-            this.room = room;
-        }
+	private class GameRoomAdapter {
+		public GameRoomAdapter( GameRoom room ) {
+			this.room = room;
+		}
 
-        @Override public String toString() {
-            return "Room " + room.definition.name + " " + room.definition.geo.latitude + " " + room.definition.geo.longitude;
-        }
+		@Override public String toString() {
+			return "Room " + room.definition.name + " " + room.definition.geo.latitude + " " + room.definition.geo.longitude;
+		}
 
-        public GameRoom room;
-    }
+		public GameRoom room;
+	}
 
-    private static ArrayAdapter adapter_;
-    private static ArrayList<GameRoomAdapter> rooms_ = new ArrayList<GameRoomAdapter>();
-    private LocationManager locationManager_;
+	private static ArrayAdapter adapter_;
+	private static ArrayList<GameRoomAdapter> rooms_ = new ArrayList<GameRoomAdapter>();
+	private LocationManager locationManager_;
 
-    private boolean locationSet = false;
-    private GeoLocation geo = new GeoLocation(0,0);
-    private ListGameRoomActivity self = this;
+	private boolean locationSet = false;
+	private GeoLocation geo = new GeoLocation(0,0);
+	private ListGameRoomActivity self = this;
 }
