@@ -1,15 +1,9 @@
 package ca.polymtl.inf8405.sevenwonders;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import android.util.Log;
 import ca.polymtl.inf8405.sevenwonders.api.Card;
 import ca.polymtl.inf8405.sevenwonders.api.CardCategory;
 import static ca.polymtl.inf8405.sevenwonders.api.CardCategory.*;
+import ca.polymtl.inf8405.sevenwonders.model.*;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -18,6 +12,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class GameScreenFragment extends Fragment {
 
@@ -34,7 +33,6 @@ public class GameScreenFragment extends Fragment {
 
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-		Log.wtf("GameScreenFragment", "OnCreateView");
 		rootView_ = (ViewGroup) inflater.inflate( R.layout.activity_game_screen, container, false);
 
 		// Set handView height
@@ -44,9 +42,13 @@ public class GameScreenFragment extends Fragment {
 
 		PlayerStateView handView = (PlayerStateView)rootView_.findViewById(R.id.PlayerStateView);
 		handView.setCardSize(GameScreenActivity.SCREEN_HEIGTH * STATE_VIEW_WEIGHT / (STATE_VIEW_WEIGHT + BOARD_VIEW_WEIGHT));
-		List<Card> cards = new LinkedList<Card>(); // Fixme: unplayables vs playables
-		cards.addAll(ScreenSlidePagerAdapter.hand_.playables.keySet());
-		cards.addAll(ScreenSlidePagerAdapter.hand_.unplayables);
+		List<CardInfo> cards = new LinkedList<CardInfo>(); // Fixme: unplayables vs playables
+		for (Card c: ScreenSlidePagerAdapter.hand_.playables.keySet()){
+			cards.add(new CardInfo(c, true, ScreenSlidePagerAdapter.hand_.playables.get(c)));
+		}
+		for (Card c: ScreenSlidePagerAdapter.hand_.unplayables){
+			cards.add(new CardInfo(c));
+		}
 		handView.setCards(cards);
 		handView.setPlayer(ScreenSlidePagerAdapter.players_.get(position));
 		// TESTING : Test UI without Server ////////////////////////////////

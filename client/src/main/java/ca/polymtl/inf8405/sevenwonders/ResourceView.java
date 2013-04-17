@@ -1,10 +1,5 @@
 package ca.polymtl.inf8405.sevenwonders;
 
-import java.util.*;
-
-
-import ca.polymtl.inf8405.sevenwonders.api.Card;
-import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -13,15 +8,20 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
+import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
+import ca.polymtl.inf8405.sevenwonders.model.*;
+
+import java.util.*;
+
 public class ResourceView extends View implements CardView {
 
 	private ResourceView sefl_ = this;
 	private float CARD_RATIO = 1;
-	private HashMap<Card, Bitmap> cards_;
+	private HashMap<CardInfo, Bitmap> cards_;
 
 	private void init(Context context){
 		setBackgroundColor(Color.GREEN);
-		cards_ = new HashMap<Card, Bitmap>();
+		cards_ = new HashMap<CardInfo, Bitmap>();
 
 		setOnTouchListener(new OnTouchListener() {
 
@@ -29,8 +29,8 @@ public class ResourceView extends View implements CardView {
 			public boolean onTouch(View v, MotionEvent evt) {
 				if (cards_.size() > 0){
 					// Get all bitmap values
-					List<Card> cards = new ArrayList<Card>();
-					for( Map.Entry<Card,Bitmap> entry : cards_.entrySet() ) {
+					List<CardInfo> cards = new ArrayList<CardInfo>();
+					for( Map.Entry<CardInfo,Bitmap> entry : cards_.entrySet() ) {
                         cards.add(entry.getKey());
                     }
 
@@ -71,26 +71,26 @@ public class ResourceView extends View implements CardView {
 		}
 	}
 
-	public void addCard(Card card){
+	public void addCard(CardInfo card){
 		Bitmap cardBm;
 		if ( (getHeight() == 0) || (getWidth() == 0) ){
-			cardBm = CardLoader.getInstance().getBitmap(getContext(), card);
+			cardBm = CardLoader.getInstance().getBitmap(getContext(), card.getName());
 		}
 		else{
 			CARD_RATIO =  getHeight() / getWidth();
 			float cardHeight = CARD_RATIO * getWidth();
 			cardBm = Bitmap.createScaledBitmap(
-					CardLoader.getInstance().getBitmap(getContext(), card), 
+					CardLoader.getInstance().getBitmap(getContext(), card.getName()), 
 					getWidth(), 
 					(int)cardHeight, false);
 		}
 		cards_.put(card, cardBm);
 	}
 
-	public void setCards( List<Card> cards){
+	public void setCards( List<CardInfo> cards){
 		if (cards != null){
 			cards_.clear();
-			for (Card card: cards){
+			for (CardInfo card: cards){
 				addCard(card);
 			}
 		}

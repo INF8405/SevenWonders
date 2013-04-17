@@ -115,10 +115,28 @@ public class ReceiverStub extends Api {
 
         List<Card> unplayables = new LinkedList<Card>();
 
-        playables.put(STOCKADE, emptyTrade);
-        playables.put(GUARD_TOWER, emptyTrade);
-        playables.put(LUMBER_YARD, emptyTrade);
-        playables.put(EXCAVATION, emptyTrade);
+        Set<Map<Resource,List<NeighborReference>>> trades = 
+        		new HashSet<Map<Resource,List<NeighborReference>>>();
+        
+        List<NeighborReference> twoNeighbors = new ArrayList<NeighborReference>(2);
+        twoNeighbors.add(NeighborReference.LEFT);
+        twoNeighbors.add(NeighborReference.RIGHT);
+        List<NeighborReference> oneNeighbor = new ArrayList<NeighborReference>(1);
+        oneNeighbor.add(NeighborReference.LEFT);
+        
+        Map<Resource,List<NeighborReference>> trade1 = new HashMap<Resource,List<NeighborReference>>();
+        trade1.put(Resource.CLAY, twoNeighbors);
+        trade1.put(Resource.ORE, oneNeighbor);
+        Map<Resource,List<NeighborReference>> trade2 = new HashMap<Resource,List<NeighborReference>>();
+        trade2.put(Resource.GLASS, oneNeighbor);
+        trade2.put(Resource.STONE, oneNeighbor);
+        trades.add(trade1);
+        trades.add(trade2);
+        
+        playables.put(STOCKADE, trades);
+        playables.put(GUARD_TOWER, trades);
+        playables.put(LUMBER_YARD, trades);
+        playables.put(EXCAVATION, trades);
         playables.put(EAST_TRADING_POST, emptyTrade);
         playables.put(BARRACKS, emptyTrade);
 

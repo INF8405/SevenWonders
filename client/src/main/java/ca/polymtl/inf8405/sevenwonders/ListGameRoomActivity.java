@@ -131,7 +131,8 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
 			this.room = room;
 		}
 
-		@Override public String toString() {
+		@Override 
+		public String toString() {
 			return "Room " + room.definition.name + " " + room.definition.geo.latitude + " " + room.definition.geo.longitude;
 		}
 

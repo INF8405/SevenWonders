@@ -1,10 +1,12 @@
 package ca.polymtl.inf8405.sevenwonders;
 
-import java.util.ArrayList;
+import ca.polymtl.inf8405.sevenwonders.model.*;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -14,8 +16,10 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.widget.PopupWindow;
+import android.widget.Toast;
 
 import ca.polymtl.inf8405.sevenwonders.api.*;
+
 import org.apache.thrift.TException;
 
 
@@ -81,7 +85,7 @@ public class GameScreenActivity extends FragmentActivity {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(3000);
                     ReceiverStub.getInstance().simulate_c_sendState();
                 } catch ( InterruptedException e ) {
 
@@ -96,20 +100,29 @@ public class GameScreenActivity extends FragmentActivity {
 //        }
 	}
 
-	public static void showZoomPopup(View view, int selectedCardId, List<Card> cards, boolean withButtonPanel, boolean canPlayWonder) {
-
+	public static void showZoomPopup(View view, int selectedCardId, List<CardInfo> cards, boolean withButtonPanel, boolean canPlayWonder) {
 		PopupWindow popup = new PopupWindow();
-		popup.setContentView(new ZoomCardView(view.getContext(), cards, selectedCardId, withButtonPanel,canPlayWonder));
+		popup.setContentView(new ZoomCardView(view.getContext(), cards, selectedCardId, withButtonPanel, canPlayWonder));
 		popup.showAtLocation(view, Gravity.CENTER, 0, 0);
 		popup.update(0, 0, SCREEN_WIDTH*2/3, SCREEN_HEIGTH/2);
 	}
 
-	public void play(Card card) {
-        try {
-            Sender.getInstance().s_playCard( card, new HashMap<Resource, List<NeighborReference>>() ); // Fixme Trade
-        } catch ( TException e ){
-            Log.e("Game", e.getMessage() );
-        }
+	public static void play(Card card, Map<Resource, List<NeighborReference>> trade) {
+//        try {
+//        	// Fixme Send Trade to Server - Activate this line to communicate with the server
+//            Sender.getInstance().s_playCard( card, trade ); 
+//        } catch ( TException e ){
+//            Log.e("Game", e.getMessage() );
+//        }
+		
+		// Test code - Replace by the code above
+		String selectedTrade = "";
+		for (Map.Entry<Resource,List<NeighborReference>> entry : trade.entrySet()){
+			for ( NeighborReference neighbor: entry.getValue()){
+				selectedTrade += "1 " + entry.getKey() + " from " + neighbor + "; ";
+			}
+		}
+		Log.e("GameScreenActivity", card + " - " +  selectedTrade);
 	}
 
     private class ApiDelegate extends Api {
