@@ -26,18 +26,18 @@ enum CardCategory {
 }
 
 enum Civilisation {
-    RHODES_A = 0,
-    RHODES_B = 1,
+    RHODOS_A = 0,
+    RHODOS_B = 1,
     ALEXANDRIA_A = 2,
     ALEXANDRIA_B = 3,
-    EPHESUS_A = 4,
-    EPHESUS_B = 5,
+    EPHESOS_A = 4,
+    EPHESOS_B = 5,
     BABYLON_A = 6,
     BABYLON_B = 7,
     OLYMPIA_A = 8,
     OLYMPIA_B = 9,
-    HALICARNASSUS_A = 10,
-    HALICARNASSUS_B = 11,
+    HALIKARNASSOS_A = 10,
+    HALIKARNASSOS_B = 11,
     GIZAH_A = 12,
     GIZAH_B = 13
 }

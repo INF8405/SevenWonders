@@ -14,7 +14,8 @@ object Model extends Build {
 			version := "0.1.0",
 			scalaVersion := "2.10.1",
 			libraryDependencies ++= Seq( spec2 ),
-			scalacOptions in Compile := Seq( "-feature" )
+			scalacOptions in Compile := Seq( "-feature" ),
+			parallelExecution in Test := false
 		)
 	)
 }

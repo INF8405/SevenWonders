@@ -1,9 +1,12 @@
 package ca.polymtl.inf8405.sevenwonders.model
 
-import collection.MultiMap
 import org.specs2.mutable._
-import SevenWonders._
 
+import SevenWonders._
+import CardCollection._
+import CivilizationCollection._
+
+import collection.MultiMap
 import collection.MultiSet
 
 trait defaults {

@@ -1,7 +1,11 @@
 package ca.polymtl.inf8405.sevenwonders.model
 
 import org.specs2.mutable._
+
 import SevenWonders._
+import CivilizationCollection._
+import CardCollection._
+
 import collection.MultiSet
 import collection.Circle
 

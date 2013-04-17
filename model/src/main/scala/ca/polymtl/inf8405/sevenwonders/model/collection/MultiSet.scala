@@ -1,9 +1,11 @@
 package ca.polymtl.inf8405.sevenwonders.model
 package collection
 
+import scala.language.implicitConversions
+
 import scala.util.Random
 import utils.Utils._
-import scala.collection.{GenMap, GenTraversableOnce}
+import scala.collection.GenTraversableOnce
 
 object conversions {
   implicit def setToMultiSet[A](from: Set[A]): MultiSet[A] =
@@ -73,25 +75,24 @@ class DefaultMultiSet[A](private val content: Map[A, Int]) extends MultiSet[A] {
     new DefaultMultiSet[A1](newContent)
   }
   def -(elem: Any): DefaultMultiSet[A] = {
-    elem match {
-      case elem: A => {
-        if (!contains(elem)) this
-        else {
-          val newContent =
-            if (content(elem) == 1) content - elem
-            else (content.updated(elem, content(elem) - 1))
-          new DefaultMultiSet[A](newContent)
-        }
+    if (!contains(elem)) this
+    else {
+      val e = elem.asInstanceOf[A]
+      if( e == null ) this
+      else {
+        val newContent =
+          if (content(e) == 1) content - e
+          else (content.updated(e, content(e) - 1))
+        new DefaultMultiSet[A](newContent)
       }
-      case _ => this
     }
   }
 
   def contains(elem: Any) = {
-    elem match {
-      case elem: A => content.contains(elem)
-      case _ => false
-    }
+    val e = elem.asInstanceOf[A]
+    if( e != null ) {
+      content.contains(e)
+    } else false
   }
   override def hashCode = content.hashCode()
 }

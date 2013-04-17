@@ -6,7 +6,7 @@ import scala.util.Random
 import scala.collection.GenIterable
 
 class Circle[A](elems: A*) extends Traversable[A] {
-  val impl: List[CircleNode[A]] = elems.toList.map(elem => new CircleNode[A](elems.toList.shiftRight(elems.indexOf(elem)), elem, elems.toList.shiftLeft(elems.indexOf(elem))))
+  private val impl: List[CircleNode[A]] = elems.toList.map(elem => new CircleNode[A](elems.toList.shiftRight(elems.indexOf(elem)), elem, elems.toList.shiftLeft(elems.indexOf(elem))))
   def foreach[U](f: A => U): Unit =
     if (!elems.isEmpty) {
       f(elems.head)
