@@ -201,13 +201,21 @@ struct GameState {
 
 service SevenWondersApi {
 
+    oneway void s_connect( 1: string username ),
+    oneway void s_reconnect( 1: string username ),
+    oneway void c_connectionResponse( 1: bool connected ),
+
+	oneway void s_create( 1: GameRoomDef definition ),
+	oneway void c_createdGame( ),
+
 	oneway void s_listGamesRequest( 1: GeoLocation geo ),
     oneway void c_listGamesResponse( 1: list<GameRoom> rooms ),
-	oneway void s_create( 1: GameRoomDef definition ),
+
 	oneway void s_join( 1: GameId id ),
 	oneway void c_joined( 1: Username user ),
     oneway void c_connected( 1: list<Username> users ),
 	oneway void c_left( 1: Username user ),
+
 	oneway void s_start( ),
 
     oneway void c_begin( 1: GameState state ),

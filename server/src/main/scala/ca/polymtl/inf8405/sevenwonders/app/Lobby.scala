@@ -6,33 +6,41 @@ import ca.polymtl.inf8405.sevenwonders.api.{GameRoom, GameRoomDef}
 
 import ApiHelper._
 
-import collection.mutable.{ Map => MMap }
+import collection.mutable.{ Map => MMap, Set => MSet }
 
-trait GameLobby {
-  def create( game: GameRoomDef, player: GameClient, dispatch: Dispatcher ): Future[TGame]
-  def join( game: GameId, player: GameClient ): Future[TGame]
+trait Lobby {
+  def connect( user: User )
+  def create( game: GameRoomDef, user: User, dispatch: Dispatcher ): Future[TGame]
+  def join( game: GameId, user: User ): Future[TGame]
   def list: Future[List[GameRoom]]
 }
 
-class GameLobbyImpl( system: ActorSystem ) extends GameLobby {
+class LobbyImpl( system: ActorSystem ) extends Lobby {
 
   import system.dispatcher
 
-  def create( definition: GameRoomDef, player: GameClient, dispatch: Dispatcher ) = {
+  def connect( user: User ) {
+    users += user
+  }
+
+  def create( definition: GameRoomDef, user: User, dispatch: Dispatcher ) = {
     import java.util.UUID
     val id = UUID.randomUUID.toString
     val game: TGame = TypedActor( system ).typedActorOf( TypedProps( classOf[TGame], new GameImpl( system ) ) )
-    games( id ) = ( new GameRoom( id, definition ), game )
-    game.join( player )
 
-    dispatch.created()
+    games( id ) = ( new GameRoom( id, definition ), game )
+    usersInGames( user ) = game
+    game.created( user )
+
+    users foreach( _.api.c_createdGame() )
 
     future { game }
   }
 
-  def join( id: GameId, player: GameClient ): Future[TGame] = {
+  def join( id: GameId, user: User ): Future[TGame] = {
     games.get( id ).map{ case ( _, game  ) => {
-      game.join( player )
+      usersInGames( user ) = game
+      game.join( user )
       future{ game }
     }}.getOrElse( (Promise failed sys.error( s"game not found id=$id" )).future )
   }
@@ -43,5 +51,7 @@ class GameLobbyImpl( system: ActorSystem ) extends GameLobby {
     }
   }
 
+  private val users = MSet.empty[User]
+  private val usersInGames = MMap.empty[User,TGame]
   private val games = MMap.empty[GameId, (GameRoom, TGame)]
 }

@@ -22,53 +22,62 @@ import scala.concurrent.Future
 
 trait TGame {
 
-  def join( player: GameClient )
-  def disconnect( player: GameClient )
+  def created( user: User )
+  def join( user: User )
+  def disconnect( user: User )
   def start()
 
-  def playCard( card: TCard, trade: TTrade )
-  def playWonder( trade: TTrade )
-  def discard( card: TCard )
+  def playCard( user: User, card: TCard, trade: TTrade )
+  def playWonder( user: User, trade: TTrade )
+  def discard( user: User, card: TCard )
 }
 
 class GameImpl( system: ActorSystem ) extends TGame {
 
   import collection.JavaConversions._
-  import system.dispatcher
 
-  def join( client: GameClient ){
-    client.username foreach { user => {
-
-      Future.sequence(players.map(_.username())).foreach( users => {
-          client.c_connected( users.toList )
-        }
-      )
-      players.add( client )
-      broadcast { _.c_joined( user ) }
-    }}
+  def created( user: User ) {
+    users.add( user )
   }
 
-  def disconnect( player: GameClient ){
-    players.remove( player )
+  def join( user: User ){
+    users.add( user )
+    broadcastOthers( user ) { _.c_joined( user.username ) }
+    user.api.c_connected( users.map( _.username ).toList )
+  }
+
+  def disconnect( user: User ){
+    // todo: handle reconnect
   }
 
   def start(){
-
-    val game = beginGame( players.size, playWithCities = false )
-    playerBridge = game.players.zip( players ).map( _.swap ).toMap
+    val game = beginGame( users.size, playWithCities = false )
+    usersPlayers = game.players.zip( users ).map( _.swap ).toMap
     gameImpl = Some( game )
 
-    playerBridge.foreach{ case ( client, player ) => {
-      client.c_begin( toThriftState( player, game ) )
+    usersPlayers.foreach{ case ( client, player ) => {
+      client.api.c_begin( toThriftState( player, game ) )
     }}
   }
 
-  def playCard(card: TCard, trade: TTrade ) {}
-  def playWonder( trade: TTrade ) {}
-  def discard(card: TCard) {}
+  def playCard( user: User, card: TCard, trade: TTrade ) {
+    // todo: do it
+  }
 
-  def broadcast( f: GameClient => Unit ) {
-    players.foreach( f(_) )
+  def playWonder( user: User, trade: TTrade ) {
+    // todo: do it
+  }
+
+  def discard( user: User, card: TCard ) {
+    // todo: do it
+  }
+
+  def broadcast( f: Client => Unit ) {
+    users foreach( user => f( user.api ) )
+  }
+
+  def broadcastOthers( me: User )( f: Client => Unit ) {
+    users filterNot( _ == me ) foreach( user => f( user.api ) )
   }
 
   def toThriftState( player: Player, game: Game ): TGameState = {
@@ -149,8 +158,8 @@ class GameImpl( system: ActorSystem ) extends TGame {
   }
 
 
-  private val players = MSet.empty[GameClient]
-  private var playerBridge = Map.empty[GameClient,Player]
+  private val users = MSet.empty[User]
+  private var usersPlayers = Map.empty[User,Player]
   private var gameImpl = Option.empty[Game]
 
   implicit def toJMap[A,B]( me: Map[A,B] ): JMap[A,B] = collection.mutable.Map( me.toSeq: _* )

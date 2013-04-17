@@ -1,10 +1,9 @@
 package ca.polymtl.inf8405.sevenwonders
 package test
 
-import client.{Joined, GameListResponse, Client}
+import client._
 import api.{GameRoomDef, GeoLocation}
 
-import java.util.{ List => JList }
 import akka.testkit.TestProbe
 
 class StateSpec extends ServerSpec {
@@ -21,28 +20,27 @@ class StateSpec extends ServerSpec {
       val pc = TestProbe()
       val c = new Client( system, pc.ref, "c" )
 
-//    val clients = List(a,b,c)
+      a.sender.s_connect("a")
+      b.sender.s_connect("b")
+      c.sender.s_connect("c")
 
       a.sender.s_create( new GameRoomDef( "1", new GeoLocation(1,1) ) )
-      Thread.sleep(1000)
-      b.sender.s_listGamesRequest( new GeoLocation(1,1) )
 
-      pa.expectMsgPF(){ case GameListResponse(_) => () }
-      pb.expectMsgPF() {
-        case GameListResponse( rooms ) => {
+      pa.expectMsgPF() { case CreatedGame => () }
 
-          rooms.size() == 1
+      pb.expectMsgPF() { case CreatedGame => b.sender.s_listGamesRequest( new GeoLocation(1,1) ) }
+      pb.expectMsgPF() { case GameListResponse( rooms ) => {
+        val id = rooms.get(0).getId
+        b.sender.s_join( id )
+      }}
 
-          // all join
-          val id = rooms.get(0).getId
-          b.sender.s_join( id )
-          c.sender.s_join( id )
-        }
-      }
+      pc.expectMsgPF() { case CreatedGame => c.sender.s_listGamesRequest( new GeoLocation(1,1) ) }
+      pc.expectMsgPF() { case GameListResponse( rooms ) => {
+        val id = rooms.get(0).getId
+        c.sender.s_join( id )
+      }}
 
-      pa.expectMsgPF(){ case Joined( _ ) => () }
-
-
+      a.sender.s_start()
 
       a.stop()
     }
