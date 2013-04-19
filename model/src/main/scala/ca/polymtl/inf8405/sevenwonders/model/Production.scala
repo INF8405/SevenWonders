@@ -1,7 +1,11 @@
 package ca.polymtl.inf8405.sevenwonders.model
 
-import SevenWonders._
 import collection.MultiSet
+import Ressource._
+
+object Production {
+  val NoProduction = CumulativeProduction(MultiSet[Resource]())
+}
 
 trait Production extends Symbol {
   def consume(resources: MultiSet[Resource]): Set[MultiSet[Resource]]

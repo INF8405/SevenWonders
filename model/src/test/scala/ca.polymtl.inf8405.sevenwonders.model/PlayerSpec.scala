@@ -2,9 +2,9 @@ package ca.polymtl.inf8405.sevenwonders.model
 
 import org.specs2.mutable._
 
-import SevenWonders._
 import CardCollection._
 import CivilizationCollection._
+import Ressource._
 
 import collection.MultiMap
 import collection.MultiSet
@@ -93,8 +93,12 @@ class PlayerSpec extends Specification with defaults {
       player.canBuild(TAVERN, Map()) === false
     }
 
+    "possibleTradesWithEmptyTrade" in {
+      defaultPlayer.possibleTradesWithEmptyTrade(TAVERN, Map[NeighborReference, Production]()) === Set(emptyTrade)
+    }
+
     "possibleTrades" in {
-      defaultPlayer.possibleTrades(TAVERN, Map[NeighborReference, Production]()) === Set(MultiMap())
+      defaultPlayer.possibleTrades(TAVERN, Map[NeighborReference, Production]()) ==== Set.empty
     }
 
     "cost" should {

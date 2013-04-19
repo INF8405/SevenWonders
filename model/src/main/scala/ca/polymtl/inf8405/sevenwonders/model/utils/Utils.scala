@@ -40,6 +40,7 @@ object Utils {
 
   implicit class AugmentedSet[A](value: Set[A]) {
     def takeRandom(nb: Int): Set[A] = Random.shuffle(value.to[List]).take(nb).to[Set]
+    def remove(a: Any): Set[A] = value.filter(_ != a)
   }
 
   implicit class AugmentedTupple2[A](value: (A, A)) {

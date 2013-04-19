@@ -89,6 +89,7 @@ class ReceiverImpl( sender: SevenWondersApi.Client, protocol: TProtocol, system:
   def s_create(definition: GameRoomDef) { SERVER }
   def s_listGamesRequest(geo: GeoLocation) { SERVER }
   def s_start() { SERVER }
+  def s_startStub() { SERVER }
   def s_pong() { SERVER }
   def s_join(id: String) { SERVER }
 

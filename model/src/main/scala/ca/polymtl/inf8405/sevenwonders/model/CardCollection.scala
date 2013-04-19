@@ -4,7 +4,7 @@ import collection.MultiSet
 
 object CardCollection {
 
-  import SevenWonders._
+  import Ressource._
 
   ////
   // AGE I
@@ -22,9 +22,9 @@ object CardCollection {
   val GUARD_TOWER = MilitaryCard("GUARD_TOWER", Cost(0, MultiSet(Clay)), Set(), 1)
 
   // Science Cards
-  val WORKSHOP = ScienceCard("WORKSHOP", Cost(0, MultiSet(Glass)), Set(LABORATORY, ARCHERY_RANGE), gear)
-  val SCRIPTORIUM = ScienceCard("SCRIPTORIUM", Cost(0, MultiSet(Paper)), Set(COURTHOUSE, LIBRARY), tablet)
-  val APOTHECARY = ScienceCard("APOTHECARY", Cost(0, MultiSet(Tapestry)), Set(STABLES, DISPENSARY), compass)
+  val WORKSHOP = ScienceCard("WORKSHOP", Cost(0, MultiSet(Glass)), Set(LABORATORY, ARCHERY_RANGE), Gear)
+  val SCRIPTORIUM = ScienceCard("SCRIPTORIUM", Cost(0, MultiSet(Paper)), Set(COURTHOUSE, LIBRARY), Tablet)
+  val APOTHECARY = ScienceCard("APOTHECARY", Cost(0, MultiSet(Tapestry)), Set(STABLES, DISPENSARY), Compass)
 
   // Civilian Cards
   val THEATER = CivilianCard("THEATER", Free, Set(STATUE), 2)
@@ -66,10 +66,10 @@ object CardCollection {
   val STABLES = MilitaryCard("STABLES", Cost(0, MultiSet(Clay, Wood, Ore)), Set(), 2)
 
   // Science Cards
-  val SCHOOL = ScienceCard("SCHOOL", Cost(0, MultiSet(Wood, Paper)), Set(ACADEMY, STUDY), tablet)
-  val LIBRARY = ScienceCard("LIBRARY", Cost(0, MultiSet(Stone, Stone, Tapestry)), Set(SENATE, UNIVERSITY), tablet)
-  val LABORATORY = ScienceCard("LABORATORY", Cost(0, MultiSet(Clay, Clay, Paper)), Set(OBSERVATORY, SIEGE_WORKSHOP),gear)
-  val DISPENSARY = ScienceCard("DISPENSARY", Cost(0, MultiSet(Ore, Ore, Glass)), Set(LODGE, ARENA), compass)
+  val SCHOOL = ScienceCard("SCHOOL", Cost(0, MultiSet(Wood, Paper)), Set(ACADEMY, STUDY), Tablet)
+  val LIBRARY = ScienceCard("LIBRARY", Cost(0, MultiSet(Stone, Stone, Tapestry)), Set(SENATE, UNIVERSITY), Tablet)
+  val LABORATORY = ScienceCard("LABORATORY", Cost(0, MultiSet(Clay, Clay, Paper)), Set(OBSERVATORY, SIEGE_WORKSHOP),Gear)
+  val DISPENSARY = ScienceCard("DISPENSARY", Cost(0, MultiSet(Ore, Ore, Glass)), Set(LODGE, ARENA), Compass)
 
   // Civilian Cards
   val AQUEDUCT = CivilianCard("AQUEDUC", Cost(0, MultiSet(Stone, Stone, Stone)), Set(), 5)
@@ -100,11 +100,11 @@ object CardCollection {
   val SIEGE_WORKSHOP = MilitaryCard("SIEGE WORKSHOP", Cost(0, MultiSet(Clay, Clay, Clay, Wood)), Set(), 3)
 
   // Science Cards
-  val OBSERVATORY = ScienceCard("OBSERVATORY", Cost(0, MultiSet(Ore, Ore, Glass, Tapestry)), Set(), gear)
-  val ACADEMY = ScienceCard("ACADEMY", Cost(0, MultiSet(Stone, Stone, Stone)), Set(), compass)
-  val LODGE = ScienceCard("LODGE", Cost(0, MultiSet(Clay, Clay, Paper, Tapestry)), Set(), compass)
-  val UNIVERSITY = ScienceCard("UNIVERSITY", Cost(0, MultiSet(Wood, Wood, Paper, Glass)), Set(), tablet)
-  val STUDY = ScienceCard("STUDY", Cost(0, MultiSet(Wood, Paper, Tapestry)), Set(), gear)
+  val OBSERVATORY = ScienceCard("OBSERVATORY", Cost(0, MultiSet(Ore, Ore, Glass, Tapestry)), Set(), Gear)
+  val ACADEMY = ScienceCard("ACADEMY", Cost(0, MultiSet(Stone, Stone, Stone)), Set(), Compass)
+  val LODGE = ScienceCard("LODGE", Cost(0, MultiSet(Clay, Clay, Paper, Tapestry)), Set(), Compass)
+  val UNIVERSITY = ScienceCard("UNIVERSITY", Cost(0, MultiSet(Wood, Wood, Paper, Glass)), Set(), Tablet)
+  val STUDY = ScienceCard("STUDY", Cost(0, MultiSet(Wood, Paper, Tapestry)), Set(), Gear)
 
   // Civilian Cards
   val TOWN_HALL = CivilianCard("TOWN HALL", Cost(0, MultiSet(Stone, Stone, Ore, Glass)), Set(), 6)
@@ -121,7 +121,7 @@ object CardCollection {
   val CRAFTMENS_GUILD = GuildCard("CRAFTSMENS_GUILD", Cost(0, MultiSet(Ore, Ore, Stone, Stone)), Set(VictoryPointSymbol(VariableAmount(2, classOf[ManufacturedGoodCard], Set(Left, Right)))))
   val WORKERS_GUILD = GuildCard("WORKERS_GUILD", Cost(0, MultiSet(Ore, Ore, Clay, Stone, Wood)), Set(VictoryPointSymbol(VariableAmount(1, classOf[RawMaterialCard], Set(Left, Right)))))
   val PHILOSOPHERS_GUILD = GuildCard("PHILOSOPHERS_GUILD", Cost(0, MultiSet(Clay, Clay, Clay, Paper, Tapestry)), Set(VictoryPointSymbol(VariableAmount(1, classOf[ScienceCard], Set(Left, Right)))))
-  val SCIENTISTS_GUILD = GuildCard("SCIENTISTS_GUILD", Cost(0, MultiSet(Wood, Wood, Ore, Ore, Paper)), Set(gear | tablet | compass))
+  val SCIENTISTS_GUILD = GuildCard("SCIENTISTS_GUILD", Cost(0, MultiSet(Wood, Wood, Ore, Ore, Paper)), Set(Gear | Tablet | Compass))
   val SPIES_GUILD = GuildCard("SPIES_GUILD", Cost(0, MultiSet(Clay, Clay, Clay, Glass)), Set(VictoryPointSymbol(VariableAmount(1, classOf[MilitaryCard], Set(Left, Right)))))
   val BUILDERS_GUILD = GuildCard("BUILDERS_GUILD", Cost(0, MultiSet(Stone, Stone, Clay, Clay, Glass)), Set(VictoryPointSymbol(VariableAmount(1, classOf[WonderStage], Set(Left, Self, Right)))))
 
@@ -238,4 +238,6 @@ object CardCollection {
         CAPITOL
       )
     )
+
+  object DUMMY_CARD extends Card( "DUMMY_CARD", Free, Set.empty, Set.empty )
 }

@@ -2,9 +2,9 @@ package ca.polymtl.inf8405.sevenwonders.model
 
 import collection.MultiSet
 
-object CivilizationCollection {
+import Ressource._
 
-  import SevenWonders._
+object CivilizationCollection {
 
   // Civilizations
   val RHODOS_A = Civilization("RHODOS_A", Ore, List(
@@ -69,13 +69,13 @@ object CivilizationCollection {
   ))
   val BABYLON_A = Civilization("BABYLON_A", Clay, List(
     WonderStage(Cost(0, MultiSet(Clay, Clay)), Set(VictoryPointSymbol(SimpleAmount(3)))),
-    WonderStage(Cost(0, MultiSet(Wood, Wood, Wood)), Set(tablet | compass | gear)),
+    WonderStage(Cost(0, MultiSet(Wood, Wood, Wood)), Set(Tablet | Compass | Gear)),
     WonderStage(Cost(0, MultiSet(Clay, Clay, Clay)), Set(VictoryPointSymbol(SimpleAmount(7))))
   ))
   val BABYLON_B = Civilization("BABYLON_B", Clay, List(
     WonderStage(Cost(0, MultiSet(Tapestry, Clay)), Set(VictoryPointSymbol(SimpleAmount(3)))),
     WonderStage(Cost(0, MultiSet(Glass, Wood, Wood)), Set(PlayLastCardEachAge)),
-    WonderStage(Cost(0, MultiSet(Paper, Clay, Clay, Clay)), Set(tablet | compass | gear))
+    WonderStage(Cost(0, MultiSet(Paper, Clay, Clay, Clay)), Set(Tablet | Compass | Gear))
   ))
   val PETRA_A = Civilization("PETRA_A", Clay, List(
     WonderStage(Cost(0, MultiSet(Wood, Stone)), Set(VictoryPointSymbol(SimpleAmount(3)))),

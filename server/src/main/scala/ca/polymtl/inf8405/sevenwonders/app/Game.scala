@@ -2,9 +2,15 @@ package ca.polymtl.inf8405.sevenwonders
 package app
 
 import ApiHelper._
-import model.SevenWonders._
 
-import ca.polymtl.inf8405.sevenwonders.api.{
+import model._
+import model.SevenWonders._
+import model.CardCollection._
+import model.CivilizationCollection._
+import model.collection.Circle
+import model.collection.MultiSet
+
+import api.{
   Player => TPlayer,
   GameState => TGameState,
   Resource => TResource,
@@ -15,17 +21,20 @@ import ca.polymtl.inf8405.sevenwonders.api.{
   Civilisation => TCivilisation
 }
 
-import collection.mutable.{ Set => MSet, Map => MMap }
-import java.util.{ List => JList, Map => JMap, Set => JSet }
 import akka.actor.ActorSystem
-import scala.concurrent.Future
+
+import scala.collection.mutable.{ Set => MSet, Map => MMap }
+import java.util.{ List => JList, Map => JMap, Set => JSet }
+
 
 trait TGame {
 
   def created( user: User )
   def join( user: User )
   def disconnect( user: User )
+
   def start()
+  def startStub()
 
   def playCard( user: User, card: TCard, trade: TTrade )
   def playWonder( user: User, trade: TTrade )
@@ -34,7 +43,7 @@ trait TGame {
 
 class GameImpl( system: ActorSystem ) extends TGame {
 
-  import collection.JavaConversions._
+  import scala.collection.JavaConversions._
 
   def created( user: User ) {
     users.add( user )
@@ -54,6 +63,36 @@ class GameImpl( system: ActorSystem ) extends TGame {
     val game = beginGame( users.size, playWithCities = false )
     usersPlayers = game.players.zip( users ).map( _.swap ).toMap
     gameImpl = Some( game )
+
+    usersPlayers.foreach{ case ( client, player ) => {
+      client.api.c_begin( toThriftState( player, game ) )
+    }}
+  }
+
+  def startStub(){
+    val hand1 = MultiSet[Card]( WEST_TRADING_POST, THEATER, ALTAR, LUMBER_YARD, BATHS, STONE_PIT, CLAY_PIT )
+    val player1 = Player( civilization = BABYLON_A, hand = hand1, coins = 3 )
+
+    val hand2 = MultiSet[Card]( CLAY_POOL, APOTHECARY, WORKSHOP, MARKETPLACE, STOCKADE, GLASSWORKS, LOOM )
+    val player2 = Player( civilization = EPHESOS_B, hand = hand2, coins = 3 )
+
+    val hand3 = MultiSet[Card]( TIMBER_YARD, PRESS, EAST_TRADING_POST, BARRACKS, SCRIPTORIUM, GUARD_TOWER, ORE_VEIN )
+    val player3 = Player( civilization = HALIKARNASSOS_B, hand = hand3, coins = 3 )
+
+    val game = Game(
+      new Circle[Player]( player1, player2, player3 ),
+      Map( 1 -> MultiSet(DUMMY_CARD), 2 -> MultiSet(DUMMY_CARD) )
+    )
+
+    val u1 = users.find( _.username == "babylon" ).get
+    val u2 = users.find( _.username == "ephesos" ).get
+    val u3 = users.find( _.username == "hali" ).get
+
+    usersPlayers = Map (
+      u1 -> player1,
+      u2 -> player2,
+      u3 -> player3
+    )
 
     usersPlayers.foreach{ case ( client, player ) => {
       client.api.c_begin( toThriftState( player, game ) )
@@ -149,7 +188,7 @@ class GameImpl( system: ActorSystem ) extends TGame {
     val ( before, me :: after ) = game.players.toList.span( _ == player )
     val players = me :: before.reverse ::: after.reverse
 
-    val unplayables = (player.hand - playableCards).map( card => TCard.valueOf( card.name ) ).toList : JList[TCard]
+    val unplayables = (player.hand -- playableCards).map( card => TCard.valueOf( card.name ) ).toList : JList[TCard]
 
     new TGameState(
       new Hand( tPlayables, unplayables ),
@@ -162,5 +201,5 @@ class GameImpl( system: ActorSystem ) extends TGame {
   private var usersPlayers = Map.empty[User,Player]
   private var gameImpl = Option.empty[Game]
 
-  implicit def toJMap[A,B]( me: Map[A,B] ): JMap[A,B] = collection.mutable.Map( me.toSeq: _* )
+  implicit def toJMap[A,B]( me: Map[A,B] ): JMap[A,B] = MMap( me.toSeq: _* )
 }

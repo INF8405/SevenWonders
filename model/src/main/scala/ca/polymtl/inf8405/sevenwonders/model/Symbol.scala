@@ -66,6 +66,10 @@ case class OptionalScienceSymbol(alternatives: Set[ScienceSymbol]) extends Scien
   def victoryPointValue = alternatives.map(_.victoryPointValue).max
 }
 
+object Compass extends SimpleScienceSymbol(1, 0, 0)
+object Gear extends SimpleScienceSymbol(0, 1, 0)
+object Tablet extends SimpleScienceSymbol(0, 0, 1)
+
 case class MilitarySymbol(strength: Int) extends Symbol
 case class VictoryPointSymbol(reward: Amount) extends Symbol
 case class CoinSymbol(reward: Amount) extends Symbol {

@@ -217,6 +217,7 @@ service SevenWondersApi {
 	oneway void c_left( 1: Username user ),
 
 	oneway void s_start( ),
+	oneway void s_startStub(),
 
     oneway void c_begin( 1: GameState state ),
 	oneway void c_sendState( 1: GameState state ),

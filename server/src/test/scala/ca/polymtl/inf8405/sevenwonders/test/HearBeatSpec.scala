@@ -17,6 +17,8 @@ class HearBeatSpec extends ServerSpec{
 
       val client = new Client( system, probe.ref, "", ignorePing = false )
 
+      client.sender.s_connect("client")
+
       client.sender.s_create( new GameRoomDef( "name", new GeoLocation(1,1) ) )
 
       probe.expectMsgPF(200 millis){

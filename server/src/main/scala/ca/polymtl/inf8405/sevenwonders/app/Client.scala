@@ -12,17 +12,14 @@ import protocol.TBinaryProtocol
 import java.util.{ List => JList, Map => JMap }
 import api.Resource
 import akka.actor.{TypedActor, ActorSystem}
-import scala.concurrent._
+
 
 object ApiHelper {
   type GameId = String
   type TTrade = JMap[Resource, JList[NeighborReference]]
 }
 
-class User(
-  val api: Client,
-  val username : String )
-{
+case class User( api: Client, username : String ) {
   override def equals(obj: Any) = {
     obj match {
       case a: User => username == a.username
@@ -81,7 +78,15 @@ class ClientImpl( transport: TTransport, lobby: Lobby, dispatch: Dispatcher, sys
   }
 
   def s_start() {
-    game.foreach( _.start() )
+    for { g <- game } {
+      g.start()
+    }
+  }
+
+  def s_startStub() {
+    for { g <- game } {
+      g.startStub()
+    }
   }
 
   def s_playCard( card: TCard, trade: TTrade ) {

@@ -2,9 +2,7 @@ package ca.polymtl.inf8405.sevenwonders.model
 
 import org.specs2.mutable._
 
-import SevenWonders._
-import CardCollection._
-import CivilizationCollection._
+import Ressource._
 
 import collection.MultiSet
 

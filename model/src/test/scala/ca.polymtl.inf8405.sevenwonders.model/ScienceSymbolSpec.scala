@@ -1,29 +1,30 @@
 package ca.polymtl.inf8405.sevenwonders.model
 
 import org.specs2.mutable._
-import SevenWonders._
+
+import Symbol._
 
 class ScienceSymbolSpec extends Specification {
   "A SimpleScienceValue" should {
     "support adding another SimpleScienceValue" in {
-      val a: ScienceSymbol = compass
-      (a + tablet) === SimpleScienceSymbol(1, 0, 1)
-      (compass + tablet) === SimpleScienceSymbol(1, 0, 1)
-      (tablet + gear) === SimpleScienceSymbol(0, 1, 1)
+      val a: ScienceSymbol = Compass
+      (a + Tablet) === SimpleScienceSymbol(1, 0, 1)
+      (Compass + Tablet) === SimpleScienceSymbol(1, 0, 1)
+      (Tablet + Gear) === SimpleScienceSymbol(0, 1, 1)
     }
 
     "support adding an OptionalScienceValue" in {
-      val actual = (compass + (tablet | gear))
-      val expected = ((compass + tablet) | (compass + gear))
+      val actual = (Compass + (Tablet | Gear))
+      val expected = ((Compass + Tablet) | (Compass + Gear))
       actual === expected
     }
 
     "support the | operator on a SimpleScienceValue" in {
-      (compass | tablet) === OptionalScienceSymbol(Set(compass, tablet))
+      (Compass | Tablet) === OptionalScienceSymbol(Set(Compass, Tablet))
     }
 
     "support the | operator on a OptionalScienceValue" in {
-      (compass | (tablet | gear)) === OptionalScienceSymbol(Set(compass, tablet, gear))
+      (Compass | (Tablet | Gear)) === OptionalScienceSymbol(Set(Compass, Tablet, Gear))
     }
 
     "have an Integer representing the victory point value" in {
@@ -34,35 +35,35 @@ class ScienceSymbolSpec extends Specification {
     }
 
     "simplify expressions where possible" in {
-      (compass | compass) === compass
+      (Compass | Compass) === Compass
     }
   }
 
   "An OptionalScienceValue" should {
     "support adding a SimpleScienceValue" in {
-      (compass | tablet) + compass === ((compass + compass) | (compass + tablet))
+      (Compass | Tablet) + Compass === ((Compass + Compass) | (Compass + Tablet))
     }
 
     "support adding another OptionalScienceValue" in {
-      val actual = (compass | tablet) + (compass | gear)
-      val expected = ((compass + compass) | (compass + gear) | (tablet + compass) | (tablet + gear))
+      val actual = (Compass | Tablet) + (Compass | Gear)
+      val expected = ((Compass + Compass) | (Compass + Gear) | (Tablet + Compass) | (Tablet + Gear))
       actual === expected
     }
 
     "support the | operaotr on a SimpleScienceValue" in {
-      ((compass | tablet) | gear) === OptionalScienceSymbol(Set(compass, tablet, gear))
-      ((compass | tablet) | tablet) === OptionalScienceSymbol(Set(compass, tablet))
+      ((Compass | Tablet) | Gear) === OptionalScienceSymbol(Set(Compass, Tablet, Gear))
+      ((Compass | Tablet) | Tablet) === OptionalScienceSymbol(Set(Compass, Tablet))
     }
 
     "support the | operator on an OptionalScienceValue" in {
-      ((compass | tablet) | (compass | gear)) === (compass | tablet | gear)
+      ((Compass | Tablet) | (Compass | Gear)) === (Compass | Tablet | Gear)
     }
 
     "have an Integer representing the victory point value" in {
-      (SimpleScienceSymbol(1,2,4) + (compass | gear | tablet)).victoryPointValue === 38
-      (SimpleScienceSymbol(2,2,4) + (compass | gear | tablet)).victoryPointValue === 47
-      (SimpleScienceSymbol(0,0,1) + (compass | gear | tablet)).victoryPointValue === 4
-      (SimpleScienceSymbol(0,1,1) + (compass | gear | tablet)).victoryPointValue === 10
+      (SimpleScienceSymbol(1,2,4) + (Compass | Gear | Tablet)).victoryPointValue === 38
+      (SimpleScienceSymbol(2,2,4) + (Compass | Gear | Tablet)).victoryPointValue === 47
+      (SimpleScienceSymbol(0,0,1) + (Compass | Gear | Tablet)).victoryPointValue === 4
+      (SimpleScienceSymbol(0,1,1) + (Compass | Gear | Tablet)).victoryPointValue === 10
     }
   }
 }
