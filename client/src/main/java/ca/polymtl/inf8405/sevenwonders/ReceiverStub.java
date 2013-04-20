@@ -74,6 +74,17 @@ public class ReceiverStub extends Api {
                 false
         );
 
+        /* Player 4 */
+        Player player4 = new Player(
+                emptyTableau,
+                ALEXANDRIA_B,
+                battleMarkersEmpty,
+                3,
+                0,
+                0,
+                false
+        );
+        
         GameState state = new GameState(
             new Hand( playables, unplayables ),
             new ArrayList<Player>(Arrays.asList(player1, player2, player3))
@@ -162,6 +173,50 @@ public class ReceiverStub extends Api {
                 false
         );
 
+        /* Player 4 */
+        Player player4 = new Player(
+                emptyTableau,
+                OLYMPIA_A,
+                battleMarkersEmpty,
+                3,
+                0,
+                0,
+                false
+        );
+        
+        /* Player 5 */
+        Player player5 = new Player(
+                emptyTableau,
+                EPHESUS_A,
+                battleMarkersEmpty,
+                3,
+                0,
+                0,
+                false
+        );
+        
+        /* Player 6 */
+        Player player6 = new Player(
+                emptyTableau,
+                GIZAH_A,
+                battleMarkersEmpty,
+                3,
+                0,
+                0,
+                false
+        );
+        
+        /* Player 7 */
+        Player player7 = new Player(
+                emptyTableau,
+                BABYLON_A,
+                battleMarkersEmpty,
+                3,
+                0,
+                0,
+                false
+        );
+        
         GameState state = new GameState(
                 new Hand( playables, unplayables ),
                 new ArrayList<Player>(Arrays.asList(player1, player2, player3))

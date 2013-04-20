@@ -50,7 +50,10 @@ public class GameScreenFragment extends Fragment {
 			cards.add(new CardInfo(c));
 		}
 		handView.setCards(cards);
-		handView.setPlayer(ScreenSlidePagerAdapter.players_.get(position));
+
+		if (position < ScreenSlidePagerAdapter.players_.size())
+			handView.setPlayer(ScreenSlidePagerAdapter.players_.get(position));
+		
 		// TESTING : Test UI without Server ////////////////////////////////
 		//		int random = 0 + (int)(Math.random() * ((11 - 0) + 1));
 		//		Player player = new Player();

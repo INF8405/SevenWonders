@@ -85,7 +85,7 @@ public class GameScreenActivity extends FragmentActivity {
             @Override
             public void run() {
                 try {
-                    Thread.sleep(3000);
+                    Thread.sleep(5000);
                     ReceiverStub.getInstance().simulate_c_sendState();
                 } catch ( InterruptedException e ) {
 
@@ -131,9 +131,10 @@ public class GameScreenActivity extends FragmentActivity {
                 @Override
                 public void run() {
                     mPager = (ViewPager) findViewById(R.id.Pager);
-                    mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), state.getPlayersSize());
+                    mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), 
+                    		state.getPlayers());
                     mPager.setAdapter(mPagerAdapter);
-                    mPager.setCurrentItem(0);
+                    mPager.setCurrentItem(100*state.getPlayersSize()); // Fixme : Magic number 100
 
                     setState(state);
                 }

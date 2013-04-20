@@ -32,9 +32,7 @@ public class ResourceView extends View implements CardView {
 					List<CardInfo> cards = new ArrayList<CardInfo>();
 					for( Map.Entry<CardInfo,Bitmap> entry : cards_.entrySet() ) {
                         cards.add(entry.getKey());
-                    }
-
-			
+                    }			
 					GameScreenActivity.showZoomPopup(sefl_, 0, cards, false,false);
 				}
 				return false;
