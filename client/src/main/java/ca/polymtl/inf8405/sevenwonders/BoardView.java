@@ -1,7 +1,7 @@
 package ca.polymtl.inf8405.sevenwonders;
 
 import ca.polymtl.inf8405.sevenwonders.R;
-import ca.polymtl.inf8405.sevenwonders.model.Card;
+import ca.polymtl.inf8405.sevenwonders.model.CardInfo;
 
 import android.content.Context;
 import android.graphics.Canvas;

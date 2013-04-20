@@ -29,7 +29,8 @@ import com.sun.net.ssl.internal.ssl.Provider;
 
 public class ListGameRoomActivity extends Activity implements LocationListener{
 
-	public static String GAMEID_MESSAGE = "ListGameRoomActivity_GameId";
+	public static final String GAMEID_MESSAGE = "ListGameRoomActivity_GameId";
+	public static String USER_NAME=""; 
 	private static final int FIVE_MINUTES = 1000 * 60 * 5;
 
 	public ListGameRoomActivity() {
@@ -41,7 +42,9 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_game_rooms);
-
+		
+		USER_NAME =  getIntent().getStringExtra(LogInActivity.USER_NAME_MESSAGE);
+		
 		// Create a list view of game room
 		final ListView listView = (ListView) findViewById(R.id.listView);
 		adapter_ = new ArrayAdapter<GameRoomAdapter>(this, R.layout.gameroom_item,rooms_);
@@ -88,7 +91,8 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
 		geo = new GeoLocation(location.getLatitude(), location.getLongitude());
 		// Test geo location
 		TextView locationText = (TextView)findViewById(R.id.testTextView);
-		locationText.setText("Update location = " + location.getLatitude()+";"+location.getLongitude());
+		locationText.setText("User:" + USER_NAME + 
+				" - Update location = " + location.getLatitude()+";"+location.getLongitude());
 		try {
 			Sender.getInstance().s_listGamesRequest(geo);
 		} catch ( TException e ) {
@@ -131,7 +135,8 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
 			this.room = room;
 		}
 
-		@Override public String toString() {
+		@Override 
+		public String toString() {
 			return "Room " + room.definition.name + " " + room.definition.geo.latitude + " " + room.definition.geo.longitude;
 		}
 

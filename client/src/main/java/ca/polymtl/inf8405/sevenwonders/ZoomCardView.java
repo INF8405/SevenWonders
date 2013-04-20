@@ -1,8 +1,10 @@
 package ca.polymtl.inf8405.sevenwonders;
 
-import ca.polymtl.inf8405.sevenwonders.api.Card;
+import ca.polymtl.inf8405.sevenwonders.api.NeighborReference;
+import ca.polymtl.inf8405.sevenwonders.api.Resource;
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
 import ca.polymtl.inf8405.sevenwonders.controller.OnFlingGestureListener;
+import ca.polymtl.inf8405.sevenwonders.model.*;
 
 import android.app.FragmentManager;
 
@@ -22,16 +24,15 @@ import android.widget.TextView;
 import java.util.*;
 
 public class ZoomCardView extends RelativeLayout{
-
 	private View sefl_ = this;
 	private OnFlingGestureListener flingGesture_;
-	private List<Card> allCardNames_;
+	private List<CardInfo> allCards_;
 	private int current_; // current card id
 
 	// Test - TO REMOVE
 	private TextView text;
 	private void changeText(){
-		text.setText("name = " + allCardNames_.get(current_) + " - index=" + current_);
+		text.setText("Index=" + current_);
 	}
 
 	/**
@@ -41,9 +42,9 @@ public class ZoomCardView extends RelativeLayout{
 	 * @param current: the id of the current card
 	 * @param withButtonPanel: if we want to display the button panel inside of the zoom view
 	 */
-	private void init(Context context, List<Card> cards, int current, boolean withButtonPanel,boolean canPlayWonder){
+	private void init(Context context, List<CardInfo> cards, int current, boolean withButtonPanel,boolean canPlayWonder){
 		current_ = current;
-		allCardNames_ = cards;
+		allCards_ = cards;
 
 		setBackgroundColor(Color.DKGRAY);
 		setGravity(Gravity.RIGHT);
@@ -55,7 +56,7 @@ public class ZoomCardView extends RelativeLayout{
 		imgLayout.gravity = Gravity.CENTER;
 		img.setLayoutParams(imgLayout);
 		img.setImageBitmap(CardLoader.getInstance()
-				.getBitmap(context, allCardNames_.get(current_)));
+				.getBitmap(context, allCards_.get(current_).getName()));
 		img.setTag("imageView");
 		addView(img);
 
@@ -93,9 +94,20 @@ public class ZoomCardView extends RelativeLayout{
 			play.setText("Play");
 			play.setOnTouchListener(new OnTouchListener() {
 				@Override
-				public boolean onTouch(View arg0, MotionEvent arg1) {
+				public boolean onTouch(View arg0, MotionEvent event) {
 					GameScreenActivity screen = (GameScreenActivity)sefl_.getContext();
-					screen.play(allCardNames_.get(current_));
+					if (allCards_.get(current_).isPlayable()){
+						if (allCards_.get(current_).getTrades().size() == 0){
+							// Play card without trade
+							screen.play(allCards_.get(current_).getName(), new HashMap<Resource, List<NeighborReference>>());
+						} 
+						else{ // Play card with trade
+							if (event.getActionMasked() == MotionEvent.ACTION_DOWN){
+								// Show trade popup - Fixme: send all trades to popup
+								showTradePopup(allCards_.get(current_).getTrades());
+							}
+						}
+					}
 					closeMe();
 					return false;
 				}
@@ -114,17 +126,17 @@ public class ZoomCardView extends RelativeLayout{
 					public boolean onTouch(View arg0, MotionEvent event) {
 						int action = event.getActionMasked();
 						if (action == MotionEvent.ACTION_DOWN){
-							GameScreenActivity screen = (GameScreenActivity)sefl_.getContext();
-							FragmentManager manager = screen.getFragmentManager();
-							TradePopup tv = new TradePopup();
-							tv.show(manager, "abc");
+							// Fixme: Show the trade popup for wonders
+							//showTradePopup();
+							// Fixme: PlayWonder
+							//playWonder();
 							closeMe();
 						}
 						return false;
 					}
 				});
 			else 
-				wonders.setActivated(false);
+				wonders.setEnabled(false);
 
 			LinearLayout ln = new LinearLayout(context);
 			ln.setOrientation(LinearLayout.VERTICAL);
@@ -162,7 +174,7 @@ public class ZoomCardView extends RelativeLayout{
 		sefl_.setOnTouchListener(flingGesture_);
 	}
 
-	public ZoomCardView(Context context, List<Card> cards, int current,
+	public ZoomCardView(Context context, List<CardInfo> cards, int current,
 			boolean withButtonPanel, boolean canPlayWonder){
 		super(context);
 		init(context, cards, current, withButtonPanel,canPlayWonder);
@@ -179,23 +191,29 @@ public class ZoomCardView extends RelativeLayout{
 			current_--;
 			ImageView img = (ImageView)findViewWithTag("imageView");
 			img.setImageBitmap(CardLoader.getInstance()
-					.getBitmap(sefl_.getContext(), allCardNames_.get(current_)));
+					.getBitmap(sefl_.getContext(), allCards_.get(current_).getName()));
 			changeText();
 		}
 	}
 
 	private void right(){
-		if (current_+1 < allCardNames_.size()){
+		if (current_+1 < allCards_.size()){
 			current_++;
 			ImageView img = (ImageView)findViewWithTag("imageView");
 			img.setImageBitmap(CardLoader.getInstance()
-					.getBitmap(sefl_.getContext(), allCardNames_.get(current_)));
+					.getBitmap(sefl_.getContext(), allCards_.get(current_).getName()));
 			changeText();
 		}
 	}
-	
+
 	private void closeMe(){
 		sefl_.setVisibility(INVISIBLE);
 	}
-	
+
+	private void showTradePopup(Set<Map<Resource,List<NeighborReference>>> trades){
+		GameScreenActivity screen = (GameScreenActivity)sefl_.getContext();
+		FragmentManager manager = screen.getFragmentManager();
+		TradePopup tv = TradePopup.newInstance(allCards_.get(current_).getName(), trades); 
+		tv.show(manager, "Trades");
+	}
 }

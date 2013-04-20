@@ -1,7 +1,6 @@
 package ca.polymtl.inf8405.sevenwonders;
 
 import android.content.Context;
-
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
@@ -11,11 +10,12 @@ import android.view.WindowManager;
 
 import ca.polymtl.inf8405.sevenwonders.api.Card;
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
+import ca.polymtl.inf8405.sevenwonders.model.*;
 
 import java.util.*;
 
 public class PlayedCards extends View implements CardView {
-	private HashMap<Card, Bitmap> cards_;
+	private HashMap<CardInfo, Bitmap> cards_;
 	private static float CARD_WIDTH = 0;
 	private static float CARD_HEIGHT = 0;
 	private static int MARGIN_LEFT = 0;
@@ -23,7 +23,7 @@ public class PlayedCards extends View implements CardView {
 	private PlayedCards self_ = this;
 
 	private void init(Context context){
-		cards_ = new HashMap<Card, Bitmap>();
+		cards_ = new HashMap<CardInfo, Bitmap>();
 
 		// Calcul card size and margin value based on the screen dimensions
 		int screenWidth = ((WindowManager)context
@@ -42,8 +42,8 @@ public class PlayedCards extends View implements CardView {
 				// TODO Auto-generated method stub
 				if (cards_.size() > 0){
 					// Get all bitmap key
-					List<Card> cards = new ArrayList<Card>();
-					for( Map.Entry<Card,Bitmap> entry : cards_.entrySet() ) {
+					List<CardInfo> cards = new ArrayList<CardInfo>();
+					for( Map.Entry<CardInfo,Bitmap> entry : cards_.entrySet() ) {
                         cards.add(entry.getKey());
                     }
 
@@ -80,21 +80,21 @@ public class PlayedCards extends View implements CardView {
 		}
 	}
 
-	public void addCard( Card card ){
+	public void addCard( CardInfo card ){
 		if (cards_ == null)
-			cards_ = new HashMap<Card, Bitmap>();
+			cards_ = new HashMap<CardInfo, Bitmap>();
 		Bitmap resizedBitmap = Bitmap.createScaledBitmap(
-				CardLoader.getInstance().getBitmap(getContext(), card), 
+				CardLoader.getInstance().getBitmap(getContext(), card.getName()), 
 				(int)CARD_WIDTH, 
 				(int)CARD_HEIGHT, 
 				false);
 		cards_.put(card, resizedBitmap);
 	}
 
-	public void setCards( List<Card> cards){
+	public void setCards( List<CardInfo> cards){
 		if (cards != null){
 			cards_.clear();
-			for (Card card: cards){
+			for (CardInfo card: cards){
 				addCard(card);
 			}
 		}

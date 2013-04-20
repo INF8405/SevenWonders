@@ -1,5 +1,13 @@
 package ca.polymtl.inf8405.sevenwonders;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import ca.polymtl.inf8405.sevenwonders.api.Card;
+import ca.polymtl.inf8405.sevenwonders.api.NeighborReference;
+import ca.polymtl.inf8405.sevenwonders.api.Resource;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -7,24 +15,45 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 
 public class TradePopup extends DialogFragment{
+	private List<Map<Resource,List<NeighborReference>>> trades_;
+	private Card card_;
+
+	public static TradePopup newInstance(Card card, Set<Map<Resource,List<NeighborReference>>> trades){
+		TradePopup popup = new TradePopup();
+		// Convert a Set trades to List
+		List<Map<Resource,List<NeighborReference>>> tradeList = new ArrayList<Map<Resource,List<NeighborReference>>>(trades.size());
+		for ( Map<Resource,List<NeighborReference>> trade: trades){
+			tradeList.add(trade);
+		}
+		popup.trades_ = tradeList;
+		popup.card_ = card;
+		return popup;
+	}
+
 	@Override
 	public Dialog onCreateDialog(Bundle savedInstanceState) {
 		// Use the Builder class for convenient dialog construction
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
 		// List of all choices for trace - Received from server
-		String[] traceChoices = new String[20];
+		String[] traceChoices = new String[trades_.size()];
 
-		for (int i = 0 ; i < 20; i++){
-			traceChoices[i] = "JR: 1 pierre,1 tapis,1 pierre,1 ore,1 pierre - 9 golds\n" +
-					"Duc: 1 papier,1 pierre,1 ore,1 pierre,1 ore - 10 golds";
+		/// WTF ??? Any idea to refactor theses lines??? n^3....
+		for (int i = 0 ; i < trades_.size(); i++){
+			traceChoices[i] = "";
+			Map<Resource,List<NeighborReference>> trade = trades_.get(i);
+			for( Map.Entry<Resource,List<NeighborReference>> entry : trade.entrySet() ) {
+				for ( NeighborReference neighbor: entry.getValue()){
+					traceChoices[i] += "1 " + entry.getKey() + " from " + neighbor + "; ";
+				}
+			}
 		}
 
 		builder.setTitle("Trade choices")
 		.setItems(traceChoices, new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int selectedItemId) {
-
+				GameScreenActivity.play(card_, trades_.get(selectedItemId));
 			}
 		});
 
