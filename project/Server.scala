@@ -20,7 +20,8 @@ object Server extends Build {
         akka, 
         logback,
         scalaTest,
-        akkaTest
+        akkaTest,
+        guava
       ),
       parallelExecution in Test := false
     )

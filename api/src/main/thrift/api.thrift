@@ -223,7 +223,7 @@ service SevenWondersApi {
 	oneway void c_sendState( 1: GameState state ),
 
 	oneway void s_playCard( 1: Card card, 2: Trade trade ),
-	oneway void s_playWonder( 1: Trade trade ),
+	oneway void s_playWonder( 1: Card card, 2: Trade trade ),
 	oneway void s_discard( 1: Card card ),
 
 	oneway void c_sendEndState( 1: GameState state, 2: ScoreDetail detail )

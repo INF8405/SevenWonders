@@ -14,6 +14,18 @@ trait MultiMap[A, B] /*extends Collection[(A, B)]*/ {
 
 object MultiMap {
   def apply[A, B](pairs: (A, B)*): MultiMap[A,B] = DefaultMultiMap(pairs : _*)
+  //def toMultiMap[A, B]( map: Map[A,B] ) = map.foldLeft( MultiMap[A,B]() )( (acc, elem ) => acc + elem )
+
+  def toMultiMap[A, B]( map: Map[A,List[B]] ) : MultiMap[A,B] =
+    map.foldLeft( MultiMap[A,B]() ){  case (acc, (key , elems ) ) =>
+      elems.foldLeft[MultiMap[A,B]]( acc ) { case ( acc2, value ) =>
+        acc2 + ( key -> value )
+      }
+    }
+
+//  implicit class RichMap[A,+B]( map: Map[A,B] ) {
+//    def toMultiMap[A,B]() = map.foldLeft( MultiMap[A,B]() )( (acc, elem ) => acc + elem )
+//  }
 }
 
 class DefaultMultiMap[A, B](private val impl: Map[A, MultiSet[B]]) extends MultiMap[A, B] {

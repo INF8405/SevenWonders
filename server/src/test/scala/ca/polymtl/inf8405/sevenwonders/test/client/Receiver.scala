@@ -84,7 +84,7 @@ class ReceiverImpl( sender: SevenWondersApi.Client, protocol: TProtocol, system:
   def s_connect(username: String) { SERVER }
   def s_reconnect(username: String) { SERVER }
   def s_playCard(card: api.Card, trade: JMap[Resource, JList[NeighborReference]]) { SERVER }
-  def s_playWonder(trade: JMap[Resource, JList[NeighborReference]]) { SERVER }
+  def s_playWonder(card: api.Card, trade: JMap[Resource, JList[NeighborReference]]) { SERVER }
   def s_discard(card: api.Card) { SERVER }
   def s_create(definition: GameRoomDef) { SERVER }
   def s_listGamesRequest(geo: GeoLocation) { SERVER }

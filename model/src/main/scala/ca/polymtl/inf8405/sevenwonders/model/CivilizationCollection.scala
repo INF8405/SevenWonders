@@ -2,7 +2,7 @@ package ca.polymtl.inf8405.sevenwonders.model
 
 import collection.MultiSet
 
-import Ressource._
+import Resource._
 
 object CivilizationCollection {
 

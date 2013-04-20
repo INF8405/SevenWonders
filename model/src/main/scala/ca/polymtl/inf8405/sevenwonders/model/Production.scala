@@ -1,7 +1,7 @@
 package ca.polymtl.inf8405.sevenwonders.model
 
 import collection.MultiSet
-import Ressource._
+import Resource._
 
 object Production {
   val NoProduction = CumulativeProduction(MultiSet[Resource]())

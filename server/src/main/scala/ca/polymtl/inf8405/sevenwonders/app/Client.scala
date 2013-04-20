@@ -98,12 +98,12 @@ class ClientImpl( transport: TTransport, lobby: Lobby, dispatch: Dispatcher, sys
     }
   }
 
-  def s_playWonder( trade: TTrade ) {
+  def s_playWonder( card: TCard, trade: TTrade ) {
     for {
       u <- user
       g <- game } {
 
-      g.playWonder( u, trade )
+      g.playWonder( u, card, trade )
     }
   }
   def s_discard( card: TCard ) {

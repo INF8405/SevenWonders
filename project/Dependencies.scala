@@ -10,4 +10,5 @@ object Dependencies
 	lazy val scalaTest		= "org.scalatest" 		%% "scalatest" 			% "2.0.M5b" % "test"
 	lazy val androidSupport = "com.google.android" 	 % "support-v4" 		% "r7"
 	lazy val spec2			= "org.specs2" 			%% "specs2" 			% "1.14" 	% "test"
+	lazy val guava = "com.google.guava" % "guava" % "14.0.1"
 }

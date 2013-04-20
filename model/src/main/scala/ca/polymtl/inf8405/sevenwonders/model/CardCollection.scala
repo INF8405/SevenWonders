@@ -4,7 +4,7 @@ import collection.MultiSet
 
 object CardCollection {
 
-  import Ressource._
+  import Resource._
 
   ////
   // AGE I

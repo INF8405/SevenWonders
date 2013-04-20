@@ -4,7 +4,7 @@ import org.specs2.mutable._
 
 import CardCollection._
 import CivilizationCollection._
-import Ressource._
+import Resource._
 
 import collection.MultiMap
 import collection.MultiSet

@@ -43,6 +43,11 @@ object Utils {
     def remove(a: Any): Set[A] = value.filter(_ != a)
   }
 
+  implicit class AugmentedMap[A, B](value: Map[A, B]) {
+    def mapKeys[C](mapping: A => C): Map[C,B] =
+      value.map{ case (key, value) => (mapping(key), value) }
+  }
+
   implicit class AugmentedTupple2[A](value: (A, A)) {
     def toList = List(value._1, value._2)
     def +[B >: A](other: (A, A))(implicit num: Numeric[B]): (B , B) = (num.plus(value._1, other._1), num.plus(value._2, other._2))
