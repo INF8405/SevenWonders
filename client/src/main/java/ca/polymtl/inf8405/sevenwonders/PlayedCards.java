@@ -14,8 +14,7 @@ import ca.polymtl.inf8405.sevenwonders.model.*;
 
 import java.util.*;
 
-public class PlayedCards extends View implements CardView {
-	private HashMap<CardInfo, Bitmap> cards_;
+public class PlayedCards extends CardView {
 	private static float CARD_WIDTH = 0;
 	private static float CARD_HEIGHT = 0;
 	private static int MARGIN_LEFT = 0;
@@ -23,8 +22,6 @@ public class PlayedCards extends View implements CardView {
 	private PlayedCards self_ = this;
 
 	private void init(Context context){
-		cards_ = new HashMap<CardInfo, Bitmap>();
-
 		// Calcul card size and margin value based on the screen dimensions
 		int screenWidth = ((WindowManager)context
 				.getSystemService(Context.WINDOW_SERVICE))
@@ -35,25 +32,6 @@ public class PlayedCards extends View implements CardView {
 		Bitmap cardBitmap = CardLoader.getInstance().getBitmap(getContext(), Card.ALTAR); // FIXME:: duc
 		CARD_HEIGHT = CARD_WIDTH * cardBitmap.getHeight() / cardBitmap.getWidth();
 		MARGIN_TOP = (int)CARD_HEIGHT / 6;
-
-		setOnTouchListener(new OnTouchListener() {
-			@Override
-			public boolean onTouch(View view, MotionEvent evt) {
-				// TODO Auto-generated method stub
-				if (cards_.size() > 0){
-					// Get all bitmap key
-					List<CardInfo> cards = new ArrayList<CardInfo>();
-					for( Map.Entry<CardInfo,Bitmap> entry : cards_.entrySet() ) {
-                        cards.add(entry.getKey());
-                    }
-
-					int selectedCardId = findSelectedCard(evt.getX(), evt.getY());
-					if (selectedCardId != -1)
-						GameScreenActivity.showZoomPopup(self_, selectedCardId, cards, false, false);
-				}
-				return false;
-			}
-		});
 	}
 
 	public PlayedCards(Context context) {
@@ -63,7 +41,6 @@ public class PlayedCards extends View implements CardView {
 
 	public PlayedCards(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		// TODO Auto-generated constructor stub
 		init(context);
 	}
 
@@ -72,14 +49,22 @@ public class PlayedCards extends View implements CardView {
 		this.invalidate();
 		int top = 0;
 		int left = 0;
-		for(Object object: cards_.keySet().toArray()){
-			String cardName = (String)object;
-			canvas.drawBitmap(cards_.get(cardName), left, top, null);
+		
+		for (Map.Entry<CardInfo,Bitmap> entry : cards_.entrySet()){
+			canvas.drawBitmap(entry.getValue(), left, top, null);
 			top += MARGIN_TOP;
 			left += MARGIN_LEFT;
 		}
+		
+//		for(Object object: cards_.keySet().toArray()){
+//			String cardName = (String)object;
+//			canvas.drawBitmap(cards_.get(cardName), left, top, null);
+//			top += MARGIN_TOP;
+//			left += MARGIN_LEFT;
+//		}
 	}
 
+	@Override
 	public void addCard( CardInfo card ){
 		if (cards_ == null)
 			cards_ = new HashMap<CardInfo, Bitmap>();
@@ -91,15 +76,7 @@ public class PlayedCards extends View implements CardView {
 		cards_.put(card, resizedBitmap);
 	}
 
-	public void setCards( List<CardInfo> cards){
-		if (cards != null){
-			cards_.clear();
-			for (CardInfo card: cards){
-				addCard(card);
-			}
-		}
-	}
-	
+	@Override
 	public int findSelectedCard(float x, float y){
 		for(int i = cards_.size() ; i > 0 ; i--){
 			if ( (i*MARGIN_LEFT < x) && (x < (i*MARGIN_LEFT+CARD_WIDTH)) 

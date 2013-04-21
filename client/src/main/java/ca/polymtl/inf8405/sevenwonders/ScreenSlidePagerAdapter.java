@@ -47,11 +47,6 @@ public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
 	public void setState( final GameState state ) {
 		players_ = state.players;
 		hand_ = state.hand;
-		//    	Log.e("PagerAdapter", "Hand =" + state.hand.unplayables.size() + " - fragments=" + fragments.size());
-		//        List<Player> players = state.getPlayers();
-		//        for( int i = 0; i < fragments.size(); i++ ){
-		//            fragments.get(i).update(players.get(i), state.getHand());
-		//        }
 	}
 
 	public static List<Player> players_;

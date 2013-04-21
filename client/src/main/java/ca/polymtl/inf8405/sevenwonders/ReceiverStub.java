@@ -1,11 +1,13 @@
 package ca.polymtl.inf8405.sevenwonders;
 
 import android.util.Log;
+
 import ca.polymtl.inf8405.sevenwonders.api.*;
 import org.apache.thrift.TException;
 
 import static ca.polymtl.inf8405.sevenwonders.api.Card.*;
 import static ca.polymtl.inf8405.sevenwonders.api.Civilisation.*;
+import static ca.polymtl.inf8405.sevenwonders.api.CardCategory.*;
 
 import java.util.*;
 
@@ -77,7 +79,40 @@ public class ReceiverStub extends Api {
         /* Player 4 */
         Player player4 = new Player(
                 emptyTableau,
-                ALEXANDRIA_B,
+                OLYMPIA_A,
+                battleMarkersEmpty,
+                3,
+                0,
+                0,
+                false
+        );
+        
+        /* Player 5 */
+        Player player5 = new Player(
+                emptyTableau,
+                EPHESUS_A,
+                battleMarkersEmpty,
+                3,
+                0,
+                0,
+                false
+        );
+        
+        /* Player 6 */
+        Player player6 = new Player(
+                emptyTableau,
+                GIZAH_A,
+                battleMarkersEmpty,
+                3,
+                0,
+                0,
+                false
+        );
+        
+        /* Player 7 */
+        Player player7 = new Player(
+                emptyTableau,
+                BABYLON_A,
                 battleMarkersEmpty,
                 3,
                 0,
@@ -107,12 +142,16 @@ public class ReceiverStub extends Api {
         Set<Map<Resource,List<NeighborReference>>> emptyTrade =
                 new HashSet<Map<Resource,List<NeighborReference>>>();
 
-        Map<CardCategory,List<Card>> emptyTableau = new HashMap<CardCategory,List<Card>>();
+        Map<CardCategory,List<Card>> tableau1 = new HashMap<CardCategory,List<Card>>();
+        tableau1.put(RAW_MATERIAL, Arrays.asList(LUMBER_YARD));
+        tableau1.put(MILITARY, Arrays.asList(BARRACKS));
+        tableau1.put(CIVILIAN, Arrays.asList(BATHS));
+        tableau1.put(COMMERCIAL, Arrays.asList(EAST_TRADING_POST));
         List<Integer> battleMarkersEmpty = new LinkedList<Integer>();
 
         /* Player 1 */
         Player player1 = new Player(
-                emptyTableau,
+                tableau1,
                 HALICARNASSUS_B,
                 battleMarkersEmpty,
                 3,
@@ -151,9 +190,11 @@ public class ReceiverStub extends Api {
         playables.put(EAST_TRADING_POST, emptyTrade);
         playables.put(BARRACKS, emptyTrade);
 
+        Map<CardCategory,List<Card>> tableau2 = new HashMap<CardCategory,List<Card>>();
+        tableau2.put(RAW_MATERIAL, Arrays.asList(EXCAVATION, LUMBER_YARD));
         /* Player 2 */
         Player player2 = new Player(
-                emptyTableau,
+                tableau2,
                 RHODES_A,
                 battleMarkersEmpty,
                 3,
@@ -162,54 +203,12 @@ public class ReceiverStub extends Api {
                 false
         );
 
+        Map<CardCategory,List<Card>> tableau3 = new HashMap<CardCategory,List<Card>>();
+        tableau3.put(MANUFACTURED_GOOD, Arrays.asList(PRESS, LOOM, GLASSWORKS));
         /* Player 3 */
         Player player3 = new Player(
-                emptyTableau,
+                tableau3,
                 ALEXANDRIA_A,
-                battleMarkersEmpty,
-                3,
-                0,
-                0,
-                false
-        );
-
-        /* Player 4 */
-        Player player4 = new Player(
-                emptyTableau,
-                OLYMPIA_A,
-                battleMarkersEmpty,
-                3,
-                0,
-                0,
-                false
-        );
-        
-        /* Player 5 */
-        Player player5 = new Player(
-                emptyTableau,
-                EPHESUS_A,
-                battleMarkersEmpty,
-                3,
-                0,
-                0,
-                false
-        );
-        
-        /* Player 6 */
-        Player player6 = new Player(
-                emptyTableau,
-                GIZAH_A,
-                battleMarkersEmpty,
-                3,
-                0,
-                0,
-                false
-        );
-        
-        /* Player 7 */
-        Player player7 = new Player(
-                emptyTableau,
-                BABYLON_A,
                 battleMarkersEmpty,
                 3,
                 0,

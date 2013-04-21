@@ -7,37 +7,33 @@ import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 
+import ca.polymtl.inf8405.sevenwonders.api.Card;
+import ca.polymtl.inf8405.sevenwonders.api.CardCategory;
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
 import ca.polymtl.inf8405.sevenwonders.model.*;
 
 import java.util.*;
 
-public class ResourceView extends View implements CardView {
+public class ResourceView extends CardView {
 
 	private ResourceView sefl_ = this;
 	private float CARD_RATIO = 1;
-	private HashMap<CardInfo, Bitmap> cards_;
+	private static float CARD_WIDTH = 0;
+	private static float CARD_HEIGHT = 0;
 
 	private void init(Context context){
 		setBackgroundColor(Color.GREEN);
-		cards_ = new HashMap<CardInfo, Bitmap>();
 
-		setOnTouchListener(new OnTouchListener() {
+		// Calcul card size and margin value based on the screen dimensions
+		int screenWidth = ((WindowManager)context
+				.getSystemService(Context.WINDOW_SERVICE))
+				.getDefaultDisplay().getWidth();
+		CARD_WIDTH = screenWidth / 8;
 
-			@Override
-			public boolean onTouch(View v, MotionEvent evt) {
-				if (cards_.size() > 0){
-					// Get all bitmap values
-					List<CardInfo> cards = new ArrayList<CardInfo>();
-					for( Map.Entry<CardInfo,Bitmap> entry : cards_.entrySet() ) {
-                        cards.add(entry.getKey());
-                    }			
-					GameScreenActivity.showZoomPopup(sefl_, 0, cards, false,false);
-				}
-				return false;
-			}
-		});
+		Bitmap cardBitmap = CardLoader.getInstance().getBitmap(getContext(), Card.ALTAR); // FIXME:: duc
+		CARD_HEIGHT = CARD_WIDTH * cardBitmap.getHeight() / cardBitmap.getWidth();
 	}
 
 	public ResourceView(Context context) {
@@ -62,36 +58,44 @@ public class ResourceView extends View implements CardView {
 		int topCorner = 0;
 		int headerSize = (int)((getHeight() - cardHeight)/(cards_.size() - 1));
 
-		for(Object object: cards_.keySet().toArray()){
-			String cardName = (String)object;
-			canvas.drawBitmap(cards_.get(cardName), 0, topCorner, null);
+		for (Map.Entry<CardInfo,Bitmap> entry : cards_.entrySet()){
+			canvas.drawBitmap(entry.getValue(), 0, topCorner,null);
 			topCorner += headerSize;
 		}
+
+		//		for(Object object: cards_.keySet().toArray()){
+		//			String cardName = (String)object;
+		//			canvas.drawBitmap(cards_.get(cardName), 0, topCorner, null);
+		//			topCorner += headerSize;
+		//		}
 	}
 
+	@Override
 	public void addCard(CardInfo card){
-		Bitmap cardBm;
-		if ( (getHeight() == 0) || (getWidth() == 0) ){
-			cardBm = CardLoader.getInstance().getBitmap(getContext(), card.getName());
-		}
-		else{
-			CARD_RATIO =  getHeight() / getWidth();
-			float cardHeight = CARD_RATIO * getWidth();
-			cardBm = Bitmap.createScaledBitmap(
-					CardLoader.getInstance().getBitmap(getContext(), card.getName()), 
-					getWidth(), 
-					(int)cardHeight, false);
-		}
-		cards_.put(card, cardBm);
+		Bitmap resizedBitmap = Bitmap.createScaledBitmap(
+				CardLoader.getInstance().getBitmap(getContext(), card.getName()), 
+				(int)CARD_WIDTH, 
+				(int)CARD_HEIGHT, 
+				false);
+		
+//		Bitmap cardBm;
+//		if ( (getHeight() == 0) || (getWidth() == 0) ){
+//			cardBm = CardLoader.getInstance().getBitmap(getContext(), card.getName());
+//		}
+//		else{
+//			CARD_RATIO =  getHeight() / getWidth();
+//			float cardHeight = CARD_RATIO * getWidth();
+//			cardBm = Bitmap.createScaledBitmap(
+//					CardLoader.getInstance().getBitmap(getContext(), card.getName()), 
+//					getWidth(), 
+//					(int)cardHeight, false);
+//		}
+		cards_.put(card, resizedBitmap);
 	}
 
-	public void setCards( List<CardInfo> cards){
-		if (cards != null){
-			cards_.clear();
-			for (CardInfo card: cards){
-				addCard(card);
-			}
-		}
+	@Override
+	public int findSelectedCard(float x, float y){
+		return 0; // Fixme : Write function to detect selected card
 	}
 
 }
