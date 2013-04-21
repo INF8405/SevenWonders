@@ -19,11 +19,11 @@ import org.apache.thrift.TException;
 
 public class GameRoomActivity extends Activity{
 
-    public static final String MESSAGE_GAME_BEGIN = "begin";
+	public static final String MESSAGE_GAME_BEGIN = "begin";
 
-    public GameRoomActivity() {
-        Receiver.getInstance().addObserver(new ApiDelegate());
-    }
+	public GameRoomActivity() {
+		Receiver.getInstance().addObserver(new ApiDelegate());
+	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState){
@@ -37,45 +37,46 @@ public class GameRoomActivity extends Activity{
 		listView.setAdapter(adapter_);
 		listView.setTextFilterEnabled(true);
 
+		Object[] connectedUsers = (Object[]) getIntent().getSerializableExtra(ListGameRoomActivity.CONNECTED_MESSAGE);
+		for( Object user: connectedUsers ){
+			players_.add((String)user);
+		}
 
-        Object[] connectedUsers = (Object[]) getIntent().getSerializableExtra(ListGameRoomActivity.CONNECTED_MESSAGE);
-        for( Object user: connectedUsers ){
-            players_.add((String)user);
-        }
-        adapter_.notifyDataSetChanged();
+
+		adapter_.notifyDataSetChanged();
 	}
-	
+
 	public void play(View view) {
-        try {
-            Sender.getInstance().s_start();
-        } catch( TException e ) {
-            Log.wtf("game room activity", e.getMessage());
-        }
+		try {
+			Sender.getInstance().s_start();
+		} catch( TException e ) {
+			Log.wtf("game room activity", e.getMessage());
+		}
 	}
 
-    private class ApiDelegate extends Api {
-        @Override public void c_joined(final String user) throws TException {
-            runOnUiThread( new Runnable() {
-                @Override
-                public void run() {
-                    players_.add(user);
-                    adapter_.notifyDataSetChanged();
-                }
-            });
-        }
+	private class ApiDelegate extends Api {
+		@Override public void c_joined(final String user) throws TException {
+			runOnUiThread( new Runnable() {
+				@Override
+				public void run() {
+					players_.add(user);
+					adapter_.notifyDataSetChanged();
+				}
+			});
+		}
 
-        @Override public void c_begin(final GameState state) throws TException {
-            runOnUiThread( new Thread( new Runnable() {
-                @Override
-                public void run() {
-                    Intent intent = new Intent(GameRoomActivity.this, GameScreenActivity.class);
-                    intent.putExtra(MESSAGE_GAME_BEGIN, state);
-                    startActivity(intent);
-                }
-            }));
-        }
-    }
+		@Override public void c_begin(final GameState state) throws TException {
+			runOnUiThread( new Thread( new Runnable() {
+				@Override
+				public void run() {
+					Intent intent = new Intent(GameRoomActivity.this, GameScreenActivity.class);
+					intent.putExtra(MESSAGE_GAME_BEGIN, state);
+					startActivity(intent);
+				}
+			}));
+		}
+	}
 
-    private static ArrayAdapter adapter_;
-    private static ArrayList<String> players_ = new ArrayList<String>();
+	private static ArrayAdapter adapter_;
+	private static ArrayList<String> players_ = new ArrayList<String>();
 }

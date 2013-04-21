@@ -5,10 +5,8 @@ import ca.polymtl.inf8405.sevenwonders.api.CardCategory;
 import static ca.polymtl.inf8405.sevenwonders.api.CardCategory.*;
 import ca.polymtl.inf8405.sevenwonders.model.*;
 
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,7 +67,6 @@ public class GameScreenFragment extends Fragment {
 		categoryToView_.put( SCIENCE, (CardView) rootView_.findViewById(R.id.GreenCard));
 
 		for(Map.Entry<CardCategory,List<Card>> entry : cardsOnBoard.entrySet()){
-			Log.e("GameScreenFragment", entry.getKey() + "-" + entry.getValue());
 			categoryToView_.get(entry.getKey()).setCards(toCardInfoList(entry.getValue()));
 		}
 		
