@@ -161,18 +161,18 @@ public class Database {
 	private static void setupCivilisation(){
 		civilisationMapper_ = new HashMap<Civilisation, Integer>();
 
-        civilisationMapper_.put(RHODES_A, R.drawable.rhodos_a);
-        civilisationMapper_.put(RHODES_B, R.drawable.rhodos_b);
+        civilisationMapper_.put(RHODOS_A, R.drawable.rhodos_a);
+        civilisationMapper_.put(RHODOS_B, R.drawable.rhodos_b);
         civilisationMapper_.put(ALEXANDRIA_A, R.drawable.alexandria_a);
         civilisationMapper_.put(ALEXANDRIA_B, R.drawable.alexandria_b);
-        civilisationMapper_.put(EPHESUS_A, R.drawable.ephesos_a);
-        civilisationMapper_.put(EPHESUS_B, R.drawable.ephesos_b);
+        civilisationMapper_.put(EPHESOS_A, R.drawable.ephesos_a);
+        civilisationMapper_.put(EPHESOS_B, R.drawable.ephesos_b);
         civilisationMapper_.put(BABYLON_A, R.drawable.babylon_a);
         civilisationMapper_.put(BABYLON_B, R.drawable.babylon_b);
         civilisationMapper_.put(OLYMPIA_A, R.drawable.olympia_a);
         civilisationMapper_.put(OLYMPIA_B, R.drawable.olympia_b);
-        civilisationMapper_.put(HALICARNASSUS_A, R.drawable.halikarnassos_a);
-        civilisationMapper_.put(HALICARNASSUS_B, R.drawable.halikarnassos_b);
+        civilisationMapper_.put(HALIKARNASSOS_A, R.drawable.halikarnassos_a);
+        civilisationMapper_.put(HALIKARNASSOS_B, R.drawable.halikarnassos_b);
         civilisationMapper_.put(GIZAH_A, R.drawable.gizah_a);
         civilisationMapper_.put(GIZAH_B, R.drawable.gizah_b);
 	}

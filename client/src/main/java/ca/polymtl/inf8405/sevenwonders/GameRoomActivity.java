@@ -1,5 +1,7 @@
 package ca.polymtl.inf8405.sevenwonders;
 
+import ca.polymtl.inf8405.sevenwonders.api.GameState;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,12 +14,15 @@ import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+
 import org.apache.thrift.TException;
 
 public class GameRoomActivity extends Activity{
 
+    public static final String MESSAGE_GAME_BEGIN = "begin";
+
     public GameRoomActivity() {
-        Receiver.getInstance().addObserver( new ApiDelegate() );
+        Receiver.getInstance().addObserver(new ApiDelegate());
     }
 
 	@Override
@@ -32,19 +37,20 @@ public class GameRoomActivity extends Activity{
 		listView.setAdapter(adapter_);
 		listView.setTextFilterEnabled(true);
 
-        String gameid =  getIntent().getStringExtra(ListGameRoomActivity.GAMEID_MESSAGE);
-        if( !gameid.equals("") ){
-            try {
-                Sender.getInstance().s_join( gameid );
-            } catch ( TException e ) {
-                Log.e( "ListGameRoomActivity", e.getMessage() );
-            }
+
+        Object[] connectedUsers = (Object[]) getIntent().getSerializableExtra(ListGameRoomActivity.CONNECTED_MESSAGE);
+        for( Object user: connectedUsers ){
+            players_.add((String)user);
         }
+        adapter_.notifyDataSetChanged();
 	}
 	
 	public void play(View view) {
-        Intent intent = new Intent(this, GameScreenActivity.class);
-        startActivity(intent);
+        try {
+            Sender.getInstance().s_start();
+        } catch( TException e ) {
+            Log.wtf("game room activity", e.getMessage());
+        }
 	}
 
     private class ApiDelegate extends Api {
@@ -57,17 +63,16 @@ public class GameRoomActivity extends Activity{
                 }
             });
         }
-        @Override public void c_connected(final List<String> users) throws TException {
-            runOnUiThread( new Runnable() {
+
+        @Override public void c_begin(final GameState state) throws TException {
+            runOnUiThread( new Thread( new Runnable() {
                 @Override
                 public void run() {
-                    for( String user: users ){
-                        players_.add(user);
-                    }
-//                    players_.addAll(users);
-                    adapter_.notifyDataSetChanged();
+                    Intent intent = new Intent(GameRoomActivity.this, GameScreenActivity.class);
+                    intent.putExtra(MESSAGE_GAME_BEGIN, state);
+                    startActivity(intent);
                 }
-            });
+            }));
         }
     }
 

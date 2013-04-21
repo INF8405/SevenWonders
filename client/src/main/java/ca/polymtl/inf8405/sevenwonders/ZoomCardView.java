@@ -99,12 +99,12 @@ public class ZoomCardView extends RelativeLayout{
 					if (allCards_.get(current_).isPlayable()){
 						if (allCards_.get(current_).getTrades().size() == 0){
 							// Play card without trade
-							screen.play(allCards_.get(current_).getName(), new HashMap<Resource, List<NeighborReference>>());
+							screen.play(allCards_.get(current_).getName(), new HashMap<Resource, List<NeighborReference>>(), false);
 						} 
 						else{ // Play card with trade
 							if (event.getActionMasked() == MotionEvent.ACTION_DOWN){
 								// Show trade popup - Fixme: send all trades to popup
-								showTradePopup(allCards_.get(current_).getTrades());
+								showTradePopup(allCards_.get(current_).getTrades(), false);
 							}
 						}
 					}
@@ -116,6 +116,14 @@ public class ZoomCardView extends RelativeLayout{
 			Button discard = new Button(context);
 			discard.setLayoutParams(bl);
 			discard.setText("Discard");
+			discard.setOnTouchListener(new OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    GameScreenActivity screen = (GameScreenActivity)sefl_.getContext();
+                    screen.discard(allCards_.get(current_).getName());
+                    return false;
+                }
+            });
 
 			Button wonders = new Button(context);
 			wonders.setLayoutParams(bl);
@@ -210,10 +218,10 @@ public class ZoomCardView extends RelativeLayout{
 		sefl_.setVisibility(INVISIBLE);
 	}
 
-	private void showTradePopup(Set<Map<Resource,List<NeighborReference>>> trades){
+	private void showTradePopup(Set<Map<Resource,List<NeighborReference>>> trades, boolean wonder){
 		GameScreenActivity screen = (GameScreenActivity)sefl_.getContext();
 		FragmentManager manager = screen.getFragmentManager();
-		TradePopup tv = TradePopup.newInstance(allCards_.get(current_).getName(), trades); 
+		TradePopup tv = TradePopup.newInstance(allCards_.get(current_).getName(), trades, wonder);
 		tv.show(manager, "Trades");
 	}
 }

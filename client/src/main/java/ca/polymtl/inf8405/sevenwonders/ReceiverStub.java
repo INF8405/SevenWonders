@@ -33,7 +33,7 @@ public class ReceiverStub extends Api {
         /* Player 1 */
         Player player1 = new Player(
             emptyTableau,
-            HALICARNASSUS_B,
+            HALIKARNASSOS_A,
             battleMarkersEmpty,
             3,
             0,
@@ -57,7 +57,7 @@ public class ReceiverStub extends Api {
         /* Player 2 */
         Player player2 = new Player(
                 emptyTableau,
-                RHODES_A,
+                RHODOS_A,
                 battleMarkersEmpty,
                 3,
                 0,
@@ -90,7 +90,7 @@ public class ReceiverStub extends Api {
         /* Player 5 */
         Player player5 = new Player(
                 emptyTableau,
-                EPHESUS_A,
+                EPHESOS_A,
                 battleMarkersEmpty,
                 3,
                 0,
@@ -152,7 +152,7 @@ public class ReceiverStub extends Api {
         /* Player 1 */
         Player player1 = new Player(
                 tableau1,
-                HALICARNASSUS_B,
+                HALIKARNASSOS_B,
                 battleMarkersEmpty,
                 3,
                 0,
@@ -195,7 +195,7 @@ public class ReceiverStub extends Api {
         /* Player 2 */
         Player player2 = new Player(
                 tableau2,
-                RHODES_A,
+                RHODOS_A,
                 battleMarkersEmpty,
                 3,
                 0,

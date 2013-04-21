@@ -20,7 +20,12 @@ class LobbyImpl( system: ActorSystem ) extends Lobby {
   import system.dispatcher
 
   def connect( user: User ) {
-    users += user
+    if( users.contains( user ) ) {
+      user.api.c_connectionResponse( false )
+    } else {
+      users += user
+      user.api.c_connectionResponse( true )
+    }
   }
 
   def create( definition: GameRoomDef, user: User, dispatch: Dispatcher ) = {

@@ -2,11 +2,9 @@ package ca.polymtl.inf8405.sevenwonders;
 
 import ca.polymtl.inf8405.sevenwonders.model.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -16,7 +14,6 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.widget.PopupWindow;
-import android.widget.Toast;
 
 import ca.polymtl.inf8405.sevenwonders.api.*;
 
@@ -29,8 +26,7 @@ public class GameScreenActivity extends FragmentActivity {
 	public static int SCREEN_WIDTH;
 
     public GameScreenActivity() {
-        ReceiverStub.getInstance().addObserver( new ApiDelegate() );
-//        Receiver.getInstance().addObserver( new ApiDelegate() ); FIxme: test
+        Receiver.getInstance().addObserver( new ApiDelegate() );
     }
 
 	@Override
@@ -39,33 +35,20 @@ public class GameScreenActivity extends FragmentActivity {
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_screen_slide);
 
-		//mPager.requestDisallowInterceptTouchEvent(true);
+        // Get ScreenSize
+        Point size = new Point();
+        getWindowManager().getDefaultDisplay().getSize(size);
+        SCREEN_WIDTH = size.x;
+        SCREEN_HEIGTH = size.y;
 
-		// Get ScreenSize
-		Point size = new Point();
-		getWindowManager().getDefaultDisplay().getSize(size);
-		SCREEN_WIDTH = size.x;
-		SCREEN_HEIGTH = size.y;
+        GameState state = (GameState) getIntent().getSerializableExtra(GameRoomActivity.MESSAGE_GAME_BEGIN);
 
-        ReceiverStub.getInstance().simulate_c_begin(); // Fixme: test
+        mPager = (ViewPager) findViewById(R.id.Pager);
+        mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), state.getPlayers());
+        mPager.setAdapter(mPagerAdapter);
+        mPager.setCurrentItem(100*state.getPlayersSize()); // Fixme : Magic number 100
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(5000);
-                    ReceiverStub.getInstance().simulate_c_sendState();
-                } catch ( InterruptedException e ) {
-
-                }
-            }
-        }).start();
-
-//        try {
-//            Sender.getInstance().s_start(); FIxme: test
-//        } catch ( TException e ) {
-//            Log.e("GameScreenActivity",e.getMessage());
-//        }
+        setState(state);
 	}
 
 	public static void showZoomPopup(View view, int selectedCardId, List<CardInfo> cards, boolean withButtonPanel, boolean canPlayWonder) {
@@ -75,39 +58,29 @@ public class GameScreenActivity extends FragmentActivity {
 		popup.update(0, 0, SCREEN_WIDTH*2/3, SCREEN_HEIGTH/2);
 	}
 
-	public static void play(Card card, Map<Resource, List<NeighborReference>> trade) {
-//        try {
-//        	// Fixme Send Trade to Server - Activate this line to communicate with the server
-//            Sender.getInstance().s_playCard( card, trade ); 
-//        } catch ( TException e ){
-//            Log.e("Game", e.getMessage() );
-//        }
-		
-		// Test code - Replace by the code above
-		String selectedTrade = "";
-		for (Map.Entry<Resource,List<NeighborReference>> entry : trade.entrySet()){
-			for ( NeighborReference neighbor: entry.getValue()){
-				selectedTrade += "1 " + entry.getKey() + " from " + neighbor + "; ";
-			}
-		}
-		Log.e("GameScreenActivity", card + " - " +  selectedTrade);
+	public static void play(Card card, Map<Resource, List<NeighborReference>> trade, boolean wonder ) {
+        try {
+            if( wonder ) {
+                Sender.getInstance().s_playWonder( card, trade );
+            } else {
+                Sender.getInstance().s_playCard( card, trade );
+            }
+        } catch ( TException e ){
+            Log.e("Game", e.getMessage() );
+        }
 	}
 
-    private class ApiDelegate extends Api {
-        @Override public void c_begin(final GameState state) throws TException {
-            runOnUiThread( new Runnable() {
-                @Override
-                public void run() {
-                    mPager = (ViewPager) findViewById(R.id.Pager);
-                    mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), 
-                    		state.getPlayers());
-                    mPager.setAdapter(mPagerAdapter);
-                    mPager.setCurrentItem(100*state.getPlayersSize()); // Fixme : Magic number 100
-
-                    setState(state);
-                }
-            });
+	public static void discard(Card card) {
+        try {
+            Sender.getInstance().s_discard( card );
+        } catch ( TException e ){
+            Log.e("Game", e.getMessage() );
         }
+	}
+
+
+
+    private class ApiDelegate extends Api {
         @Override public void c_sendState(final GameState state) throws TException {
             runOnUiThread(new Runnable() {
                 @Override public void run() {
@@ -123,11 +96,11 @@ public class GameScreenActivity extends FragmentActivity {
                 }
             });
         }
+    }
 
-        private void setState( final GameState state ) {
-            mPagerAdapter.setState(state);
-            mPagerAdapter.notifyDataSetChanged();
-        }
+    private void setState( final GameState state ) {
+        mPagerAdapter.setState(state);
+        mPagerAdapter.notifyDataSetChanged();
     }
 
     /**

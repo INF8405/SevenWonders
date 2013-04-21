@@ -76,6 +76,7 @@ public class PlayerStateView extends View{
 
 	public void setCards(List<CardInfo> cards){
 		Bitmap cardBm;
+		cardsInHand_.clear();
 		for (CardInfo card: cards){
 			if ((cardHeight_ == 0) && (cardWidth_ == 0)){
 				cardBm = CardLoader.getInstance().getBitmap(getContext(), card.getName());

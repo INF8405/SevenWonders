@@ -40,13 +40,26 @@ public class Receiver extends Api {
         observers.add( observer );
     }
 
-	public void c_listGamesResponse(final List<GameRoom> rooms) throws TException {
+
+    @Override public void c_connectionResponse(boolean connected) throws TException {
+        for( Api observer : observers ) {
+            observer.c_connectionResponse( connected );
+        }
+    }
+
+    @Override public void c_listGamesResponse(final List<GameRoom> rooms) throws TException {
         for( Api observer : observers ) {
             observer.c_listGamesResponse(rooms);
         }
-	}
+    }
 
-	public void c_joined(String user) throws TException {
+    @Override public void c_createdGame() throws TException {
+        for( Api observer : observers ) {
+            observer.c_createdGame();
+        }
+    }
+
+    @Override public void c_joined(String user) throws TException {
         for( Api observer : observers ) {
             observer.c_joined(user);
         }
@@ -63,6 +76,12 @@ public class Receiver extends Api {
             observer.c_left(user);
         }
 	}
+
+    @Override public void c_begin(GameState state) throws TException {
+        for( Api observer : observers ) {
+            observer.c_begin(state);
+        }
+    }
 
 	public void c_sendState(final GameState state) throws TException {
         for( Api observer : observers ) {

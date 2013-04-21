@@ -17,8 +17,9 @@ import android.os.Bundle;
 public class TradePopup extends DialogFragment{
 	private List<Map<Resource,List<NeighborReference>>> trades_;
 	private Card card_;
+	private boolean wonder_;
 
-	public static TradePopup newInstance(Card card, Set<Map<Resource,List<NeighborReference>>> trades){
+	public static TradePopup newInstance(Card card, Set<Map<Resource,List<NeighborReference>>> trades, boolean wonder){
 		TradePopup popup = new TradePopup();
 		// Convert a Set trades to List
 		List<Map<Resource,List<NeighborReference>>> tradeList = new ArrayList<Map<Resource,List<NeighborReference>>>(trades.size());
@@ -27,6 +28,7 @@ public class TradePopup extends DialogFragment{
 		}
 		popup.trades_ = tradeList;
 		popup.card_ = card;
+		popup.wonder_ = wonder;
 		return popup;
 	}
 
@@ -53,7 +55,7 @@ public class TradePopup extends DialogFragment{
 		.setItems(traceChoices, new DialogInterface.OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int selectedItemId) {
-				GameScreenActivity.play(card_, trades_.get(selectedItemId));
+				GameScreenActivity.play(card_, trades_.get(selectedItemId), wonder_);
 			}
 		});
 

@@ -8,6 +8,8 @@ import java.util.Map;
 
 public class Api implements SevenWondersApi.Iface {
 
+    @Override public void c_connectionResponse(boolean connected) throws TException { }
+    @Override public void c_createdGame() throws TException { }
     @Override public void c_listGamesResponse(List<GameRoom> rooms) throws TException {}
     @Override public void c_joined(String user) throws TException {}
     @Override public void c_connected(List<String> users) throws TException {}
@@ -18,12 +20,15 @@ public class Api implements SevenWondersApi.Iface {
     @Override public void c_ping() throws TException {}
 
     // Server calls this should not be implemented
+    @Override final public void s_connect(String username) throws TException { }
+    @Override final public void s_reconnect(String username) throws TException { }
     @Override final public void s_listGamesRequest(GeoLocation geo) throws TException {}
     @Override final public void s_create(GameRoomDef definition) throws TException {}
     @Override final public void s_join(String id) throws TException { }
     @Override final public void s_start() throws TException { }
+    @Override final public void s_startStub() throws TException {}
     @Override final public void s_playCard(Card card, Map<Resource, List<NeighborReference>> trade) throws TException { }
-    @Override final public void s_playWonder(Map<Resource, List<NeighborReference>> trade) throws TException { }
+    @Override final public void s_playWonder(Card card, Map<Resource, List<NeighborReference>> trade) throws TException { }
     @Override final public void s_discard(Card card) throws TException { }
     @Override final public void s_pong() throws TException { }
 }
