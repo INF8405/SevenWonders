@@ -1,7 +1,6 @@
 package ca.polymtl.inf8405.sevenwonders;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import android.app.Activity;

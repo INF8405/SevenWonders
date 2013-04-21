@@ -7,7 +7,8 @@ import android.view.View;
 import android.view.Window;
 
 public class MainActivity extends Activity {
-	
+
+	public static final boolean DEBUG_MODE = true;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
