@@ -3,7 +3,7 @@ import Keys._
 
 object Settings
 {
-  val scalaVersion = "2.10.0"
+  val scalaVersion = "2.10.1"
   val version = "0.1-SNAPSHOT"
   val org = "ca.polymtl.inf8405"
   val resolvers = Seq(

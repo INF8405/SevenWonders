@@ -1,46 +1,37 @@
-package ca.polymtl.inf8405.sevenwonders.app
+package ca.polymtl.inf8405.sevenwonders
+package app
+
+import ca.polymtl.inf8405.sevenwonders.api._
+import ApiHelper._
 
 import akka.actor._
-import ca.polymtl.inf8405.sevenwonders.api.{GeoLocation, GameRoomDef, SevenWondersApi}
-import java.net.InetAddress
 import org.apache.thrift.transport.{TSocket, TTransport}
 
 import scala.concurrent.duration._
-import scala.concurrent.Future
 import org.apache.thrift.TException
+
 
 trait Dispatcher {
   protected val system: ActorSystem
-  protected val lobby: GameLobby
-  def create( game: GameRoomDef, player: GameClient ): Future[TGame]
-  def created(): Unit
-  def pong( ip: InetAddress ): Unit
-  def disconnect( ip: InetAddress ): Unit
-  def getOrAddProcessor( transport: TTransport ): SevenWondersApi.Processor[GameClient]
+  protected val lobby: Lobby
+
+  def pong( transport: TTransport ): Unit
+  def disconnect( transport: TTransport ): Unit
+  def getOrAddProcessor( transport: TTransport ): SevenWondersApi.Processor[Client]
 }
 
 class DispatcherImpl(
   override val system: ActorSystem,
-  override val lobby: GameLobby ) extends Dispatcher {
+  override val lobby: Lobby ) extends Dispatcher
+{
 
-  def pong( ip: InetAddress ) {
-    clients get( ip ) foreach( _.alive = true )
+  def pong( transport: TTransport ) {
+    clients get( transport ) foreach( _.connected = true )
   }
 
-  def disconnect( ip: InetAddress ) {
-    clients.get( ip ).foreach( _.client.disconnect() )
-    clients.remove( ip )
-  }
-
-  def create( game: GameRoomDef, player: GameClient ): Future[TGame] = {
-    lobby.create( game, player, TypedActor.self )
-  }
-
-  def created() {
-    clients foreach { case ( _, c ) => {
-      println("create request")
-      c.client.s_listGamesRequest( new GeoLocation(0,0) )
-    }}
+  def disconnect( transport: TTransport ) {
+    clients.get( transport ).foreach( _.api.disconnect() )
+    clients.remove( transport )
   }
 
   /* This is kind of a thrift hack
@@ -51,20 +42,17 @@ class DispatcherImpl(
     val socket = transport.asInstanceOf[TSocket]
     val ip = socket.getSocket.getInetAddress
 
-    if ( clients.contains( ip ) ) {
-      clients( ip ).processor
+    if ( clients.contains( transport ) ) {
+      clients( transport ).processor
     } else {
-
-      println( "new connection " + ip )
-
       val me = TypedActor.self[Dispatcher]
-      val client: GameClient = TypedActor( system ).typedActorOf(TypedProps(
-        classOf[GameClient],
-        new GameClientImpl( transport, ip, lobby, me, system )
+      val api: Client = TypedActor( system ).typedActorOf(TypedProps(
+        classOf[Client],
+        new ClientImpl( transport, lobby, me, system )
       ))
 
-      val processor = new SevenWondersApi.Processor( client )
-      clients( ip ) = new InnerClient( client, processor )
+      val processor = new SevenWondersApi.Processor( api )
+      clients( transport ) = new InnerClient( api, transport, processor )
 
       processor
     }
@@ -76,11 +64,11 @@ class DispatcherImpl(
   import system.dispatcher
 
   system.scheduler.schedule( delta, delta ){
-    clients foreach { case ( ip, c ) => {
-      if( c.alive ) {
-        c.alive = false
+    clients foreach { case ( ip, client ) => {
+      if( client.connected ) {
+        client.connected = false
         try{
-          c.client.c_ping()
+          client.api.c_ping()
         } catch {
           case e: TException => disconnect( ip )
         }
@@ -91,10 +79,11 @@ class DispatcherImpl(
   }
 
   class InnerClient(
-    val client: GameClient,
-    val processor: SevenWondersApi.Processor[GameClient],
-    var alive: Boolean = true
+    val api: Client,
+    transport: TTransport,
+    val processor: SevenWondersApi.Processor[Client],
+    var connected: Boolean = false
   )
 
-  private val clients = collection.mutable.Map.empty[ InetAddress, InnerClient ]
+  private val clients = collection.mutable.Map.empty[ TTransport, InnerClient ]
 }

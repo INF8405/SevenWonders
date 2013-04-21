@@ -1,0 +1,12 @@
+ChangeSet 1
+* Fix scala build (maybe)
+* Card + Evolution Card
+	Ressources & Guilds dont have evolutions
+* Set Player references
+	
+* Commercial Cards
+
+Todo
+Rethink Guild Card & Commercial Reward Card strategy
+	Scientists Guild really different
+	Reward from building

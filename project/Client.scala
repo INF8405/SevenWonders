@@ -1,6 +1,6 @@
 import sbt._
-
 import Keys._
+
 import AndroidKeys._
 
 object AndroidBuild extends Build 

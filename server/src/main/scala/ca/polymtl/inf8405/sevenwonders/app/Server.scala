@@ -15,7 +15,7 @@ object Server extends App {
 
 class ServerImpl( system: ActorSystem ) {
 
-  val lobby: GameLobby = TypedActor( system ).typedActorOf( TypedProps( classOf[GameLobby], new GameLobbyImpl( system ) ) )
+  val lobby: Lobby = TypedActor( system ).typedActorOf( TypedProps( classOf[Lobby], new LobbyImpl( system ) ) )
   val dispatcher: Dispatcher = TypedActor( system ).typedActorOf( TypedProps( classOf[Dispatcher], new DispatcherImpl( system, lobby ) ) )
 
   val serverTransport = new TServerSocket( Config.port )

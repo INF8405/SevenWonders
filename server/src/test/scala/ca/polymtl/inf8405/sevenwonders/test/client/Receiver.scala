@@ -4,30 +4,8 @@ package test.client
 import api._
 
 import org.apache.thrift.protocol.TProtocol
-import akka.actor.ActorSystem
-import java.util
+import akka.actor.{ActorRef, ActorSystem}
 import concurrent.Future
-
-
-class DispatcherMock extends Mock {
-
-  def c_listGamesResponse(rooms: util.List[GameRoom]) {}
-  def c_joined(user: String) {}
-  def c_left(user: String) {}
-  def c_ping() {}
-  def c_sendState(state: GameState) {}
-  def c_sendEndState(state: GameState, detail: util.List[util.Map[String, Integer]]) {}
-
-  def s_start() { SERVER }
-  def s_listGamesRequest(geo: GeoLocation) { SERVER }
-  def s_pong() { SERVER }
-  def s_join(id: String) { SERVER }
-  def s_playCard(card: String, trade: JMap[Resource, JList[NeighborReference]]) { SERVER }
-  def s_playWonder(trade: JMap[Resource, JList[NeighborReference]]) { SERVER }
-  def s_discard(card: String) { SERVER }
-  def s_create(definition: GameRoomDef) { SERVER }
-  def s_join(id: Int) { SERVER }
-}
 
 trait Mock extends SevenWondersApi.Iface
 trait Receiver extends SevenWondersApi.Iface {
@@ -35,7 +13,18 @@ trait Receiver extends SevenWondersApi.Iface {
   def stop()
 }
 
-class ReceiverImpl( sender: SevenWondersApi.Client, protocol: TProtocol, system: ActorSystem, mock: Mock ) extends Receiver {
+case class ConnectionResponse( connected: Boolean )
+case object Ping
+case class GameListResponse( rooms: JList[GameRoom] )
+case class Joined( user: String )
+case class Connected( users: JList[String] )
+case class Left( user: String )
+case object CreatedGame
+case class GameBegin( state: GameState )
+case class GameUpdate( state: GameState )
+case class GameEnd( state: GameState, detail: JList[JMap[String, Integer]] )
+
+class ReceiverImpl( sender: SevenWondersApi.Client, protocol: TProtocol, system: ActorSystem, probe: ActorRef, name: String, ignorePing : Boolean ) extends Receiver {
 
   def start(){
     import system.dispatcher
@@ -46,41 +35,63 @@ class ReceiverImpl( sender: SevenWondersApi.Client, protocol: TProtocol, system:
     }
   }
 
-  def stop(){
-    _stop = true
+  def stop(){ _stop = true }
+
+
+  def c_connectionResponse(connected: Boolean) {
+    probe ! ConnectionResponse( connected )
   }
 
-  def c_listGamesResponse(rooms: util.List[GameRoom]) {
-    mock.c_listGamesResponse( rooms )
+  def c_listGamesResponse(rooms: JList[GameRoom]) {
+    probe ! GameListResponse( rooms )
   }
 
-  def c_joined(user: User) {
-    mock.c_joined( user )
+  def c_joined(user: String) {
+    probe ! Joined( user )
   }
+
+  def c_connected(users: JList[String]) {
+    probe ! Connected( users )
+  }
+
+  def c_left(user: String) {
+    probe ! Left( user )
+  }
+
+  def c_createdGame() {
+    probe ! CreatedGame
+  }
+
+  def c_begin(state: GameState) {
+    probe ! GameBegin( state )
+  }
+
   def c_sendState(state: GameState) {
-    mock.c_sendState( state )
+    probe ! GameUpdate( state )
   }
-  def c_sendEndState(state: GameState, detail: JList[JMap[Category, Integer]]) {
-    mock.c_sendEndState( state, detail )
+
+  def c_sendEndState(state: GameState, detail: JList[JMap[String, Integer]]) {
+    probe ! GameEnd( state, detail )
   }
+
   def c_ping() {
-    mock.c_ping()
     sender.s_pong()
-  }
-  def c_left(user: User) {
-    mock.c_left(user)
+    if( !ignorePing ) {
+      probe ! Ping
+    }
   }
 
-  def s_join(id: String) {}
-
-  def s_start() { SERVER }
-  def s_pong() { SERVER }
-  def s_listGamesRequest(geo: GeoLocation) { SERVER }
-  def s_playCard(card: String, trade: JMap[Resource, JList[NeighborReference]]) { SERVER }
-  def s_playWonder(trade: JMap[Resource, JList[NeighborReference]]) { SERVER }
-  def s_discard(card: String) { SERVER }
+  def s_connect(username: String) { SERVER }
+  def s_reconnect(username: String) { SERVER }
+  def s_playCard(card: api.Card, trade: JMap[Resource, JList[NeighborReference]]) { SERVER }
+  def s_playWonder(card: api.Card, trade: JMap[Resource, JList[NeighborReference]]) { SERVER }
+  def s_discard(card: api.Card) { SERVER }
   def s_create(definition: GameRoomDef) { SERVER }
-  def s_join(id: Int) { SERVER }
+  def s_listGamesRequest(geo: GeoLocation) { SERVER }
+  def s_start() { SERVER }
+  def s_startStub() { SERVER }
+  def s_pong() { SERVER }
+  def s_join(id: String) { SERVER }
 
   private val processor = new SevenWondersApi.Processor( this )
   private var _stop = false

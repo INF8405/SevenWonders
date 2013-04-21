@@ -26,18 +26,18 @@ enum CardCategory {
 }
 
 enum Civilisation {
-    RHODES_A = 0,
-    RHODES_B = 1,
+    RHODOS_A = 0,
+    RHODOS_B = 1,
     ALEXANDRIA_A = 2,
     ALEXANDRIA_B = 3,
-    EPHESUS_A = 4,
-    EPHESUS_B = 5,
+    EPHESOS_A = 4,
+    EPHESOS_B = 5,
     BABYLON_A = 6,
     BABYLON_B = 7,
     OLYMPIA_A = 8,
     OLYMPIA_B = 9,
-    HALICARNASSUS_A = 10,
-    HALICARNASSUS_B = 11,
+    HALIKARNASSOS_A = 10,
+    HALIKARNASSOS_B = 11,
     GIZAH_A = 12,
     GIZAH_B = 13
 }
@@ -201,20 +201,29 @@ struct GameState {
 
 service SevenWondersApi {
 
+    oneway void s_connect( 1: string username ),
+    oneway void s_reconnect( 1: string username ),
+    oneway void c_connectionResponse( 1: bool connected ),
+
+	oneway void s_create( 1: GameRoomDef definition ),
+	oneway void c_createdGame( ),
+
 	oneway void s_listGamesRequest( 1: GeoLocation geo ),
     oneway void c_listGamesResponse( 1: list<GameRoom> rooms ),
-	oneway void s_create( 1: GameRoomDef definition ),
+
 	oneway void s_join( 1: GameId id ),
 	oneway void c_joined( 1: Username user ),
     oneway void c_connected( 1: list<Username> users ),
 	oneway void c_left( 1: Username user ),
+
 	oneway void s_start( ),
+	oneway void s_startStub(),
 
     oneway void c_begin( 1: GameState state ),
 	oneway void c_sendState( 1: GameState state ),
 
 	oneway void s_playCard( 1: Card card, 2: Trade trade ),
-	oneway void s_playWonder( 1: Trade trade ),
+	oneway void s_playWonder( 1: Card card, 2: Trade trade ),
 	oneway void s_discard( 1: Card card ),
 
 	oneway void c_sendEndState( 1: GameState state, 2: ScoreDetail detail )

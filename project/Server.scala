@@ -3,6 +3,7 @@ import Keys._
 
 object Server extends Build {
 
+  import Model._
   import Dependencies._
   import com.github.bigtoast.sbtthrift.ThriftPlugin
 
@@ -20,11 +21,11 @@ object Server extends Build {
         logback,
         scalaTest,
         akkaTest,
-        model
+        guava
       ),
       parallelExecution in Test := false
     )
-  ) dependsOn ( api )
+  ) dependsOn ( api, model )
 
   lazy val api = Project(
     id = "Api",
