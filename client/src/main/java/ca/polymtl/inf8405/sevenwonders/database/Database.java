@@ -44,46 +44,46 @@ public class Database {
 	private static void setupCardMapper(){
 		cardMapper_ = new HashMap<Card, Integer>();
 
-        // === Age I ===
-        // Commercial
-        cardMapper_.put(TAVERN, R.drawable.tavern);
-        cardMapper_.put(WEST_TRADING_POST, R.drawable.west_trading_post);
-        cardMapper_.put(MARKETPLACE, R.drawable.marketplace);
-        cardMapper_.put(EAST_TRADING_POST, R.drawable.east_trading_port);
-
-
-        // Military
-        cardMapper_.put(STOCKADE, R.drawable.stockade);
-        cardMapper_.put(BARRACKS, R.drawable.baracks);
-        cardMapper_.put(GUARD_TOWER, R.drawable.guard_tower);
-
-        // Science
-        cardMapper_.put(WORKSHOP, R.drawable.workshop);
-        cardMapper_.put(SCRIPTORIUM, R.drawable.scriptorium);
-        cardMapper_.put(APOTHECARY, R.drawable.apothecary);
-
-        // Civilian
-        cardMapper_.put(THEATER, R.drawable.theater);
-        cardMapper_.put(BATHS, R.drawable.baths);
-        cardMapper_.put(ALTAR, R.drawable.altar);
-        cardMapper_.put(PAWNSHOP, R.drawable.pawnshop);
-
-        // Raw Material
-        cardMapper_.put(TREE_FARM, R.drawable.tree_farm);
-        cardMapper_.put(MINE, R.drawable.mine);
-        cardMapper_.put(CLAY_PIT, R.drawable.clay_pit);
-        cardMapper_.put(TIMBER_YARD, R.drawable.timber_yard);
-        cardMapper_.put(STONE_PIT, R.drawable.stone_pit);
-        cardMapper_.put(FOREST_CAVE, R.drawable.forest_cave);
-        cardMapper_.put(LUMBER_YARD, R.drawable.lumber_yard);
-        cardMapper_.put(ORE_VEIN, R.drawable.ore_vein);
-        cardMapper_.put(EXCAVATION, R.drawable.excavation);
-        cardMapper_.put(CLAY_POOL, R.drawable.clay_pool);
-
-        // Manufactured Good
-        cardMapper_.put(LOOM, R.drawable.loom);
-        cardMapper_.put(GLASSWORKS, R.drawable.glassworks);
-        cardMapper_.put(PRESS, R.drawable.press);
+//        // === Age I ===
+//        // Commercial
+//        cardMapper_.put(TAVERN, R.drawable.tavern);
+//        cardMapper_.put(WEST_TRADING_POST, R.drawable.west_trading_post);
+//        cardMapper_.put(MARKETPLACE, R.drawable.marketplace);
+//        cardMapper_.put(EAST_TRADING_POST, R.drawable.east_trading_port);
+//
+//
+//        // Military
+//        cardMapper_.put(STOCKADE, R.drawable.stockade);
+//        cardMapper_.put(BARRACKS, R.drawable.baracks);
+//        cardMapper_.put(GUARD_TOWER, R.drawable.guard_tower);
+//
+//        // Science
+//        cardMapper_.put(WORKSHOP, R.drawable.workshop);
+//        cardMapper_.put(SCRIPTORIUM, R.drawable.scriptorium);
+//        cardMapper_.put(APOTHECARY, R.drawable.apothecary);
+//
+//        // Civilian
+//        cardMapper_.put(THEATER, R.drawable.theater);
+//        cardMapper_.put(BATHS, R.drawable.baths);
+//        cardMapper_.put(ALTAR, R.drawable.altar);
+//        cardMapper_.put(PAWNSHOP, R.drawable.pawnshop);
+//
+//        // Raw Material
+//        cardMapper_.put(TREE_FARM, R.drawable.tree_farm);
+//        cardMapper_.put(MINE, R.drawable.mine);
+//        cardMapper_.put(CLAY_PIT, R.drawable.clay_pit);
+//        cardMapper_.put(TIMBER_YARD, R.drawable.timber_yard);
+//        cardMapper_.put(STONE_PIT, R.drawable.stone_pit);
+//        cardMapper_.put(FOREST_CAVE, R.drawable.forest_cave);
+//        cardMapper_.put(LUMBER_YARD, R.drawable.lumber_yard);
+//        cardMapper_.put(ORE_VEIN, R.drawable.ore_vein);
+//        cardMapper_.put(EXCAVATION, R.drawable.excavation);
+//        cardMapper_.put(CLAY_POOL, R.drawable.clay_pool);
+//
+//        // Manufactured Good
+//        cardMapper_.put(LOOM, R.drawable.loom);
+//        cardMapper_.put(GLASSWORKS, R.drawable.glassworks);
+//        cardMapper_.put(PRESS, R.drawable.press);
 
         // === Age II ===
 
@@ -160,20 +160,20 @@ public class Database {
 
 	private static void setupCivilisation(){
 		civilisationMapper_ = new HashMap<Civilisation, Integer>();
-
-        civilisationMapper_.put(RHODOS_A, R.drawable.rhodos_a);
-        civilisationMapper_.put(RHODOS_B, R.drawable.rhodos_b);
-        civilisationMapper_.put(ALEXANDRIA_A, R.drawable.alexandria_a);
-        civilisationMapper_.put(ALEXANDRIA_B, R.drawable.alexandria_b);
-        civilisationMapper_.put(EPHESOS_A, R.drawable.ephesos_a);
-        civilisationMapper_.put(EPHESOS_B, R.drawable.ephesos_b);
-        civilisationMapper_.put(BABYLON_A, R.drawable.babylon_a);
-        civilisationMapper_.put(BABYLON_B, R.drawable.babylon_b);
-        civilisationMapper_.put(OLYMPIA_A, R.drawable.olympia_a);
-        civilisationMapper_.put(OLYMPIA_B, R.drawable.olympia_b);
-        civilisationMapper_.put(HALIKARNASSOS_A, R.drawable.halikarnassos_a);
-        civilisationMapper_.put(HALIKARNASSOS_B, R.drawable.halikarnassos_b);
-        civilisationMapper_.put(GIZAH_A, R.drawable.gizah_a);
-        civilisationMapper_.put(GIZAH_B, R.drawable.gizah_b);
+//
+//        civilisationMapper_.put(RHODOS_A, R.drawable.rhodos_a);
+//        civilisationMapper_.put(RHODOS_B, R.drawable.rhodos_b);
+//        civilisationMapper_.put(ALEXANDRIA_A, R.drawable.alexandria_a);
+//        civilisationMapper_.put(ALEXANDRIA_B, R.drawable.alexandria_b);
+//        civilisationMapper_.put(EPHESOS_A, R.drawable.ephesos_a);
+//        civilisationMapper_.put(EPHESOS_B, R.drawable.ephesos_b);
+//        civilisationMapper_.put(BABYLON_A, R.drawable.babylon_a);
+//        civilisationMapper_.put(BABYLON_B, R.drawable.babylon_b);
+//        civilisationMapper_.put(OLYMPIA_A, R.drawable.olympia_a);
+//        civilisationMapper_.put(OLYMPIA_B, R.drawable.olympia_b);
+//        civilisationMapper_.put(HALIKARNASSOS_A, R.drawable.halikarnassos_a);
+//        civilisationMapper_.put(HALIKARNASSOS_B, R.drawable.halikarnassos_b);
+//        civilisationMapper_.put(GIZAH_A, R.drawable.gizah_a);
+//        civilisationMapper_.put(GIZAH_B, R.drawable.gizah_b);
 	}
 }
