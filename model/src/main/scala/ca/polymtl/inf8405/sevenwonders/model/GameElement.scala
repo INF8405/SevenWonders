@@ -19,7 +19,10 @@ class Card(
   val cost: Cost,
   val evolutions: Set[Card],
   val symbols:  Set[Symbol]
-) extends PlayableElement
+) extends PlayableElement {
+
+  override def toString = name
+}
 
 case class Cost(coins: Int, resources: MultiSet[Resource]) {
   def this(resources: MultiSet[Resource]) = this(0, resources)

@@ -3,11 +3,16 @@ package app
 
 import api.Card._
 import api.Resource._
-import ca.polymtl.inf8405.sevenwonders.model.{CardCollection => CC, Right, Left}
+import api.{Resource, NeighborReference}
+import ca.polymtl.inf8405.sevenwonders.model.{CardCollection => CC, _}
 
+import api.{ Resource => TResource }
 
 import com.google.common.collect.ImmutableBiMap
-import ca.polymtl.inf8405.sevenwonders.api.NeighborReference
+
+import java.util.{ List => JList, Map => JMap }
+import ca.polymtl.inf8405.sevenwonders.app.ApiHelper._
+import ca.polymtl.inf8405.sevenwonders.model.collection.MultiMap
 
 object ModelApiBridge
 {
@@ -143,6 +148,21 @@ object ModelApiBridge
     NeighborReference.RIGHT -> Right
   )
   bridgeNeighbor.inverse()
+
+  import scala.collection.JavaConversions._
+
+  def toThriftTrade( trade: model.Trade ): JMap[TResource, JList[NeighborReference]] = {
+    trade.toMap.map{
+      case ( resource, neighbors ) =>
+        ( bridgeResource.inverse().get(resource), neighbors.map( n => bridgeNeighbor.inverse().get(n) ).toList : JList[NeighborReference] )
+    }
+  }
+
+  def fromThriftTrade( trade: TTrade ): Trade = {
+    MultiMap.toMultiMap( trade.map{ case ( resource, refs ) =>
+      ( bridgeResource(resource), refs.map( r => bridgeNeighbor(r) ).toList ) }.toMap
+    )
+  }
 }
 
 object BiMap {

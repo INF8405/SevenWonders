@@ -1,7 +1,7 @@
 package ca.polymtl.inf8405.sevenwonders.model
 
 import collection.MultiSet
-import SevenWonders._
+import Resource._
 import org.specs2.mutable._
 
 class Bugs extends Specification {

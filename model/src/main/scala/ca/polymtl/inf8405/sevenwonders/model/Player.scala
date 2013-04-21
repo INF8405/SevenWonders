@@ -50,7 +50,7 @@ case class Player(
   def canBuildWonderStage(availableThroughTrade: Map[NeighborReference, Production]): Boolean =
     if (nbWonders == civilization.stagesOfWonder.size) false
     else if (allSymbols.contains(BuildWondersForFree)) true
-    else canBuild(civilization.stagesOfWonder(nbWonders), availableThroughTrade)
+    else canBuild(nextWonderStage, availableThroughTrade)
 
   def buildForFree(card: Card): Player = {
     if (!canBuildForFree) throw new UnsupportedOperationException("It is not possible for this player to use this action from his current state")
@@ -108,6 +108,8 @@ case class Player(
   def debtTokens: MultiSet[DebtToken] = stuff.filter(_.isInstanceOf[DebtToken]).map(_.asInstanceOf[DebtToken])
 
   def hasDiplomacy: Boolean = !stuff.filter(_.isInstanceOf[DiplomacyToken]).isEmpty
+
+  def nextWonderStage: WonderStage = civilization.stagesOfWonder( nbWonders )
 
   def removeDiplomacyToken: Player =
     if (hasDiplomacy) this.copy(stuff = stuff - new DiplomacyToken)
@@ -253,8 +255,6 @@ case class Player(
         ).flatten.toSet
   }
 
-
-
   /**
    * @return A pair containing the left and right cost of a given Trade
    */
@@ -292,7 +292,7 @@ case class Player(
       newCards = played -- previous.played,
       coinDelta = coins - previous.coins,
       additionalStuff = stuff -- previous.stuff,
-      discards = hand -- previous.hand,
+      discards = previous.hand -- hand,
       additionalWonders = nbWonders - previous.nbWonders,
       builtForFree = hasBuiltForFreeThisAge && !previous.hasBuiltForFreeThisAge
     )

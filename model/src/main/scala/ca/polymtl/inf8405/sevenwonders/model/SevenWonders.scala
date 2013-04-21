@@ -25,7 +25,7 @@ object SevenWonders
 
     val chosenCivilizations = Random.shuffle(qualifiedCivilizations.toList).take(nbPlayers)
     val players = chosenCivilizations.map{ civ =>
-      Player(civ.takeRandom, MultiSet(), 3)
+      Player(civilization = civ.takeRandom, stuff = MultiSet(), coins = 3)
     }
     Game(new Circle[Player](players: _*), cards, MultiSet()).beginAge()
   }

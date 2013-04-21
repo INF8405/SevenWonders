@@ -19,7 +19,7 @@ case class GameListResponse( rooms: JList[GameRoom] )
 case class Joined( user: String )
 case class Connected( users: JList[String] )
 case class Left( user: String )
-case object CreatedGame
+case object GameCreated
 case class GameBegin( state: GameState )
 case class GameUpdate( state: GameState )
 case class GameEnd( state: GameState, detail: JList[JMap[String, Integer]] )
@@ -59,7 +59,7 @@ class ReceiverImpl( sender: SevenWondersApi.Client, protocol: TProtocol, system:
   }
 
   def c_createdGame() {
-    probe ! CreatedGame
+    probe ! GameCreated
   }
 
   def c_begin(state: GameState) {

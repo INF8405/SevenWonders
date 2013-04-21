@@ -191,7 +191,8 @@ struct Player {
 	4: i32 coins,
 	5: i32 score,
 	6: i32 wonderStaged,
-	7: bool canPlayWonder
+	7: bool canPlayWonder,
+	8: set<Trade> wonderTrades
 }
 
 struct GameState {

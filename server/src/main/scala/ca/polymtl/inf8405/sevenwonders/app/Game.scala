@@ -73,16 +73,16 @@ class GameImpl( system: ActorSystem ) extends TGame {
     stub = true
 
     val hand1 = MultiSet[Card]( WEST_TRADING_POST, THEATER, ALTAR, LUMBER_YARD, BATHS, STONE_PIT, CLAY_PIT )
-    val player1 = Player( civilization = BABYLON_A, hand = hand1, coins = 3 )
+    val babylon = Player( civilization = BABYLON_A, hand = hand1, coins = 3 )
 
     val hand2 = MultiSet[Card]( CLAY_POOL, APOTHECARY, WORKSHOP, MARKETPLACE, STOCKADE, GLASSWORKS, LOOM )
-    val player2 = Player( civilization = EPHESOS_B, hand = hand2, coins = 3 )
+    val ephesos = Player( civilization = EPHESOS_B, hand = hand2, coins = 3 )
 
     val hand3 = MultiSet[Card]( TIMBER_YARD, PRESS, EAST_TRADING_POST, BARRACKS, SCRIPTORIUM, GUARD_TOWER, ORE_VEIN )
-    val player3 = Player( civilization = HALIKARNASSOS_B, hand = hand3, coins = 3 )
+    val hali = Player( civilization = HALIKARNASSOS_B, hand = hand3, coins = 3 )
 
     val game = Game(
-      new Circle[Player]( player1, player2, player3 ),
+      new Circle[Player]( babylon, ephesos, hali ),
       Map( 1 -> MultiSet(DUMMY_CARD), 2 -> MultiSet(DUMMY_CARD) )
     )
 
@@ -93,9 +93,9 @@ class GameImpl( system: ActorSystem ) extends TGame {
     val u3 = users.find( _.username == "hali" ).get
 
     usersPlayers = Map (
-      u1 -> player1,
-      u2 -> player2,
-      u3 -> player3
+      u1 -> babylon,
+      u2 -> ephesos,
+      u3 -> hali
     )
 
     usersPlayers.foreach{ case ( client, player ) => {
@@ -103,19 +103,15 @@ class GameImpl( system: ActorSystem ) extends TGame {
     }}
   }
 
-  def bridgeTrade( trade: TTrade ): Trade = {
-    MultiMap.toMultiMap( trade.map{ case ( resource, refs ) =>
-      ( bridgeResource(resource), refs.map( r => bridgeNeighbor(r) ).toList ) }.toMap
-    )
-  }
+
 
   def playCard( user: User, card: TCard, trade: TTrade ) {
-    actions = actions + ( user -> Build( cardsBridge(card), bridgeTrade(trade) ) )
+    actions = actions + ( user -> Build( cardsBridge(card), fromThriftTrade(trade) ) )
     doTurn()
   }
 
   def playWonder( user: User, card: TCard, trade: TTrade ) {
-    actions = actions + ( user -> Build( cardsBridge(card), bridgeTrade(trade), wonder = true ) )
+    actions = actions + ( user -> Build( cardsBridge(card), fromThriftTrade(trade), wonder = true ) )
     doTurn()
   }
 
@@ -136,9 +132,7 @@ class GameImpl( system: ActorSystem ) extends TGame {
       // todo: check end game
 
       // the game updated the players references
-      usersPlayers = usersPlayers.mapValues( oldPlayer =>
-        game.players.find( _.civilization == oldPlayer.civilization ).get
-      )
+      usersPlayers = usersPlayers.mapValues( oldPlayer => game.findPlayer( oldPlayer.civilization ) )
 
       usersPlayers.foreach{ case ( client, player ) => {
         client.api.c_sendState( toThriftState( player, game ) )
@@ -160,14 +154,7 @@ class GameImpl( system: ActorSystem ) extends TGame {
 
   def toThriftState( player: Player, game: Game ): TGameState = {
 
-    def getNeighborProductions( player: Player ) = {
-      Map(
-        Left -> game.players.getLeft( player ).tradableProduction,
-        Right -> game.players.getRight( player ).tradableProduction
-      )
-    }
-
-    def toThriftPlayer(p: Player ): TPlayer = {
+    def toThriftPlayer(player: Player ): TPlayer = {
       val bridgeCategory: Map[Class[_ <: Card], CardCategory] = Map(
         classOf[ScienceCard] -> CardCategory.SCIENCE,
         classOf[MilitaryCard] -> CardCategory.MILITARY,
@@ -179,7 +166,7 @@ class GameImpl( system: ActorSystem ) extends TGame {
       )
 
       val tableau: JMap[CardCategory,JList[TCard]] =
-        p.played.groupBy( _.getClass ).map{ case ( ( clazz, cards ) ) => {
+        player.played.groupBy( _.getClass ).map{ case ( ( clazz, cards ) ) => {
           ( bridgeCategory(clazz), (cards.map( card => TCard.valueOf( card.name ) ).toList): JList[TCard] )
         }}
 
@@ -190,29 +177,25 @@ class GameImpl( system: ActorSystem ) extends TGame {
         player.coins,
         player.score( game.getNeighboorsStuff( player ) ),
         player.nbWonders,
-        player.canBuildWonderStage( getNeighborProductions( player ) )
+        player.canBuildWonderStage( game.getNeighborProductions(player) ),
+        game.possibleWonderTrades( player ).map( toThriftTrade _ )
       )
     }
 
     // Playables
-    val neighborProductions = getNeighborProductions( player )
-    val playableCards = player.playableCards( neighborProductions )
+    val playableCards = game.playableCards(player)
+    println(playableCards.map(_.name))
 
     val playables: Map[TCard,Set[Trade]] = playableCards.map( card => {
-      ( cardsBridge.inverse().get( card ), player.possibleTrades( card, neighborProductions ) )
+      ( cardsBridge.inverse().get( card ), game.possibleTrades(player, card))
     }).toMap
 
     val tPlayables = playables.mapValues(
-      _.map(
-        _.toMap.map{
-          case ( resource, neighbors ) =>
-            ( bridgeResource.inverse()(resource), neighbors.map( n => bridgeNeighbor.inverse()(n) ).toList : JList[NeighborReference] )
-        } : JMap[TResource, JList[NeighborReference]]
-      ) : JSet[JMap[TResource, JList[NeighborReference]]]
+      _.map( t => toThriftTrade( t ) ): JSet[JMap[TResource, JList[NeighborReference]]]
     ): JMap[TCard,JSet[JMap[TResource, JList[NeighborReference]]]]
 
     // players
-    val ( before, me :: after ) = game.players.toList.span( _ == player )
+    val ( before, me :: after ) = game.players.toList.span( _ != player )
     val players = me :: before.reverse ::: after.reverse
 
     val unplayables = (player.hand -- playableCards).map( card => TCard.valueOf( card.name ) ).toList : JList[TCard]

@@ -18,6 +18,25 @@ case class Game(
     Map(Left -> players.getLeft(player).allGameElements, Right -> players.getRight(player).allGameElements)
   }
 
+  def getNeighborProductions( player: Player ) = {
+    Map(
+      Left -> players.getLeft( player ).tradableProduction,
+      Right -> players.getRight( player ).tradableProduction
+    )
+  }
+
+  def findPlayer( by: Civilization ) = {
+    players.find( _.civilization == by ).get
+  }
+
+  def possibleWonderTrades( player: Player ) =
+    player.possibleTrades( player.nextWonderStage, getNeighborProductions(player) )
+
+  def possibleTrades(player: Player, playable: PlayableElement) =
+    player.possibleTrades(playable, getNeighborProductions(player))
+
+  def playableCards(player: Player) = player.playableCards(getNeighborProductions(player))
+
   def playTurn(actions: Map[Player, Action]): Game = {
     val deltas = for ( (player, action) <- actions) yield
       action.perform(this, player)

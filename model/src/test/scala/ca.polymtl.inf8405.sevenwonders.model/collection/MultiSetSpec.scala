@@ -3,7 +3,7 @@ package ca.polymtl.inf8405.sevenwonders.model
 import collection.MultiSet
 
 import org.specs2.mutable._
-import SevenWonders._
+import Resource._
 
 class MultiSetSpec extends Specification {
   "MultiSet" should {
