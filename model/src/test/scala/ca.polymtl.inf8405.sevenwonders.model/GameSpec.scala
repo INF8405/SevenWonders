@@ -11,6 +11,7 @@ import collection.Circle
 
 import org.specs2.mutable._
 
+// test-only ca.polymtl.inf8405.sevenwonders.model.GameSpec
 class GameSpec extends Specification {
 
   val defaultHand1: MultiSet[Card] = MultiSet(TAVERN, STOCKADE, MINE, LOOM, PRESS)
@@ -66,7 +67,7 @@ class GameSpec extends Specification {
       game2.playableCards( game2.findPlayer( BABYLON_A ) ) ==== Set(GUARD_TOWER, ORE_VEIN, PRESS, BARRACKS)
 
       game2.findPlayer( EPHESOS_B ).played ==== Set( GLASSWORKS, EAST_TRADING_POST )
-      game2.playableCards( game2.findPlayer( EPHESOS_B ) ) ==== Set(ALTAR, THEATER, STONE_PIT, LUMBER_YARD, EAST_TRADING_POST)
+      game2.playableCards( game2.findPlayer( EPHESOS_B ) ) ==== Set(ALTAR, THEATER, STONE_PIT, LUMBER_YARD, WEST_TRADING_POST)
 
       game2.findPlayer( HALIKARNASSOS_B ).played ==== Set( TIMBER_YARD, BATHS )
       game2.playableCards( game2.findPlayer( HALIKARNASSOS_B ) ) ==== Set( CLAY_POOL, MARKETPLACE, APOTHECARY, LOOM, STOCKADE )

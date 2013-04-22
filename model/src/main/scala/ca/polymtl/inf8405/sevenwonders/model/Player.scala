@@ -24,6 +24,8 @@ case class Player(
 
   import utils.Utils._
 
+  override def toString = civilization.name
+
   def discard(card: Card): Player = this.copy(hand = hand - card, coins = coins + 3)
 
   def build(card: Card, trade: Trade, wonder: Boolean = false) =
@@ -292,7 +294,7 @@ case class Player(
       newCards = played -- previous.played,
       coinDelta = coins - previous.coins,
       additionalStuff = stuff -- previous.stuff,
-      discards = previous.hand -- hand,
+      discards = hand -- previous.hand,
       additionalWonders = nbWonders - previous.nbWonders,
       builtForFree = hasBuiltForFreeThisAge && !previous.hasBuiltForFreeThisAge
     )

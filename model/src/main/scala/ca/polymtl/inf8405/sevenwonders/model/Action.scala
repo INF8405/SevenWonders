@@ -17,9 +17,9 @@ case class Build(card: Card, trade: Trade = MultiMap(), wonder: Boolean = false)
 }
 case class Discard(card: Card) extends Action {
   def perform(current:Game, by: Player) =
-    GameDelta(Map(by -> by.discard(card).-(by)), MultiSet(card))
+    GameDelta(Map(by -> (by.discard(card) - by)), MultiSet(card))
 }
 case class BuildForFree(card: Card) extends Action {
   def perform(current:Game, by: Player) =
-    GameDelta(Map(by -> by.buildForFree(card).-(by)))
+    GameDelta(Map(by -> (by.buildForFree(card) - by)))
 }

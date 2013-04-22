@@ -50,8 +50,8 @@ case class Game(
     val gameStateAfterResolvingCards = actions.foldLeft(newGameState) {
       (gameState, keyValue) =>
         keyValue match {
-          case (player, Build(card, trade, false)) => card.resolve(gameState, player)
-          case (player, Build(card, trade, true)) => {
+          case (player, Build(card, trade, wonder)) if !wonder => card.resolve(gameState, player)
+          case (player, Build(card, trade, wonder)) if  wonder => {
             val wonderStage = player.wonderStagesBuilt.last
             if (wonderStage.symbols.contains(GrabFromDiscardPile)) grabDiscard = Some(player)
             if (wonderStage.symbols.contains(PlayLastCardEachAge)) playLast = Some(player)
@@ -174,7 +174,7 @@ case class Game(
     val updatedPlayers = players.map[Player]{
       player =>
         val playerDelta = delta.playerDeltas(player)
-        player.copy(coins = player.coins + playerDelta.coinDelta, played = player.played ++ playerDelta.newCards)
+        player.copy(coins = player.coins + playerDelta.coinDelta, played = player.played ++ playerDelta.newCards, hand = player.hand -- playerDelta.newCards)
     }
     Game(updatedPlayers, cards, discarded ++ delta.additionalDiscards)
   }
