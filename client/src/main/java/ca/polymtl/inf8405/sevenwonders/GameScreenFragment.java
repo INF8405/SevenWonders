@@ -2,18 +2,23 @@ package ca.polymtl.inf8405.sevenwonders;
 
 import ca.polymtl.inf8405.sevenwonders.api.Card;
 import ca.polymtl.inf8405.sevenwonders.api.CardCategory;
+import ca.polymtl.inf8405.sevenwonders.api.Player;
 import static ca.polymtl.inf8405.sevenwonders.api.CardCategory.*;
 import ca.polymtl.inf8405.sevenwonders.model.*;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +39,9 @@ public class GameScreenFragment extends Fragment {
 				container, false);
 		Map<CardCategory,CardView> categoryToView_ = new HashMap<CardCategory, CardView>();
 
+		LinearLayout playersInfoView = (LinearLayout)rootView_.findViewById(R.id.PlayerInfos);
+		playersInfoView.setBackgroundColor(Color.RED);
+		
 		// Set handView height
 		LinearLayout boardView = (LinearLayout)rootView_.findViewById(R.id.TopBoardView);
 		LayoutParams params = boardView.getLayoutParams();
@@ -54,8 +62,8 @@ public class GameScreenFragment extends Fragment {
 
 		if (isOpponent()){ handView.setAlpha((float)0.5); }
 
+		// Update board view
 		Map<CardCategory, List<Card>> cardsOnBoard = ScreenSlidePagerAdapter.players_.get(position).getTableau();
-
 		CardView c1 = (CardView) rootView_.findViewById(R.id.BlueCard);
 		categoryToView_.put( CIVILIAN,  c1);
 		CardView c2 = (CardView) rootView_.findViewById(R.id.YellowCard);
@@ -69,6 +77,26 @@ public class GameScreenFragment extends Fragment {
 		for(Map.Entry<CardCategory,List<Card>> entry : cardsOnBoard.entrySet()){
 			categoryToView_.get(entry.getKey()).setCards(toCardInfoList(entry.getValue()));
 		}
+		
+		// Update player info
+		Player currentPlayer = ScreenSlidePagerAdapter.players_.get(position);
+		TextView wonders = (TextView) rootView_.findViewById(R.id.WondersStaged);
+		wonders.setText("Wonders staged:" + currentPlayer.getWonderStaged());
+		
+		TextView coins = (TextView) rootView_.findViewById(R.id.CoinsTextView);
+		coins.setText("" + currentPlayer.coins);
+		
+		int[] battleMarkerPoint = {1,3,5,-1};
+		Map<Integer, Integer> battleMarkers = new HashMap<Integer, Integer>(4);
+		for (int i: battleMarkerPoint){
+			int occurrences = Collections.frequency(currentPlayer.getBattleMarkers(), i);
+			battleMarkers.put(i, occurrences);
+		}
+		 
+		((TextView)rootView_.findViewById(R.id.BMAge1)).setText(battleMarkers.get(1)+"");
+		((TextView)rootView_.findViewById(R.id.BMAge2)).setText(battleMarkers.get(3)+"");
+		((TextView)rootView_.findViewById(R.id.BMAge3)).setText(battleMarkers.get(5)+"");
+		((TextView)rootView_.findViewById(R.id.BD)).setText(battleMarkers.get(-1)+"");
 		
 		//		// Fixme: Implement me duc !
 		//		//player.canPlayWonder - in PlayerStateView - DONE

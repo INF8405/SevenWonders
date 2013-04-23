@@ -147,14 +147,18 @@ public class ReceiverStub extends Api {
         tableau1.put(MILITARY, Arrays.asList(BARRACKS));
         tableau1.put(CIVILIAN, Arrays.asList(BATHS));
         tableau1.put(COMMERCIAL, Arrays.asList(EAST_TRADING_POST));
-        List<Integer> battleMarkersEmpty = new LinkedList<Integer>();
+        List<Integer> battleMarkers1 = new LinkedList<Integer>();
+        battleMarkers1.add(1);
+        battleMarkers1.add(1);
+        battleMarkers1.add(3);
+        battleMarkers1.add(5);
 
         /* Player 1 */
         Player player1 = new Player(
                 tableau1,
                 HALIKARNASSOS_B,
-                battleMarkersEmpty,
-                3,
+                battleMarkers1,
+                6,
                 0,
                 0,
                 false
@@ -192,12 +196,16 @@ public class ReceiverStub extends Api {
 
         Map<CardCategory,List<Card>> tableau2 = new HashMap<CardCategory,List<Card>>();
         tableau2.put(RAW_MATERIAL, Arrays.asList(EXCAVATION, LUMBER_YARD));
+        List<Integer> battleMarkers2 = new LinkedList<Integer>();
+        battleMarkers2.add(-1);
+        battleMarkers2.add(-1);
+        battleMarkers2.add(3);
         /* Player 2 */
         Player player2 = new Player(
                 tableau2,
                 RHODOS_A,
-                battleMarkersEmpty,
-                3,
+                battleMarkers2,
+                2,
                 0,
                 0,
                 false
@@ -209,8 +217,8 @@ public class ReceiverStub extends Api {
         Player player3 = new Player(
                 tableau3,
                 ALEXANDRIA_A,
-                battleMarkersEmpty,
-                3,
+                battleMarkers2,
+                4,
                 0,
                 0,
                 false
