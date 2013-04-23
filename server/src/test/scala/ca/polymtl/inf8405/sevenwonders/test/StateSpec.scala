@@ -66,6 +66,8 @@ class StateSpec extends ServerSpec {
 
       babylon.sender.s_startStub()
 
+      /* AGE I - Hand 1 */
+
       pBabylon.expectMsgPF() { case GameBegin( state ) => {
 
         state.players.size === 3
@@ -163,6 +165,8 @@ class StateSpec extends ServerSpec {
         hali.sender.s_playCard( TIMBER_YARD, NO_TRADE )
       }}))
 
+      /* AGE I - Hand 2 */
+
       pBabylon.expectMsgPF() { case GameUpdate( state ) => {
         val me = state.players.get(0)
         me.tableau.get(RAW_MATERIAL) === ( List(CLAY_PIT): JList[TCard] )
@@ -221,6 +225,7 @@ class StateSpec extends ServerSpec {
         hali.sender.s_playCard( BATHS, NO_TRADE )
       }}
 
+      /* AGE I - Hand 3 */
       pBabylon.expectMsgPF() { case GameUpdate( state ) => {
         val me = state.players.get(0)
         me.tableau.get(RAW_MATERIAL) === ( List(CLAY_PIT): JList[TCard] )
@@ -277,6 +282,7 @@ class StateSpec extends ServerSpec {
         hali.sender.s_playCard( STOCKADE, NO_TRADE )
       }}
 
+      /* AGE I - Hand 4 */
       pBabylon.expectMsgPF() { case GameUpdate( state ) => {
         val me = state.players.get(0)
         me.tableau.get(RAW_MATERIAL) === ( List(CLAY_PIT): JList[TCard] )
@@ -292,8 +298,6 @@ class StateSpec extends ServerSpec {
         playables.ac(ALTAR)
         playables.ac(THEATER)
         playables.ac(STONE_PIT)
-
-        println(state.hand.unplayables)
 
         assert( state.hand.unplayables.isEmpty )
 
@@ -339,26 +343,119 @@ class StateSpec extends ServerSpec {
         hali.sender.s_playCard( ORE_VEIN, NO_TRADE )
       }}
 
-//      pHali.expectMsgPF() { case GameUpdate( state ) => {
-//        val me = state.players.get(0)
-//        me.tableau.get(MANUFACTURED_GOOD) === ( List(GLASSWORKS): JList[TCard] )
-//        me.coins ===
-//          me.canPlayWonder ===
-//
-//
-//        val playables = state.hand.playables
-//        playables.ac()
-//        playables.ac()
-//        playables.ac()
-//        playables.ac()
-//        playables.ac()
-//        playables.ac(, Set( MultiMap( ) ) )
-//
-//        assert( state.hand.unplayables.isEmpty )
-//        hali.sender.s_playCard( , NO_TRADE )
-//      }}
 
-      // STOP
+      /* AGE I - Hand 5 */
+
+      pBabylon.expectMsgPF() { case GameUpdate( state ) => {
+        val me = state.players.get(0)
+        assert( me.tableau.get(RAW_MATERIAL).containsAll( List(CLAY_PIT, LUMBER_YARD): JList[TCard] ) )
+        me.tableau.get(MILITARY) === ( List(BARRACKS): JList[TCard] )
+        me.tableau.get(SCIENCE) === ( List(WORKSHOP): JList[TCard] )
+        me.coins === 0
+        me.canPlayWonder === true
+        me.wonderTrades.isEmpty === true
+
+
+        val playables = state.hand.playables
+        playables.ac(CLAY_POOL)
+        playables.ac(MARKETPLACE)
+
+        assert( state.hand.unplayables.contains( APOTHECARY ) )
+
+        babylon.sender.s_playCard( MARKETPLACE, NO_TRADE )
+      }}
+
+      pEphesos.expectMsgPF() { case GameUpdate( state ) => {
+        val me = state.players.get(0)
+        assert(me.tableau.get(COMMERCIAL).containsAll( List(WEST_TRADING_POST, EAST_TRADING_POST): JList[TCard] ))
+        assert(me.tableau.get(MANUFACTURED_GOOD).containsAll( List(GLASSWORKS, LOOM): JList[TCard] ))
+        me.coins === 5
+        me.canPlayWonder === false
+
+        val playables = state.hand.playables
+        playables.ac(SCRIPTORIUM)
+        playables.ac(PRESS)
+        playables.ac(GUARD_TOWER, Set( MultiMap( Clay -> Left)))
+
+        assert( state.hand.unplayables.isEmpty )
+
+        ephesos.sender.s_playCard( SCRIPTORIUM, NO_TRADE )
+      }}
+
+      pHali.expectMsgPF() { case GameUpdate( state ) => {
+        val me = state.players.get(0)
+        me.tableau.get(CIVILIAN) === ( List(BATHS): JList[TCard] )
+        me.tableau.get(MILITARY) === ( List(STOCKADE): JList[TCard] )
+        assert(me.tableau.get(RAW_MATERIAL).containsAll( List(TIMBER_YARD, ORE_VEIN): JList[TCard] ))
+        me.coins === 2
+        me.canPlayWonder === false
+
+
+        val playables = state.hand.playables
+        playables.ac(ALTAR)
+        playables.ac(THEATER)
+        playables.ac(STONE_PIT)
+
+        assert( state.hand.unplayables.isEmpty )
+
+        hali.sender.s_playCard( ALTAR, NO_TRADE )
+      }}
+
+      /* AGE I Hand 6 */
+      pBabylon.expectMsgPF() { case GameUpdate( state ) => {
+        val me = state.players.get(0)
+        assert( me.tableau.get(RAW_MATERIAL).containsAll( List(CLAY_PIT, LUMBER_YARD): JList[TCard] ) )
+        me.tableau.get(MILITARY) === ( List(BARRACKS): JList[TCard] )
+        me.tableau.get(SCIENCE) === ( List(WORKSHOP): JList[TCard] )
+        me.tableau.get(COMMERCIAL) === ( List(MARKETPLACE): JList[TCard] )
+        me.coins === 0
+        me.canPlayWonder === true
+        me.wonderTrades.isEmpty === true
+
+        val playables = state.hand.playables
+        playables.ac(GUARD_TOWER)
+        playables.ac(PRESS)
+
+        assert( state.hand.unplayables.isEmpty )
+
+        babylon.sender.s_playWonder( GUARD_TOWER, NO_TRADE )
+      }}
+
+      pEphesos.expectMsgPF() { case GameUpdate( state ) => {
+        val me = state.players.get(0)
+        assert(me.tableau.get(COMMERCIAL).containsAll( List(WEST_TRADING_POST, EAST_TRADING_POST): JList[TCard] ))
+        assert(me.tableau.get(MANUFACTURED_GOOD).containsAll( List(GLASSWORKS, LOOM): JList[TCard] ))
+        me.tableau.get(SCIENCE) === ( List(SCRIPTORIUM): JList[TCard] )
+        me.coins === 5
+        me.canPlayWonder === false
+
+        val playables = state.hand.playables
+        playables.ac(STONE_PIT)
+        playables.ac(THEATER)
+
+        assert( state.hand.unplayables.isEmpty )
+
+        ephesos.sender.s_discard( STONE_PIT )
+      }}
+
+      pHali.expectMsgPF() { case GameUpdate( state ) => {
+        val me = state.players.get(0)
+        assert(me.tableau.get(CIVILIAN).containsAll( List(BATHS, ALTAR): JList[TCard] ))
+        me.tableau.get(MILITARY) === ( List(STOCKADE): JList[TCard] )
+        assert(me.tableau.get(RAW_MATERIAL).containsAll( List(TIMBER_YARD, ORE_VEIN): JList[TCard] ))
+        me.coins === 2
+        me.canPlayWonder === false
+
+
+        val playables = state.hand.playables
+        playables.ac(CLAY_POOL)
+        playables.ac(APOTHECARY)
+
+        assert( state.hand.unplayables.isEmpty )
+
+        hali.sender.s_playCard( APOTHECARY, NO_TRADE )
+      }}
+
     }
   }
 

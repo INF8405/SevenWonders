@@ -184,7 +184,6 @@ class GameImpl( system: ActorSystem ) extends TGame {
 
     // Playables
     val playableCards = game.playableCards(player)
-    println(playableCards.map(_.name))
 
     val playables: Map[TCard,Set[Trade]] = playableCards.map( card => {
       ( cardsBridge.inverse().get( card ), game.possibleTrades(player, card))
