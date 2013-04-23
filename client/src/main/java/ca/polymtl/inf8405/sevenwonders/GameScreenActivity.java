@@ -27,8 +27,7 @@ public class GameScreenActivity extends FragmentActivity {
 
 	public GameScreenActivity() {
 		if (MainActivity.DEBUG_MODE){
-			ReceiverStub.getInstance().addObserver( new ApiDelegate() );
-			Receiver.getInstance().addObserver( new ApiDelegate() );
+//			ReceiverStub.getInstance().addObserver( new ApiDelegate() );
 		}
 		else {
 			Receiver.getInstance().addObserver( new ApiDelegate() );
@@ -48,18 +47,18 @@ public class GameScreenActivity extends FragmentActivity {
 		SCREEN_HEIGTH = size.y;
 
 		if (MainActivity.DEBUG_MODE){
-			ReceiverStub.getInstance().simulate_c_begin(); // Fixme: test
-
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						Thread.sleep(5000);
-						ReceiverStub.getInstance().simulate_c_sendState();
-					} catch ( InterruptedException e ) {
-					}
-				}
-			}).start();
+//			ReceiverStub.getInstance().simulate_c_begin(); // Fixme: test
+//
+//			new Thread(new Runnable() {
+//				@Override
+//				public void run() {
+//					try {
+//						Thread.sleep(5000);
+//						ReceiverStub.getInstance().simulate_c_sendState();
+//					} catch ( InterruptedException e ) {
+//					}
+//				}
+//			}).start();
 		}
 		else {
 			GameState state = (GameState) getIntent().getSerializableExtra(GameRoomActivity.MESSAGE_GAME_BEGIN);

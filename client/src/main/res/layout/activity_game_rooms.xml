@@ -3,26 +3,28 @@
    android:orientation="vertical"
       android:layout_width="match_parent"
       android:layout_height="match_parent">
-  <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/testTextView"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:padding="10dp"
-    android:textSize="20sp"
-    android:gravity="center" 
-    >
-  </TextView>
-  
-  <ListView 
-     android:id="@+id/listView" 
-     android:layout_width="match_parent" 
-     android:layout_height="0px"
-     android:layout_weight="1" />
+
+    <fragment
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:map="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/map"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        map:uiCompass="false"
+        map:cameraZoom="13"
+        map:uiRotateGestures="true"
+        map:uiScrollGestures="true"
+        map:uiTiltGestures="true"
+        map:uiZoomControls="true"
+        map:uiZoomGestures="true"
+        map:mapType="terrain"
+        android:name="com.google.android.gms.maps.MapFragment"/>
+
   <Button 
      android:id="@+id/buttonCreate"
-     android:layout_width="match_parent" 
-     android:layout_height="wrap_content" 
+     android:layout_width="match_parent"
      android:layout_weight="0"
+     android:layout_height="20px"
      android:state_pressed="true"
      android:text="@string/createGame"
      android:onClick="createGame"/>
