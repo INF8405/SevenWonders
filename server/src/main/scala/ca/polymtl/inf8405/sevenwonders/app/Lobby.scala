@@ -56,7 +56,18 @@ class LobbyImpl( system: ActorSystem ) extends Lobby {
     }
   }
 
+//  def createStubGame() {
+//    import java.util.UUID
+//    val id = UUID.randomUUID.toString
+//    val game: TGame = TypedActor( system ).typedActorOf( TypedProps( classOf[TGame], new GameImpl( system ) ) )
+//
+//    val definition = new GameRoomDef( "name", new GeoLocation(45.46, -73.63) ); // Proche de chez JR !
+//    games( id ) = ( new GameRoom( id, definition ), game )
+//  }
+
   private val users = MSet.empty[User]
   private val usersInGames = MMap.empty[User,TGame]
   private val games = MMap.empty[GameId, (GameRoom, TGame)]
+
+//  createStubGame()
 }
