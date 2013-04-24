@@ -30,6 +30,7 @@ public class ZoomCardView extends RelativeLayout{
 	private List<CardInfo> allCards_;
 	private int current_; // current card id
 	private Button playButton_;
+	private boolean withButtonPanel_;
 
 	// Test - TO REMOVE
 	private TextView text;
@@ -47,7 +48,8 @@ public class ZoomCardView extends RelativeLayout{
 	private void init(Context context, List<CardInfo> cards, int current, boolean withButtonPanel,boolean canPlayWonder){
 		current_ = current;
 		allCards_ = cards;
-
+		withButtonPanel_ = withButtonPanel;
+		
 		setBackgroundColor(Color.DKGRAY);
 		setGravity(Gravity.RIGHT);
 
@@ -218,6 +220,8 @@ public class ZoomCardView extends RelativeLayout{
 	}
 
 	private void changePlayButtonState(){
+		if (!withButtonPanel_)
+			return;
 		if (allCards_.get(current_).isPlayable()){
 			playButton_.setEnabled(true);
 		} else {

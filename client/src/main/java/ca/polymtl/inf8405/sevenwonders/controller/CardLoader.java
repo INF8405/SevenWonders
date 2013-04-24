@@ -61,7 +61,7 @@ public class CardLoader {
 		}
 	}
 	
-	private Bitmap drawableToBitmap( Drawable d) {
+	public static Bitmap drawableToBitmap( Drawable d) {
 		Bitmap bitmap = Bitmap.createBitmap(d.getIntrinsicWidth(), 
 				d.getIntrinsicHeight(), Config.ARGB_8888);
 		Canvas canvas = new Canvas(bitmap); 

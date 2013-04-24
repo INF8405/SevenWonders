@@ -107,7 +107,7 @@ public class ReceiverStub extends Api {
 		Map<CardCategory,List<Card>> tableau1 = new HashMap<CardCategory,List<Card>>();
 		tableau1.put(RAW_MATERIAL, Arrays.asList(LUMBER_YARD));
 		tableau1.put(MILITARY, Arrays.asList(BARRACKS));
-		tableau1.put(CIVILIAN, Arrays.asList(BATHS));
+		tableau1.put(CIVILIAN, Arrays.asList(BATHS, ALTAR, TEMPLE, THEATER, STATUE, PAWNSHOP ));
 		tableau1.put(COMMERCIAL, Arrays.asList(EAST_TRADING_POST));
 		List<Integer> battleMarkers1 = new LinkedList<Integer>();
 		battleMarkers1.add(1);

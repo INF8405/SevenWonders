@@ -25,11 +25,11 @@ public class PlayedCards extends CardView {
 				.getSystemService(Context.WINDOW_SERVICE))
 				.getDefaultDisplay().getWidth();
 		CARD_WIDTH = screenWidth / 8;
-		MARGIN_LEFT = (int)CARD_WIDTH / 6;
+		MARGIN_LEFT = (int)CARD_WIDTH / 10;
 
 		Bitmap cardBitmap = CardLoader.getInstance().getBitmap(getContext(), Card.ALTAR);
 		CARD_HEIGHT = CARD_WIDTH * cardBitmap.getHeight() / cardBitmap.getWidth();
-		MARGIN_TOP = (int)CARD_HEIGHT / 6;
+		MARGIN_TOP = (int)CARD_HEIGHT / 10;
 	}
 
 	public PlayedCards(Context context) {

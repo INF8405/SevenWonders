@@ -50,7 +50,7 @@ public class GameScreenFragment extends Fragment {
 		// Cards in hand
 		PlayerStateView handView = (PlayerStateView)rootView_.findViewById(R.id.PlayerStateView);
 		handView.setCardSize(GameScreenActivity.SCREEN_HEIGTH * STATE_VIEW_WEIGHT / (STATE_VIEW_WEIGHT + BOARD_VIEW_WEIGHT));
-		List<CardInfo> cards = new LinkedList<CardInfo>(); // Fixme: unplayables vs playables
+		List<CardInfo> cards = new LinkedList<CardInfo>(); 
 		for (Card c: ScreenSlidePagerAdapter.hand_.playables.keySet()){
 			cards.add(new CardInfo(c, true, ScreenSlidePagerAdapter.hand_.playables.get(c)));
 		}
@@ -122,8 +122,8 @@ public class GameScreenFragment extends Fragment {
 		return result;
 	}
 
-	private static final int BOARD_VIEW_WEIGHT = 3;
-	private static final int STATE_VIEW_WEIGHT = 2;
+	private static final int BOARD_VIEW_WEIGHT = 1;
+	private static final int STATE_VIEW_WEIGHT = 1;
 
 	public int playerPosition;
 

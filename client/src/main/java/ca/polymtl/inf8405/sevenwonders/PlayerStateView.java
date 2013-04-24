@@ -10,6 +10,8 @@ import ca.polymtl.inf8405.sevenwonders.model.*;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -71,7 +73,7 @@ public class PlayerStateView extends View{
 
 	public void setCardSize(float viewHeight){
 		Bitmap cardSample = CardLoader.getInstance().getBitmap(getContext(), Card.TAVERN); // Fixme: ???
-		cardHeight_ = viewHeight * 2 / 3;
+		cardHeight_ = viewHeight * 2 / 5;
 		cardWidth_ = cardHeight_ * cardSample.getWidth() / cardSample.getHeight();
 	}
 
@@ -95,7 +97,11 @@ public class PlayerStateView extends View{
 	public void setPlayer(Player player){
 		invalidate();
 		player_ = player;
-//		setBackgroundResource(Database.getInstance().getCivilisationBitmapId(player_.civilisation));
+//		Drawable civiDrawable = CivilisationLoader.getInstance().getDrawable(getContext(), player_.civilisation);
+//		Bitmap resized = Bitmap.createScaledBitmap(CardLoader.drawableToBitmap(civiDrawable), 
+//				getWidth(), getHeight(), false);
+//		setBackgroundDrawable(new BitmapDrawable(resized));
+		
 		setBackgroundDrawable(CivilisationLoader.getInstance().getDrawable(getContext(), player_.civilisation));
 	}
 
