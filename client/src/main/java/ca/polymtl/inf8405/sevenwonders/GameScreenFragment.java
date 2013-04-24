@@ -81,7 +81,7 @@ public class GameScreenFragment extends Fragment {
 		// Update player info
 		Player currentPlayer = ScreenSlidePagerAdapter.players_.get(position);
 		TextView name = (TextView) rootView_.findViewById(R.id.PlayerName);
-		name.setText("");
+		name.setText(currentPlayer.username);
 		
 		TextView wonders = (TextView) rootView_.findViewById(R.id.WondersStaged);
 		wonders.setText("Wonders staged:" + currentPlayer.getWonderStaged());
