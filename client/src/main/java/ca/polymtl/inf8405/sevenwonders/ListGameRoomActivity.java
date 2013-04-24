@@ -36,9 +36,10 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
 	private static final int UPDATE_INTERVAL = (1000 * 60) /* minutes >> */ * 1;
 
     private LocationManager locationManager_;
-
     private boolean locationIsSet = false;
-    private GeoLocation geo = new GeoLocation(0,0);
+    private Marker createGameMarker;
+
+    private GeoLocation geo = new GeoLocation(45.46, -73.63); // Montreal default
 	private GoogleMap map;
     private Set<GameRoom> rooms_ = new HashSet<GameRoom>();
     private Map<String,GameRoom> markerRoomAssociation = new HashMap<String,GameRoom>();
@@ -56,6 +57,17 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
 		setContentView(R.layout.activity_game_rooms);
 
 		map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
+        updateMapLocation();
+
+        if (!MainActivity.DEBUG_MODE){
+            try {
+                Sender.getInstance().s_listGamesRequest(geo);
+            } catch ( TException e ) {
+                Log.e("ListGameRoom", e.getMessage() );
+            }
+        }
+
+
 		locationManager_ = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
 		// Define the criteria how to select the locatioin provider -> use default
@@ -64,12 +76,39 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
 		locationManager_.requestLocationUpdates(provider, UPDATE_INTERVAL, 0, this);
 
 		Location location = locationManager_.getLastKnownLocation(provider);
-
 		if (null != location) {
 			onLocationChanged(location); 
-		} else {
-			locationIsSet = false;
 		}
+
+        map.setOnMarkerClickListener( new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                if( null != createGameMarker && marker.getId().equals(createGameMarker.getId())) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(ListGameRoomActivity.this);
+                    builder.setMessage("Create a new game?")
+                            .setPositiveButton("Create", createGame)
+                            .setNegativeButton("Cancel", createGame)
+                            .show();
+                } else {
+                    final GameRoom room = markerRoomAssociation.get(marker.getId());
+                    if( null != room ) {
+                        DialogInterface.OnClickListener joinGame = new JoinRoomListener(room);
+                        AlertDialog.Builder builder = new AlertDialog.Builder(ListGameRoomActivity.this);
+                        builder.setMessage( room.definition.name + " Join game?")
+                                .setPositiveButton("Join", joinGame)
+                                .setNegativeButton("Cancel", joinGame)
+                                .show();
+                    }
+                }
+
+                return true;
+            }
+        });
+	}
+
+	private void updateMapLocation() {
+        final LatLng position = new LatLng(geo.getLatitude(),geo.getLongitude());
+        map.moveCamera(CameraUpdateFactory.newLatLng(position));
 	}
 
 	//////////////////////////// Location Listener /////////////////////////////////////
@@ -88,40 +127,14 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
                     Log.e("ListGameRoom", e.getMessage() );
                 }
             }
+            updateMapLocation();
+            final LatLng position = new LatLng(geo.getLatitude(),geo.getLongitude());
 
-            final LatLng position = new LatLng(location.getLatitude(),location.getLongitude());
-            map.moveCamera(CameraUpdateFactory.newLatLng(position));
-
-            final Marker createGameMarker = map.addMarker(
+            createGameMarker = map.addMarker(
                 new MarkerOptions().
                     position(position).
                     icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_launcher))
             );
-
-            map.setOnMarkerClickListener( new GoogleMap.OnMarkerClickListener() {
-                @Override
-                public boolean onMarkerClick(Marker marker) {
-                    if( marker.getId().equals(createGameMarker.getId())) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(ListGameRoomActivity.this);
-                        builder.setMessage("Create a new game?")
-                                .setPositiveButton("Create", createGame)
-                                .setNegativeButton("Cancel", createGame)
-                                .show();
-                    } else {
-                        final GameRoom room = markerRoomAssociation.get(marker.getId());
-                        if( null != room ) {
-                            DialogInterface.OnClickListener joinGame = new JoinRoomListener(room);
-                            AlertDialog.Builder builder = new AlertDialog.Builder(ListGameRoomActivity.this);
-                            builder.setMessage( room.definition.name + " Join game?")
-                                    .setPositiveButton("Join", joinGame)
-                                    .setNegativeButton("Cancel", joinGame)
-                                    .show();
-                        }
-                    }
-
-                    return true;
-                }
-            });
         }
 	}
 
@@ -148,7 +161,7 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
                 case DialogInterface.BUTTON_NEGATIVE:
                     break;
             }
-        }
+           }
 	};
 
 	private class JoinRoomListener implements DialogInterface.OnClickListener {
@@ -195,9 +208,7 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
 	private class ApiDelegate extends Api {
 
         @Override public void c_createdGame() throws TException {
-            if(locationIsSet) {
-                Sender.getInstance().s_listGamesRequest(geo);
-            }
+            Sender.getInstance().s_listGamesRequest(geo);
         }
 
 		@Override
