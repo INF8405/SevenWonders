@@ -1,4 +1,4 @@
-package ca.polymtl.inf8405.sevenwonders
+  package ca.polymtl.inf8405.sevenwonders
 package app
 
 import ApiHelper._
@@ -170,7 +170,12 @@ class GameImpl( system: ActorSystem ) extends TGame {
           ( bridgeCategory(clazz), (cards.map( card => TCard.valueOf( card.name ) ).toList): JList[TCard] )
         }}
 
+      // find username
+      val playersUsers = usersPlayers.map( _.swap )
+      val username = playersUsers(player).username
+
       new TPlayer(
+        username,
         tableau,
         TCivilisation.valueOf(player.civilization.name),
         player.battleMarkers.map( _.vicPoints: Integer ).toList: JList[Integer],

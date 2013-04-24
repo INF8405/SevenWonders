@@ -185,14 +185,15 @@ struct Hand {
 }
 
 struct Player {
-	1: map<CardCategory, list<Card>> tableau,
-	2: Civilisation civilisation,
-	3: list<BattleMarker> battleMarkers,
-	4: i32 coins,
-	5: i32 score,
-	6: i32 wonderStaged,
-	7: bool canPlayWonder,
-	8: set<Trade> wonderTrades
+    1: string username,
+	2: map<CardCategory, list<Card>> tableau,
+	3: Civilisation civilisation,
+	4: list<BattleMarker> battleMarkers,
+	5: i32 coins,
+	6: i32 score,
+	7: i32 wonderStaged,
+	8: bool canPlayWonder,
+	9: set<Trade> wonderTrades
 }
 
 struct GameState {
