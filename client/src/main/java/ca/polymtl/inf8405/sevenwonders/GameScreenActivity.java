@@ -27,7 +27,7 @@ public class GameScreenActivity extends FragmentActivity {
 
 	public GameScreenActivity() {
 		if (MainActivity.DEBUG_MODE){
-//			ReceiverStub.getInstance().addObserver( new ApiDelegate() );
+			ReceiverStub.getInstance().addObserver( new ApiDelegate() );
 		}
 		else {
 			Receiver.getInstance().addObserver( new ApiDelegate() );
@@ -47,18 +47,18 @@ public class GameScreenActivity extends FragmentActivity {
 		SCREEN_HEIGTH = size.y;
 
 		if (MainActivity.DEBUG_MODE){
-//			ReceiverStub.getInstance().simulate_c_begin(); // Fixme: test
-//
-//			new Thread(new Runnable() {
-//				@Override
-//				public void run() {
-//					try {
-//						Thread.sleep(5000);
-//						ReceiverStub.getInstance().simulate_c_sendState();
-//					} catch ( InterruptedException e ) {
-//					}
-//				}
-//			}).start();
+			ReceiverStub.getInstance().simulate_c_begin(); // Fixme: test
+
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(5000);
+						ReceiverStub.getInstance().simulate_c_sendState();
+					} catch ( InterruptedException e ) {
+					}
+				}
+			}).start();
 		}
 		else {
 			GameState state = (GameState) getIntent().getSerializableExtra(GameRoomActivity.MESSAGE_GAME_BEGIN);
@@ -116,18 +116,16 @@ public class GameScreenActivity extends FragmentActivity {
 
 		// OVERRIDE THIS FUNCTION ON DEBUGING MODE ONLY
 		@Override public void c_begin(final GameState state) throws TException {
-			if (MainActivity.DEBUG_MODE){
-				runOnUiThread( new Runnable() {
-					@Override
-					public void run() {
-						mPager = (ViewPager) findViewById(R.id.Pager);
-						mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), state.getPlayers());
-						mPager.setAdapter(mPagerAdapter);
-						mPager.setCurrentItem(100*state.getPlayersSize()); // Fixme : Magic number 100
-						setState(state);
-					}
-				});
-			}
+            runOnUiThread( new Runnable() {
+                @Override
+                public void run() {
+                    mPager = (ViewPager) findViewById(R.id.Pager);
+                    mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), state.getPlayers());
+                    mPager.setAdapter(mPagerAdapter);
+                    mPager.setCurrentItem(100*state.getPlayersSize()); // Fixme : Magic number 100
+                    setState(state);
+                }
+            });
 		}
 	}
 	

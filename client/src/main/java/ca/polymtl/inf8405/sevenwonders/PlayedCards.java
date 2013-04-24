@@ -4,9 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
 import android.view.WindowManager;
 
 import ca.polymtl.inf8405.sevenwonders.api.Card;
@@ -30,8 +27,7 @@ public class PlayedCards extends CardView {
 		CARD_WIDTH = screenWidth / 8;
 		MARGIN_LEFT = (int)CARD_WIDTH / 6;
 
-		Log.e("PlayedCards", Card.ALTAR.toString());
-		Bitmap cardBitmap = CardLoader.getInstance().getBitmap(getContext(), Card.ALTAR); // FIXME:: duc
+		Bitmap cardBitmap = CardLoader.getInstance().getBitmap(getContext(), Card.ALTAR);
 		CARD_HEIGHT = CARD_WIDTH * cardBitmap.getHeight() / cardBitmap.getWidth();
 		MARGIN_TOP = (int)CARD_HEIGHT / 6;
 	}

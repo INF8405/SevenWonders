@@ -1,16 +1,12 @@
 package ca.polymtl.inf8405.sevenwonders.controller;
 
 import java.util.HashMap;
-
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
-import ca.polymtl.inf8405.sevenwonders.R;
 import ca.polymtl.inf8405.sevenwonders.api.Civilisation;
 
 public class CivilisationLoader {
@@ -35,12 +31,10 @@ public class CivilisationLoader {
 			// Access to other application
 			PackageManager pm = context.getPackageManager();
 			try {
-				Log.e("CiviLoader 0:", civi.toString().toLowerCase());
 				Resources resources = pm.getResourcesForApplication("ca.polymtl.inf8405.sevenwondersassets");
 				int id = resources.getIdentifier(civi.toString().toLowerCase(), "drawable", 
 						"ca.polymtl.inf8405.sevenwondersassets");
 				if (id != 0){
-					Log.e("CiviLoader 1:", "" + id);
 					Drawable d = resources.getDrawable(id);
 					civiDataBase_.put(civi, d);
 					return d;
