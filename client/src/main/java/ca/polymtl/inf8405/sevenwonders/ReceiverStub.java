@@ -151,12 +151,12 @@ public class ReceiverStub extends Api {
 		trades.add(trade1);
 		trades.add(trade2);
 
-		playables.put(STOCKADE, trades);
-		playables.put(GUARD_TOWER, trades);
+		unplayables.add(STOCKADE);
+		unplayables.add(GUARD_TOWER);
 		playables.put(LUMBER_YARD, trades);
 		playables.put(EXCAVATION, trades);
 		playables.put(EAST_TRADING_POST, emptyTrade);
-		playables.put(BARRACKS, emptyTrade);
+		unplayables.add(BARRACKS);
 
 		Map<CardCategory,List<Card>> tableau2 = new HashMap<CardCategory,List<Card>>();
 		tableau2.put(RAW_MATERIAL, Arrays.asList(EXCAVATION, LUMBER_YARD));
@@ -249,9 +249,8 @@ public class ReceiverStub extends Api {
 
 		GameState state = new GameState(
 				new Hand( playables, unplayables ),
-				new ArrayList<Player>(Arrays.asList(player1, player2, player3, player4, player5, player6, player7))
-				);
-
+				new ArrayList<Player>(Arrays.asList(player1, player2, player3)));
+				//, player4, player5, player6, player7
 		try {
 			c_sendState( state );
 		} catch ( TException e ) {

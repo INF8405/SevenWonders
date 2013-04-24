@@ -28,6 +28,7 @@ public class ZoomCardView extends RelativeLayout{
 	private OnFlingGestureListener flingGesture_;
 	private List<CardInfo> allCards_;
 	private int current_; // current card id
+	Button playButton_;
 
 	// Test - TO REMOVE
 	private TextView text;
@@ -86,13 +87,13 @@ public class ZoomCardView extends RelativeLayout{
 
 		// Button panel
 		if (withButtonPanel){
-			Button play = new Button(context);
+			playButton_ = new Button(context);
 			RelativeLayout.LayoutParams bl = new RelativeLayout.LayoutParams(
 					LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
 			bl.addRule(RelativeLayout.CENTER_IN_PARENT);
-			play.setLayoutParams(bl);
-			play.setText("Play");
-			play.setOnTouchListener(new OnTouchListener() {
+			playButton_.setLayoutParams(bl);
+			playButton_.setText("Play");
+			playButton_.setOnTouchListener(new OnTouchListener() {
 				@Override
 				public boolean onTouch(View arg0, MotionEvent event) {
 					GameScreenActivity screen = (GameScreenActivity)sefl_.getContext();
@@ -112,6 +113,7 @@ public class ZoomCardView extends RelativeLayout{
 					return false;
 				}
 			});
+			playButton_.setEnabled(allCards_.get(current_).isPlayable());
 
 			Button discard = new Button(context);
 			discard.setLayoutParams(bl);
@@ -151,7 +153,7 @@ public class ZoomCardView extends RelativeLayout{
 			ln.setGravity(Gravity.CENTER_VERTICAL);
 			ln.setBackgroundColor(Color.RED);
 			ln.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.FILL_PARENT));
-			ln.addView(play);
+			ln.addView(playButton_);
 			ln.addView(wonders);
 			ln.addView(discard);
 			addView(ln);
@@ -202,6 +204,7 @@ public class ZoomCardView extends RelativeLayout{
 					.getBitmap(sefl_.getContext(), allCards_.get(current_).getName()));
 			changeText();
 		}
+		changePlayButtonState();
 	}
 
 	private void right(){
@@ -212,8 +215,18 @@ public class ZoomCardView extends RelativeLayout{
 					.getBitmap(sefl_.getContext(), allCards_.get(current_).getName()));
 			changeText();
 		}
+		changePlayButtonState();
 	}
 
+	private void changePlayButtonState(){
+		if (allCards_.get(current_).isPlayable()){
+			playButton_.setEnabled(true);
+		} else {
+			playButton_.setEnabled(false);
+		}
+		invalidate();
+	}
+	
 	private void closeMe(){
 		sefl_.setVisibility(INVISIBLE);
 	}
