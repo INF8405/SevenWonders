@@ -88,8 +88,22 @@ class GameSpec extends Specification {
       game3.playableCards( game3.findPlayer( HALIKARNASSOS_B ) ) ==== Set( GUARD_TOWER, SCRIPTORIUM, ORE_VEIN, PRESS )
     }
 
-//    "optionnal ressource when neighbor has it" in {
-//
-//    }
+    "optionnal ressource when neighbor has it" in {
+      val hand1 = MultiSet[Card]( WEST_TRADING_POST, THEATER, ALTAR, LUMBER_YARD, GUARD_TOWER, STONE_PIT )
+      val gizah = Player( civilization = GIZAH_A, hand = hand1, coins = 3 , played = Set(CLAY_PIT))
+
+      val hand2 = MultiSet[Card]( CLAY_POOL, APOTHECARY, WORKSHOP, MARKETPLACE, STOCKADE, GLASSWORKS)
+      val baby = Player( civilization = BABYLON_A, hand = hand2, coins = 3, played = Set(LOOM) )
+
+      val hand3 = MultiSet[Card]( TIMBER_YARD, ORE_VEIN, EAST_TRADING_POST, BATHS, SCRIPTORIUM, BARRACKS)
+      val hali = Player( civilization = HALIKARNASSOS_B, hand = hand3, coins = 3, played = Set(PRESS) )
+
+      val game = Game(
+        new Circle[Player]( gizah, baby, hali ),
+        Map( 1 -> MultiSet(DUMMY_CARD), 2 -> MultiSet(DUMMY_CARD) )
+      )
+
+      game.possibleTrades(gizah, GUARD_TOWER) ==== Set.empty
+    }
   }
 }
