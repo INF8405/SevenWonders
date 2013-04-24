@@ -9,6 +9,9 @@ import ca.polymtl.inf8405.sevenwonders.api.GameState;
 import ca.polymtl.inf8405.sevenwonders.api.Hand;
 import ca.polymtl.inf8405.sevenwonders.api.Player;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -24,8 +27,9 @@ public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
 
 	@Override
 	public Fragment getItem(int position) {
+		String s = position + " - ";
 		position = position % players_.size();
-		
+		s += position + " - " + players_.get(position).getCivilisation().toString();
 		Fragment fragment = new GameScreenFragment();
 		Bundle args = new Bundle();
 		args.putInt("position", position);
@@ -46,6 +50,7 @@ public class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
 
 	public void setState( final GameState state ) {
 		players_ = state.players;
+		Collections.reverse(players_);
 		hand_ = state.hand;
 	}
 

@@ -65,7 +65,7 @@ public class GameScreenActivity extends FragmentActivity {
 			mPager = (ViewPager) findViewById(R.id.Pager);
 			mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), state.getPlayers());
 			mPager.setAdapter(mPagerAdapter);
-			mPager.setCurrentItem(100*state.getPlayersSize()); // Fixme : Magic number 100
+			mPager.setCurrentItem(2); // Fixme : Magic number 100 100*state.getPlayersSize()+
 			setState(state);
 		}
 	}
@@ -78,14 +78,18 @@ public class GameScreenActivity extends FragmentActivity {
 	}
 
 	public static void play(Card card, Map<Resource, List<NeighborReference>> trade, boolean wonder ) {
-		try {
-			if( wonder ) {
-				Sender.getInstance().s_playWonder( card, trade );
-			} else {
-				Sender.getInstance().s_playCard( card, trade );
-			}
-		} catch ( TException e ){
-			Log.e("Game", e.getMessage() );
+		if (MainActivity.DEBUG_MODE){
+			Log.e("GameScreenActivity", "Play card: " + card.toString() + " - wonders:" + wonder);
+		} else {
+			try {
+				if( wonder ) {
+					Sender.getInstance().s_playWonder( card, trade );
+				} else {
+					Sender.getInstance().s_playCard( card, trade );
+				}
+			} catch ( TException e ){
+				Log.e("Game", e.getMessage() );
+			}	
 		}
 	}
 
@@ -122,7 +126,6 @@ public class GameScreenActivity extends FragmentActivity {
                     mPager = (ViewPager) findViewById(R.id.Pager);
                     mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), state.getPlayers());
                     mPager.setAdapter(mPagerAdapter);
-                    mPager.setCurrentItem(100*state.getPlayersSize()); // Fixme : Magic number 100
                     setState(state);
                 }
             });
@@ -130,6 +133,7 @@ public class GameScreenActivity extends FragmentActivity {
 	}
 	
 	private void setState( final GameState state ) {
+		mPager.setCurrentItem(state.getPlayersSize() -1 + (50*state.getPlayersSize()));//Fixme : Magic number 50
 		mPagerAdapter.setState(state);
 		mPagerAdapter.notifyDataSetChanged();
 	}

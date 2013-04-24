@@ -30,7 +30,7 @@ public class GameScreenFragment extends Fragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Bundle args = getArguments();
-		position = args.getInt("position");
+		playerPosition = args.getInt("position");
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public class GameScreenFragment extends Fragment {
 		// Cards in hand
 		PlayerStateView handView = (PlayerStateView)rootView_.findViewById(R.id.PlayerStateView);
 		handView.setCardSize(GameScreenActivity.SCREEN_HEIGTH * STATE_VIEW_WEIGHT / (STATE_VIEW_WEIGHT + BOARD_VIEW_WEIGHT));
-		List<CardInfo> cards = new LinkedList<CardInfo>(); // Fixme: unplayables vs playables
+		List<CardInfo> cards = new LinkedList<CardInfo>(); 
 		for (Card c: ScreenSlidePagerAdapter.hand_.playables.keySet()){
 			cards.add(new CardInfo(c, true, ScreenSlidePagerAdapter.hand_.playables.get(c)));
 		}
@@ -58,12 +58,12 @@ public class GameScreenFragment extends Fragment {
 			cards.add(new CardInfo(c));
 		}
 		handView.setCards(cards);
-		handView.setPlayer(ScreenSlidePagerAdapter.players_.get(position));
+		handView.setPlayer(ScreenSlidePagerAdapter.players_.get(playerPosition));
 
 		if (isOpponent()){ handView.setAlpha((float)0.5); }
 
 		// Update board view
-		Map<CardCategory, List<Card>> cardsOnBoard = ScreenSlidePagerAdapter.players_.get(position).getTableau();
+		Map<CardCategory, List<Card>> cardsOnBoard = ScreenSlidePagerAdapter.players_.get(playerPosition).getTableau();
 		CardView c1 = (CardView) rootView_.findViewById(R.id.BlueCard);
 		categoryToView_.put( CIVILIAN,  c1);
 		CardView c2 = (CardView) rootView_.findViewById(R.id.YellowCard);
@@ -79,7 +79,10 @@ public class GameScreenFragment extends Fragment {
 		}
 		
 		// Update player info
-		Player currentPlayer = ScreenSlidePagerAdapter.players_.get(position);
+		Player currentPlayer = ScreenSlidePagerAdapter.players_.get(playerPosition);
+		TextView name = (TextView) rootView_.findViewById(R.id.PlayerName);
+		name.setText(currentPlayer.username);
+		
 		TextView wonders = (TextView) rootView_.findViewById(R.id.WondersStaged);
 		wonders.setText("Wonders staged:" + currentPlayer.getWonderStaged());
 		
@@ -101,9 +104,9 @@ public class GameScreenFragment extends Fragment {
 		//		// Fixme: Implement me duc !
 		//		//player.canPlayWonder - in PlayerStateView - DONE
 		//		//player.civilisation - in PlayerStateView & ScoreBoardView - DONE
-		//		//player.wonderStaged - in PlayerStateView & ScoreBoardView
-		//		//player.coins - in ScoreBoardView ( & PlayerStateView )
-		//		//player.battleMarkers - in ScoreBoardView
+		//		//player.wonderStaged - in PlayerStateView & ScoreBoardView - DONE
+		//		//player.coins - in ScoreBoardView ( & PlayerStateView ) - DONE
+		//		//player.battleMarkers - in ScoreBoardView - DONE
 		//		//player.score - in ScoreBoardView
 
 		return rootView_;
@@ -119,13 +122,13 @@ public class GameScreenFragment extends Fragment {
 		return result;
 	}
 
-	private static final int BOARD_VIEW_WEIGHT = 3;
-	private static final int STATE_VIEW_WEIGHT = 2;
+	private static final int BOARD_VIEW_WEIGHT = 1;
+	private static final int STATE_VIEW_WEIGHT = 1;
 
-	private int position;
+	public int playerPosition;
 
 	private boolean isOpponent() {
-		return position != 0;
+		return playerPosition != (ScreenSlidePagerAdapter.players_.size()-1);
 	}
 
 }
