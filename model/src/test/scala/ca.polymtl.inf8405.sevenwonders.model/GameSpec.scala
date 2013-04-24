@@ -42,7 +42,7 @@ class GameSpec extends Specification {
 
       val game = Game(
         new Circle[Player]( babylon, ephesos, hali ),
-        Map( 1 -> MultiSet(DUMMY_CARD), 2 -> MultiSet(DUMMY_CARD) )
+        Map( 1 -> MultiSet() ,2 -> MultiSet(DUMMY_CARD), 3 -> MultiSet(DUMMY_CARD) )
       )
 
       game.players.getLeft(ephesos) ==== babylon
@@ -56,6 +56,10 @@ class GameSpec extends Specification {
         ephesos -> Build( GLASSWORKS ),
         hali -> Build( TIMBER_YARD )
       ))
+
+      game1.findPlayer( BABYLON_A ).coins ==== 2
+      game1.findPlayer( EPHESOS_B ).coins ==== 3
+      game1.findPlayer( HALIKARNASSOS_B ).coins ==== 2
 
       val game2 = game1.playTurn( Map(
         game1.findPlayer( BABYLON_A ) -> Build( WORKSHOP, MultiMap( Glass -> Right ) ),
@@ -86,6 +90,12 @@ class GameSpec extends Specification {
 
       game3.findPlayer( HALIKARNASSOS_B ).played ==== Set( TIMBER_YARD, BATHS, STOCKADE )
       game3.playableCards( game3.findPlayer( HALIKARNASSOS_B ) ) ==== Set( GUARD_TOWER, SCRIPTORIUM, ORE_VEIN, PRESS )
+
+      val game4 = game3.playTurn( Map(
+        game3.findPlayer( BABYLON_A ) -> Build( STONE_PIT, emptyTrade, wonder = true ),
+        game3.findPlayer( EPHESOS_B ) -> Build( LOOM ),
+        game3.findPlayer( HALIKARNASSOS_B ) -> Build( PRESS )
+      ))
     }
 
     "optionnal ressource when neighbor has it" in {
@@ -93,6 +103,24 @@ class GameSpec extends Specification {
       val gizah = Player( civilization = GIZAH_A, hand = hand1, coins = 3 , played = Set(CLAY_PIT))
 
       val hand2 = MultiSet[Card]( CLAY_POOL, APOTHECARY, WORKSHOP, MARKETPLACE, STOCKADE, GLASSWORKS)
+      val baby = Player( civilization = BABYLON_A, hand = hand2, coins = 3, played = Set(LOOM) )
+
+      val hand3 = MultiSet[Card]( TIMBER_YARD, ORE_VEIN, EAST_TRADING_POST, BATHS, SCRIPTORIUM, BARRACKS)
+      val hali = Player( civilization = HALIKARNASSOS_B, hand = hand3, coins = 3, played = Set(PRESS) )
+
+      val game = Game(
+        new Circle[Player]( gizah, baby, hali ),
+        Map( 1 -> MultiSet(DUMMY_CARD), 2 -> MultiSet(DUMMY_CARD) )
+      )
+
+      game.possibleTrades(gizah, GUARD_TOWER) ==== Set.empty
+    }
+
+    "ressource when neighbor has it" in {
+      val hand1 = MultiSet[Card]( WEST_TRADING_POST, THEATER, ALTAR, LUMBER_YARD, GUARD_TOWER, STONE_PIT )
+      val gizah = Player( civilization = GIZAH_A, hand = hand1, coins = 3 , played = Set(CLAY_POOL))
+
+      val hand2 = MultiSet[Card]( CLAY_PIT, APOTHECARY, WORKSHOP, MARKETPLACE, STOCKADE, GLASSWORKS)
       val baby = Player( civilization = BABYLON_A, hand = hand2, coins = 3, played = Set(LOOM) )
 
       val hand3 = MultiSet[Card]( TIMBER_YARD, ORE_VEIN, EAST_TRADING_POST, BATHS, SCRIPTORIUM, BARRACKS)

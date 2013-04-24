@@ -12,7 +12,7 @@ import protocol.TBinaryProtocol
 class Client( system: ActorSystem, probe: ActorRef, name: String, ignorePing: Boolean = true ) {
 
   val protocolFactory = new TBinaryProtocol.Factory
-  val transport = new TSocket(Config.ip, Config.port)
+  val transport = new TSocket("localhost", Config.port)
   val protocol = new TBinaryProtocol(transport)
 
   val sender = new SevenWondersApi.Client(protocol)

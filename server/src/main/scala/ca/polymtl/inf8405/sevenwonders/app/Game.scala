@@ -83,7 +83,7 @@ class GameImpl( system: ActorSystem ) extends TGame {
 
     val game = Game(
       new Circle[Player]( babylon, ephesos, hali ),
-      Map( 1 -> MultiSet(DUMMY_CARD), 2 -> MultiSet(DUMMY_CARD) )
+      Map( 1 -> MultiSet(), 2 -> MultiSet(DUMMY_CARD), 3 -> MultiSet(DUMMY_CARD) )
     )
 
     gameImpl = Some( game )

@@ -232,7 +232,9 @@ case class Player(
   }
 
   def possibleTrades(playable: PlayableElement, tradableProduction: Map[NeighborReference, Production]): Set[Trade] = {
-    possibleTradesWithEmptyTrade( playable, tradableProduction ).remove( emptyTrade )
+    val a = possibleTradesWithEmptyTrade( playable, tradableProduction )
+    if( a.contains( emptyTrade ) ) Set()
+    else a
   }
 
   def possibleTradesWithEmptyTrade(playable: PlayableElement, tradableProduction: Map[NeighborReference, Production]): Set[Trade] =

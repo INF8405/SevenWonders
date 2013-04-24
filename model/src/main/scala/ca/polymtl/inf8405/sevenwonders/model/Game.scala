@@ -73,7 +73,7 @@ case class Game(
       // During age I and III, we pass our hands to the player to our left, during age II, we pass our hand to the right
       val passHandLeft = currentAge == 1 || currentAge == 3
       // Let's pass the hands left or right
-      val nextTurnPlayers: Circle[Player] = players.map[Player](player => if (passHandLeft) player.copy(hand = player.left.hand) else player.copy(hand = player.right.hand))
+      val nextTurnPlayers: Circle[Player] = players.map[Player](player => if (passHandLeft) player.copy(hand = player.right.hand) else player.copy(hand = player.left.hand))
 
       this.copy(players = nextTurnPlayers, needsToGrabFromDiscardPile = None, needsToPlayLastCard = None)
     }
@@ -182,7 +182,7 @@ case class Game(
 
 case class GameDelta(playerDeltas: Map[Player, PlayerDelta], additionalDiscards: MultiSet[Card] = MultiSet()) {
   def +(other: GameDelta): GameDelta = {
-    val newPlayerDeltas: Map[Player, PlayerDelta] = playerDeltas.map{case (player, delta) => (player, other.playerDeltas(player) + delta)}
+    val newPlayerDeltas: Map[Player, PlayerDelta] = playerDeltas.map{case (player, delta) => (player, other.playerDeltas.get(player).map(_ + delta).getOrElse(delta))}
     val totalDiscards = additionalDiscards ++ other.additionalDiscards
     GameDelta(newPlayerDeltas, totalDiscards)
   }
