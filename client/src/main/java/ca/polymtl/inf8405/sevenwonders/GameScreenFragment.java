@@ -80,6 +80,9 @@ public class GameScreenFragment extends Fragment {
 		
 		// Update player info
 		Player currentPlayer = ScreenSlidePagerAdapter.players_.get(position);
+		TextView name = (TextView) rootView_.findViewById(R.id.PlayerName);
+		name.setText("");
+		
 		TextView wonders = (TextView) rootView_.findViewById(R.id.WondersStaged);
 		wonders.setText("Wonders staged:" + currentPlayer.getWonderStaged());
 		
@@ -101,9 +104,9 @@ public class GameScreenFragment extends Fragment {
 		//		// Fixme: Implement me duc !
 		//		//player.canPlayWonder - in PlayerStateView - DONE
 		//		//player.civilisation - in PlayerStateView & ScoreBoardView - DONE
-		//		//player.wonderStaged - in PlayerStateView & ScoreBoardView
-		//		//player.coins - in ScoreBoardView ( & PlayerStateView )
-		//		//player.battleMarkers - in ScoreBoardView
+		//		//player.wonderStaged - in PlayerStateView & ScoreBoardView - DONE
+		//		//player.coins - in ScoreBoardView ( & PlayerStateView ) - DONE
+		//		//player.battleMarkers - in ScoreBoardView - DONE
 		//		//player.score - in ScoreBoardView
 
 		return rootView_;
@@ -125,7 +128,7 @@ public class GameScreenFragment extends Fragment {
 	private int position;
 
 	private boolean isOpponent() {
-		return position != 0;
+		return position != (ScreenSlidePagerAdapter.players_.size()-1);
 	}
 
 }

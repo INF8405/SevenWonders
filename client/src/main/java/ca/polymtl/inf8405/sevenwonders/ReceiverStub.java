@@ -79,54 +79,6 @@ public class ReceiverStub extends Api {
                 emptyTrade
         );
 
-        /* Player 4 */
-        Player player4 = new Player(
-                emptyTableau,
-                OLYMPIA_A,
-                battleMarkersEmpty,
-                3,
-                0,
-                0,
-                false,
-                emptyTrade
-        );
-        
-        /* Player 5 */
-        Player player5 = new Player(
-                emptyTableau,
-                EPHESOS_A,
-                battleMarkersEmpty,
-                3,
-                0,
-                0,
-                false,
-                emptyTrade
-        );
-        
-        /* Player 6 */
-        Player player6 = new Player(
-                emptyTableau,
-                GIZAH_A,
-                battleMarkersEmpty,
-                3,
-                0,
-                0,
-                false,
-                emptyTrade
-        );
-        
-        /* Player 7 */
-        Player player7 = new Player(
-                emptyTableau,
-                BABYLON_A,
-                battleMarkersEmpty,
-                3,
-                0,
-                0,
-                false,
-                emptyTrade
-        );
-        
         GameState state = new GameState(
             new Hand( playables, unplayables ),
             new ArrayList<Player>(Arrays.asList(player1, player2, player3))
@@ -234,9 +186,60 @@ public class ReceiverStub extends Api {
                 emptyTrade
         );
         
+        Map<CardCategory,List<Card>> emptyTableau = new HashMap<CardCategory,List<Card>>();
+        List<Integer> battleMarkersEmpty = new LinkedList<Integer>();
+        /* Player 4 */
+        Player player4 = new Player(
+                emptyTableau,
+                OLYMPIA_A,
+                battleMarkersEmpty,
+                3,
+                0,
+                0,
+                false,
+                emptyTrade
+        );
+        
+        /* Player 5 */
+        Player player5 = new Player(
+                emptyTableau,
+                EPHESOS_A,
+                battleMarkersEmpty,
+                3,
+                0,
+                0,
+                false,
+                emptyTrade
+        );
+        
+        /* Player 6 */
+        Player player6 = new Player(
+                emptyTableau,
+                GIZAH_A,
+                battleMarkersEmpty,
+                3,
+                0,
+                0,
+                false,
+                emptyTrade
+        );
+        
+        /* Player 7 */
+        Player player7 = new Player(
+                emptyTableau,
+                BABYLON_A,
+                battleMarkersEmpty,
+                3,
+                0,
+                0,
+                false,
+                emptyTrade
+        );
+
+        
         GameState state = new GameState(
                 new Hand( playables, unplayables ),
-                new ArrayList<Player>(Arrays.asList(player1, player2, player3))
+                new ArrayList<Player>(Arrays.asList(player1, player2, player3, player4, player5, player6, player7))
         );
 
         try {
@@ -255,4 +258,5 @@ public class ReceiverStub extends Api {
     private List<Api> observers = new LinkedList<Api>();
     private static ReceiverStub instance = new ReceiverStub();
     private ReceiverStub() {}
+    
 }

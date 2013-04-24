@@ -65,7 +65,7 @@ public class GameScreenActivity extends FragmentActivity {
 			mPager = (ViewPager) findViewById(R.id.Pager);
 			mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), state.getPlayers());
 			mPager.setAdapter(mPagerAdapter);
-			mPager.setCurrentItem(100*state.getPlayersSize()); // Fixme : Magic number 100
+			mPager.setCurrentItem(2); // Fixme : Magic number 100 100*state.getPlayersSize()+
 			setState(state);
 		}
 	}
@@ -122,7 +122,6 @@ public class GameScreenActivity extends FragmentActivity {
                     mPager = (ViewPager) findViewById(R.id.Pager);
                     mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager(), state.getPlayers());
                     mPager.setAdapter(mPagerAdapter);
-                    mPager.setCurrentItem(100*state.getPlayersSize()); // Fixme : Magic number 100
                     setState(state);
                 }
             });
@@ -130,6 +129,7 @@ public class GameScreenActivity extends FragmentActivity {
 	}
 	
 	private void setState( final GameState state ) {
+		mPager.setCurrentItem(state.getPlayersSize() -1 + (50*state.getPlayersSize()));//Fixme : Magic number 50
 		mPagerAdapter.setState(state);
 		mPagerAdapter.notifyDataSetChanged();
 	}
