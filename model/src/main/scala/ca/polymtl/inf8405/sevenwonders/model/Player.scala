@@ -285,9 +285,8 @@ case class Player(
     this.copy(
       coins = coins + delta.coinDelta,
       played = played ++ delta.newCards,
-      stuff = stuff ++ delta.additionalStuff,
-      hand = hand -- delta.discards,
-      nbWonders = nbWonders + delta.additionalWonders,
+      stuff = stuff ++ delta.stuff,
+      nbWonders = nbWonders + delta.nbWonder,
       hasBuiltForFreeThisAge = hasBuiltForFreeThisAge || delta.builtForFree
     )
 
@@ -295,9 +294,8 @@ case class Player(
     PlayerDelta(
       newCards = played -- previous.played,
       coinDelta = coins - previous.coins,
-      additionalStuff = stuff -- previous.stuff,
-      discards = hand -- previous.hand,
-      additionalWonders = nbWonders - previous.nbWonders,
+      stuff = stuff -- previous.stuff,
+      nbWonder = nbWonders - previous.nbWonders,
       builtForFree = hasBuiltForFreeThisAge && !previous.hasBuiltForFreeThisAge
     )
 }

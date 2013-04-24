@@ -50,8 +50,12 @@ case class Game(
     val gameStateAfterResolvingCards = actions.foldLeft(newGameState) {
       (gameState, keyValue) =>
         keyValue match {
-          case (player, Build(card, trade, wonder)) if !wonder => card.resolve(gameState, player)
-          case (player, Build(card, trade, wonder)) if  wonder => {
+          case (actionPlayer, Build(card, trade, wonder)) if !wonder => {
+            val player = gameState.findPlayer(actionPlayer.civilization)
+            card.resolve(gameState, player)
+          }
+          case (actionPlayer, Build(card, trade, wonder)) if  wonder => {
+            val player = gameState.findPlayer(actionPlayer.civilization)
             val wonderStage = player.wonderStagesBuilt.last
             if (wonderStage.symbols.contains(GrabFromDiscardPile)) grabDiscard = Some(player)
             if (wonderStage.symbols.contains(PlayLastCardEachAge)) playLast = Some(player)
@@ -143,7 +147,7 @@ case class Game(
                 case 1 => MultiSet(winMarker)
                 case -1 => MultiSet(new DefeatBattleMarker)
               }
-            PlayerDelta(additionalStuff = battleMarker)
+            PlayerDelta(stuff = battleMarker)
         }
       else
         playersAtWar.createMap{
@@ -162,7 +166,7 @@ case class Game(
                 case -1 => MultiSet(new DefeatBattleMarker)
               }
 
-            PlayerDelta(additionalStuff = leftBattleMarker ++ rightBattleMarker)
+            PlayerDelta(stuff = leftBattleMarker ++ rightBattleMarker)
         }
     val discards = players.map[MultiSet[Card]](_.hand).reduce(_ ++ _)
     val afterWarAndDiscard = this + GameDelta(playerDeltas, discards)
@@ -174,7 +178,14 @@ case class Game(
     val updatedPlayers = players.map[Player]{
       player =>
         val playerDelta = delta.playerDeltas(player)
-        player.copy(coins = player.coins + playerDelta.coinDelta, played = player.played ++ playerDelta.newCards, hand = player.hand -- playerDelta.newCards)
+        player.copy(
+          played = player.played ++ playerDelta.newCards,
+          coins = player.coins + playerDelta.coinDelta,
+          stuff = player.stuff ++ playerDelta.stuff,
+          nbWonders = player.nbWonders + playerDelta.nbWonder,
+          hasBuiltForFreeThisAge = player.hasBuiltForFreeThisAge || playerDelta.builtForFree,
+          hand = player.hand -- playerDelta.newCards
+        )
     }
     Game(updatedPlayers, cards, discarded ++ delta.additionalDiscards)
   }
@@ -191,20 +202,18 @@ case class GameDelta(playerDeltas: Map[Player, PlayerDelta], additionalDiscards:
 }
 
 case class PlayerDelta(
-  discards: MultiSet[Card] = MultiSet(),
   newCards: Set[Card] = Set(),
   coinDelta: Int = 0,
-  additionalStuff: MultiSet[GameElement] = MultiSet(),
-  additionalWonders: Int = 0,
+  stuff: MultiSet[GameElement] = MultiSet(),
+  nbWonder: Int = 0,
   builtForFree: Boolean = false) {
 
   def +(other: PlayerDelta): PlayerDelta =
     PlayerDelta(
-      discards ++ other.discards,
       newCards ++ other.newCards,
       coinDelta + other.coinDelta,
-      additionalStuff ++ other.additionalStuff,
-      additionalWonders + other.additionalWonders,
-      builtForFree || builtForFree
+      stuff ++ other.stuff,
+      nbWonder + other.nbWonder,
+      builtForFree || other.builtForFree
     )
 }
