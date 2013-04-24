@@ -87,5 +87,9 @@ class GameSpec extends Specification {
       game3.findPlayer( HALIKARNASSOS_B ).played ==== Set( TIMBER_YARD, BATHS, STOCKADE )
       game3.playableCards( game3.findPlayer( HALIKARNASSOS_B ) ) ==== Set( GUARD_TOWER, SCRIPTORIUM, ORE_VEIN, PRESS )
     }
+
+//    "optionnal ressource when neighbor has it" in {
+//
+//    }
   }
 }
