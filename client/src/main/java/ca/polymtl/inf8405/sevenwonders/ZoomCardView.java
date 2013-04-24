@@ -1,6 +1,7 @@
 package ca.polymtl.inf8405.sevenwonders;
 
 import ca.polymtl.inf8405.sevenwonders.api.NeighborReference;
+import ca.polymtl.inf8405.sevenwonders.api.Player;
 import ca.polymtl.inf8405.sevenwonders.api.Resource;
 import ca.polymtl.inf8405.sevenwonders.controller.CardLoader;
 import ca.polymtl.inf8405.sevenwonders.controller.OnFlingGestureListener;
@@ -28,7 +29,7 @@ public class ZoomCardView extends RelativeLayout{
 	private OnFlingGestureListener flingGesture_;
 	private List<CardInfo> allCards_;
 	private int current_; // current card id
-	Button playButton_;
+	private Button playButton_;
 
 	// Test - TO REMOVE
 	private TextView text;
@@ -136,10 +137,8 @@ public class ZoomCardView extends RelativeLayout{
 					public boolean onTouch(View arg0, MotionEvent event) {
 						int action = event.getActionMasked();
 						if (action == MotionEvent.ACTION_DOWN){
-							// Fixme: Show the trade popup for wonders
-							//showTradePopup();
-							// Fixme: PlayWonder
-							//playWonder();
+							List<Player> allPlayers = ScreenSlidePagerAdapter.players_;
+							showTradePopup(allPlayers.get(allPlayers.size() - 1).wonderTrades, true);
 							closeMe();
 						}
 						return false;

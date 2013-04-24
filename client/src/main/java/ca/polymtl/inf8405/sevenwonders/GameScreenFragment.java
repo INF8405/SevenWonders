@@ -30,7 +30,7 @@ public class GameScreenFragment extends Fragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Bundle args = getArguments();
-		position = args.getInt("position");
+		playerPosition = args.getInt("position");
 	}
 
 	@Override
@@ -58,12 +58,12 @@ public class GameScreenFragment extends Fragment {
 			cards.add(new CardInfo(c));
 		}
 		handView.setCards(cards);
-		handView.setPlayer(ScreenSlidePagerAdapter.players_.get(position));
+		handView.setPlayer(ScreenSlidePagerAdapter.players_.get(playerPosition));
 
 		if (isOpponent()){ handView.setAlpha((float)0.5); }
 
 		// Update board view
-		Map<CardCategory, List<Card>> cardsOnBoard = ScreenSlidePagerAdapter.players_.get(position).getTableau();
+		Map<CardCategory, List<Card>> cardsOnBoard = ScreenSlidePagerAdapter.players_.get(playerPosition).getTableau();
 		CardView c1 = (CardView) rootView_.findViewById(R.id.BlueCard);
 		categoryToView_.put( CIVILIAN,  c1);
 		CardView c2 = (CardView) rootView_.findViewById(R.id.YellowCard);
@@ -79,7 +79,7 @@ public class GameScreenFragment extends Fragment {
 		}
 		
 		// Update player info
-		Player currentPlayer = ScreenSlidePagerAdapter.players_.get(position);
+		Player currentPlayer = ScreenSlidePagerAdapter.players_.get(playerPosition);
 		TextView name = (TextView) rootView_.findViewById(R.id.PlayerName);
 		name.setText(currentPlayer.username);
 		
@@ -125,10 +125,10 @@ public class GameScreenFragment extends Fragment {
 	private static final int BOARD_VIEW_WEIGHT = 3;
 	private static final int STATE_VIEW_WEIGHT = 2;
 
-	private int position;
+	public int playerPosition;
 
 	private boolean isOpponent() {
-		return position != (ScreenSlidePagerAdapter.players_.size()-1);
+		return playerPosition != (ScreenSlidePagerAdapter.players_.size()-1);
 	}
 
 }

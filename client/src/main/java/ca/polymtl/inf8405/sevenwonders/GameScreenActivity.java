@@ -78,14 +78,18 @@ public class GameScreenActivity extends FragmentActivity {
 	}
 
 	public static void play(Card card, Map<Resource, List<NeighborReference>> trade, boolean wonder ) {
-		try {
-			if( wonder ) {
-				Sender.getInstance().s_playWonder( card, trade );
-			} else {
-				Sender.getInstance().s_playCard( card, trade );
-			}
-		} catch ( TException e ){
-			Log.e("Game", e.getMessage() );
+		if (MainActivity.DEBUG_MODE){
+			Log.e("GameScreenActivity", "Play card: " + card.toString() + " - wonders:" + wonder);
+		} else {
+			try {
+				if( wonder ) {
+					Sender.getInstance().s_playWonder( card, trade );
+				} else {
+					Sender.getInstance().s_playCard( card, trade );
+				}
+			} catch ( TException e ){
+				Log.e("Game", e.getMessage() );
+			}	
 		}
 	}
 
