@@ -176,9 +176,7 @@ case class Game(
 
   def +(delta: GameDelta): Game = {
     val updatedPlayers = players.map[Player]{
-      player =>
-        val playerDelta = delta.playerDeltas(player)
-        player + playerDelta
+      player => delta.playerDeltas.get(player).map( player + _ ).getOrElse( player )
     }
     Game(updatedPlayers, cards, discarded ++ delta.additionalDiscards)
   }
@@ -186,7 +184,10 @@ case class Game(
 
 case class GameDelta(playerDeltas: Map[Player, PlayerDelta], additionalDiscards: MultiSet[Card] = MultiSet()) {
   def +(other: GameDelta): GameDelta = {
-    val newPlayerDeltas: Map[Player, PlayerDelta] = playerDeltas.map{case (player, delta) => (player, other.playerDeltas.get(player).map(_ + delta).getOrElse(delta))}
+    val newPlayerDeltas: Map[Player, PlayerDelta] = {
+      // todo: Join two maps
+      playerDeltas ++ other.playerDeltas.map{ case ( player, delta) => ( player, playerDeltas.get(player).map( _ + delta).getOrElse(delta) ) }
+    }
     val totalDiscards = additionalDiscards ++ other.additionalDiscards
     GameDelta(newPlayerDeltas, totalDiscards)
   }
