@@ -223,6 +223,11 @@ class PlayerSpec extends Specification with defaults {
       player.militaryStrength === 8
     }
 
+    "evolutions" in {
+      val player = Player(civilization = RHODOS_B, played = Set(BATHS, ALTAR, MARKETPLACE, WORKSHOP))
+      player.availableEvolutions ==== Set(AQUEDUCT, TEMPLE, CARAVANSERY, LABORATORY, ARCHERY_RANGE)
+    }
+
     "score" in {
       defaultPlayer.score(Map()) === 7
     }
