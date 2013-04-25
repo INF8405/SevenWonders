@@ -283,8 +283,9 @@ case class Player(
 
   def +(delta: PlayerDelta) =
     this.copy(
-      coins = coins + delta.coinDelta,
+      hand = hand -- delta.consumed,
       played = played ++ delta.newCards,
+      coins = coins + delta.coinDelta,
       stuff = stuff ++ delta.stuff,
       nbWonders = nbWonders + delta.nbWonder,
       hasBuiltForFreeThisAge = hasBuiltForFreeThisAge || delta.builtForFree
@@ -292,6 +293,7 @@ case class Player(
 
   def -(previous: Player): PlayerDelta =
     PlayerDelta(
+      consumed = previous.hand -- hand,
       newCards = played -- previous.played,
       coinDelta = coins - previous.coins,
       stuff = stuff -- previous.stuff,

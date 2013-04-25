@@ -11,7 +11,7 @@ import collection.Circle
 
 import org.specs2.mutable._
 
-// test-only ca.polymtl.inf8405.sevenwonders.model.GameSpec
+// Model/test-only ca.polymtl.inf8405.sevenwonders.model.GameSpec
 class GameSpec extends Specification {
 
   val defaultHand1: MultiSet[Card] = MultiSet(TAVERN, STOCKADE, MINE, LOOM, PRESS)
@@ -30,6 +30,11 @@ class GameSpec extends Specification {
       game.currentAge === 1
     }
 
+    "current age with begin game" in {
+      val game = SevenWonders.beginGame(3)
+      game.currentAge ==== 1
+    }
+
     "bug1" in {
       val hand1 = MultiSet[Card]( WEST_TRADING_POST, THEATER, ALTAR, LUMBER_YARD, BATHS, STONE_PIT, CLAY_PIT )
       val babylon = Player( civilization = BABYLON_A, hand = hand1, coins = 3 )
@@ -42,7 +47,7 @@ class GameSpec extends Specification {
 
       val game = Game(
         new Circle[Player]( babylon, ephesos, hali ),
-        Map( 1 -> MultiSet() ,2 -> MultiSet(DUMMY_CARD), 3 -> MultiSet(DUMMY_CARD) )
+        Map( 1 -> MultiSet() ,2 -> normalBaseCards(2)(3), 3 -> normalBaseCards(3)(3) )
       )
 
       game.players.getLeft(ephesos) ==== babylon
@@ -59,6 +64,7 @@ class GameSpec extends Specification {
 
       game1.findPlayer( BABYLON_A ).coins ==== 2
       game1.findPlayer( EPHESOS_B ).coins ==== 3
+      assert( game1.playableCards( game1.findPlayer( EPHESOS_B ) ).contains( SCRIPTORIUM ) )
       game1.findPlayer( HALIKARNASSOS_B ).coins ==== 2
 
       val game2 = game1.playTurn( Map(
@@ -68,7 +74,9 @@ class GameSpec extends Specification {
       ))
 
       game2.findPlayer( BABYLON_A ).played ==== Set( CLAY_PIT, WORKSHOP )
-      game2.playableCards( game2.findPlayer( BABYLON_A ) ) ==== Set(GUARD_TOWER, ORE_VEIN, PRESS, BARRACKS)
+      val baby2 = game2.findPlayer( BABYLON_A )
+      game2.playableCards( baby2 ) ==== Set(GUARD_TOWER, ORE_VEIN, PRESS, BARRACKS ) // Cannot play SCRIPTORIUM
+      baby2.hand ==== MultiSet( GUARD_TOWER, ORE_VEIN, PRESS, BARRACKS, SCRIPTORIUM )
 
       game2.findPlayer( EPHESOS_B ).played ==== Set( GLASSWORKS, EAST_TRADING_POST )
       game2.playableCards( game2.findPlayer( EPHESOS_B ) ) ==== Set(ALTAR, THEATER, STONE_PIT, LUMBER_YARD, WEST_TRADING_POST)
@@ -96,6 +104,58 @@ class GameSpec extends Specification {
         game3.findPlayer( EPHESOS_B ) -> Build( LOOM ),
         game3.findPlayer( HALIKARNASSOS_B ) -> Build( PRESS )
       ))
+
+      val baby4 = game4.findPlayer( BABYLON_A )
+      game4.playableCards( baby4 ) ==== Set( CLAY_POOL, MARKETPLACE )
+      baby4.hand ==== MultiSet( CLAY_POOL, APOTHECARY, MARKETPLACE )
+      baby4.played ==== Set( BARRACKS, CLAY_PIT, WORKSHOP )
+      baby4.nbWonders ==== 1
+
+      val ephesos4 = game4.findPlayer( EPHESOS_B )
+      ephesos4.played ==== Set( LOOM, GLASSWORKS, EAST_TRADING_POST, WEST_TRADING_POST )
+      game4.playableCards( ephesos4 ) ==== Set( SCRIPTORIUM, GUARD_TOWER, ORE_VEIN )
+      ephesos4.coins ==== 5
+
+      game4.findPlayer( HALIKARNASSOS_B ).played ==== Set( TIMBER_YARD, BATHS, STOCKADE, PRESS )
+      game4.playableCards( game4.findPlayer( HALIKARNASSOS_B ) ) ==== Set(ALTAR, THEATER, LUMBER_YARD )
+
+      val game5 = game4.playTurn( Map(
+        game4.findPlayer( BABYLON_A ) -> Build( MARKETPLACE ),
+        game4.findPlayer( EPHESOS_B ) -> Discard( ORE_VEIN ),
+        game4.findPlayer( HALIKARNASSOS_B ) -> Discard( LUMBER_YARD )
+      ))
+
+      game5.discarded ==== MultiSet( ORE_VEIN, LUMBER_YARD )
+      game5.findPlayer( EPHESOS_B ).coins ==== 8
+      game5.findPlayer( HALIKARNASSOS_B  ).coins ==== 5
+
+      val game_age2_1 = game5.playTurn( Map(
+        game5.findPlayer( BABYLON_A ) -> Build( GUARD_TOWER ),
+        game5.findPlayer( EPHESOS_B ) -> Build( ALTAR ),
+        game5.findPlayer( HALIKARNASSOS_B ) -> Build( APOTHECARY )
+      ))
+
+      game_age2_1.discarded ==== MultiSet(ORE_VEIN, LUMBER_YARD, CLAY_POOL, THEATER, SCRIPTORIUM)
+
+      val baby_2_1 = game_age2_1.findPlayer( BABYLON_A )
+      val ephesos_2_1 = game_age2_1.findPlayer( EPHESOS_B )
+      val hali_2_1 = game_age2_1.findPlayer( HALIKARNASSOS_B )
+
+      baby_2_1.stuff ==== MultiSet(VictoryBattleMarker(1), VictoryBattleMarker(1))
+      ephesos_2_1.stuff ==== MultiSet(new DefeatBattleMarker, new DefeatBattleMarker)
+      hali_2_1.stuff ==== MultiSet(new DefeatBattleMarker, VictoryBattleMarker(1))
+
+      val baby_2_1mod = baby_2_1.copy( hand = MultiSet( CARAVANSERY, VINEYARD, STATUE, ARCHERY_RANGE, DISPENSARY, WALLS, FOUNDRY ) )
+      val ephesos_2_1mod = ephesos_2_1.copy( hand = MultiSet( LABORATORY, LIBRARY, STABLES, TEMPLE, AQUEDUCT, COURTHOUSE, FORUM ) )
+      val hali_2_1mod = hali_2_1.copy( hand = MultiSet( SCHOOL, GLASSWORKS, BRICKYARD, LOOM, QUARRY, SAWMILL, PRESS ) )
+
+      val game_age2_1mod = game_age2_1.copy( players = new Circle[Player]( baby_2_1mod, ephesos_2_1mod, hali_2_1mod ) )
+
+//      val game_age2_2 = game_age2_1mod.playTurn( Map(
+//        game_age2_1mod.findPlayer( BABYLON_A ) -> Build( ),
+//        game_age2_1mod.findPlayer( EPHESOS_B ) -> Build( ),
+//        game_age2_1mod.findPlayer( HALIKARNASSOS_B ) -> Build( )
+//      ))
     }
 
     "optionnal ressource when neighbor has it" in {

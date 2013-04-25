@@ -131,7 +131,7 @@ case class Game(
     val hands: Iterator[MultiSet[Card]] = shuffledNextAgeCards.grouped(7).map(_.toMultiSet)
     // Let's give each player his new hand as well as indicate that they have all not built for free this age yet
     val updatedPlayers = players.map[Player]{ player => player.copy(hand = hands.next(), hasBuiltForFreeThisAge = false) }
-    Game(updatedPlayers, cards.updated(currentAge, MultiSet()), discarded)
+    Game(updatedPlayers, cards.updated(currentAge + 1, MultiSet()), discarded)
   }
 
   def endAge(): Game = {
@@ -171,21 +171,14 @@ case class Game(
     val discards = players.map[MultiSet[Card]](_.hand).reduce(_ ++ _)
     val afterWarAndDiscard = this + GameDelta(playerDeltas, discards)
     // Let's remove one diplomacyToken from all players (if they don't have one they stay at zero)
-    afterWarAndDiscard.copy(players = players.map[Player](_.removeDiplomacyToken))
+    afterWarAndDiscard.copy(players = afterWarAndDiscard.players.map[Player](_.removeDiplomacyToken))
   }
 
   def +(delta: GameDelta): Game = {
     val updatedPlayers = players.map[Player]{
       player =>
         val playerDelta = delta.playerDeltas(player)
-        player.copy(
-          played = player.played ++ playerDelta.newCards,
-          coins = player.coins + playerDelta.coinDelta,
-          stuff = player.stuff ++ playerDelta.stuff,
-          nbWonders = player.nbWonders + playerDelta.nbWonder,
-          hasBuiltForFreeThisAge = player.hasBuiltForFreeThisAge || playerDelta.builtForFree,
-          hand = player.hand -- playerDelta.newCards
-        )
+        player + playerDelta
     }
     Game(updatedPlayers, cards, discarded ++ delta.additionalDiscards)
   }
@@ -202,6 +195,7 @@ case class GameDelta(playerDeltas: Map[Player, PlayerDelta], additionalDiscards:
 }
 
 case class PlayerDelta(
+  consumed: MultiSet[Card] = MultiSet(),
   newCards: Set[Card] = Set(),
   coinDelta: Int = 0,
   stuff: MultiSet[GameElement] = MultiSet(),
@@ -210,6 +204,7 @@ case class PlayerDelta(
 
   def +(other: PlayerDelta): PlayerDelta =
     PlayerDelta(
+      consumed ++ other.consumed,
       newCards ++ other.newCards,
       coinDelta + other.coinDelta,
       stuff ++ other.stuff,
