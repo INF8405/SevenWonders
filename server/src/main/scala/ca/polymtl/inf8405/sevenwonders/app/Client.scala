@@ -94,6 +94,8 @@ class ClientImpl( transport: TTransport, lobby: Lobby, dispatch: Dispatcher, sys
       u <- user
       g <- game } {
 
+      println( s"${u.username} played ${card.toString}")
+
       g.playCard( u, card, trade )
     }
   }
@@ -117,6 +119,7 @@ class ClientImpl( transport: TTransport, lobby: Lobby, dispatch: Dispatcher, sys
 
   def disconnect() {
     // todo: do something
+    user.map( u => println(s"$u got disconnected"))
   }
 
   def s_pong() {
@@ -150,6 +153,7 @@ class ClientImpl( transport: TTransport, lobby: Lobby, dispatch: Dispatcher, sys
     client.c_begin( state )
   }
   def c_sendState(state: GameState) {
+    println("send state")
     client.c_sendState( state )
   }
   def c_sendEndState(state: GameState, detail: JList[JMap[String, Integer]]) {

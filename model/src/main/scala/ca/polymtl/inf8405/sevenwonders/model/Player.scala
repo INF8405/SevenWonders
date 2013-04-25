@@ -117,6 +117,8 @@ case class Player(
     if (hasDiplomacy) this.copy(stuff = stuff - new DiplomacyToken)
     else this
 
+  def clearHand: Player = copy( hand = MultiSet() )
+
   def militaryStrength: Int = allSymbols.filter(_.isInstanceOf[MilitarySymbol]).map(_.asInstanceOf[MilitarySymbol]).map(_.strength).sum
 
   def score(neighborStuff: Map[NeighborReference, MultiSet[GameElement]]): Int =
@@ -170,7 +172,7 @@ case class Player(
   def wondersScore(neighborStuff: Map[NeighborReference, MultiSet[GameElement]]): Int =
     if (wonderStagesBuilt.isEmpty) 0
     else {
-      val standardPoints = calculateVictoryPoints(wonderStagesBuilt.asInstanceOf[MultiSet[PlayableElement]], neighborStuff)
+      val standardPoints = calculateVictoryPoints(MultiSet(wonderStagesBuilt:_*), neighborStuff)
       val (pointsFromCopyGuildCard, usedScienceGuildCard) = copyGuildCardBonus(neighborStuff)
       standardPoints + (if (usedScienceGuildCard) 0 else pointsFromCopyGuildCard)
     }

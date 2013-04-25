@@ -29,6 +29,9 @@ case class Game(
     players.find( _.civilization == by ).get
   }
 
+  def score( player: Player ) =
+    player.score( getNeighboorsStuff(player) )
+
   def possibleWonderTrades( player: Player ) =
     player.possibleTrades( player.nextWonderStage, getNeighborProductions(player) )
 
@@ -124,6 +127,11 @@ case class Game(
     }
   }
 
+  def isDone = {
+    currentAge == 3 &&
+    players.forall( _.hand.isEmpty )
+  }
+
   def currentAge = cards.keys.toList.reverse.find(cards(_).isEmpty).getOrElse(0)
 
   def beginAge(): Game = {
@@ -170,8 +178,11 @@ case class Game(
         }
     val discards = players.map[MultiSet[Card]](_.hand).reduce(_ ++ _)
     val afterWarAndDiscard = this + GameDelta(playerDeltas, discards)
+
+    val ditchHand = afterWarAndDiscard.players.map[Player]( _.clearHand )
+
     // Let's remove one diplomacyToken from all players (if they don't have one they stay at zero)
-    afterWarAndDiscard.copy(players = afterWarAndDiscard.players.map[Player](_.removeDiplomacyToken))
+    afterWarAndDiscard.copy(players = ditchHand.map[Player](_.removeDiplomacyToken) )
   }
 
   def +(delta: GameDelta): Game = {
