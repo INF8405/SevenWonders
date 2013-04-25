@@ -14,7 +14,7 @@ import android.widget.Toast;
 import org.apache.thrift.TException;
 
 public class LogInActivity extends Activity {
-	private EditText userNameBox_;
+    private String username = "";
 	public static String USER_NAME_MESSAGE="userName";
 
 	public LogInActivity(){
@@ -31,7 +31,7 @@ public class LogInActivity extends Activity {
 
 	public void addKeyListener() {
 		// get edittext component
-		userNameBox_ = (EditText) findViewById(R.id.user_name);
+        final EditText userNameBox_ = (EditText) findViewById(R.id.user_name);
 
 		// add a keylistener to keep track user input
 		userNameBox_.setOnKeyListener(new OnKeyListener() {
@@ -42,7 +42,8 @@ public class LogInActivity extends Activity {
 						&& (keyCode == KeyEvent.KEYCODE_ENTER)) {
 
                     try {
-                        Sender.getInstance().s_connect( userNameBox_.getText().toString() );
+                        username = userNameBox_.getText().toString();
+                        Sender.getInstance().s_connect( username );
                     } catch ( TException e ) {
                         Log.wtf("login", e.getMessage());
                     }
@@ -61,11 +62,11 @@ public class LogInActivity extends Activity {
                 public void run() {
                     if( connected ) {
                         Intent intent = new Intent(LogInActivity.this, ListGameRoomActivity.class);
-                        intent.putExtra(USER_NAME_MESSAGE, userNameBox_.getText().toString());
+                        intent.putExtra(USER_NAME_MESSAGE, username);
                         startActivity(intent);
                         finish();
                     } else {
-                        Toast.makeText(LogInActivity.this, "connection failed: " + userNameBox_.getText(),
+                        Toast.makeText(LogInActivity.this, "connection failed: " + username,
                             Toast.LENGTH_LONG).show();
                     }
                 }
