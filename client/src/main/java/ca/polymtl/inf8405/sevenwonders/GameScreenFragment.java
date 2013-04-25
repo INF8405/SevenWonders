@@ -89,6 +89,9 @@ public class GameScreenFragment extends Fragment {
 		TextView coins = (TextView) rootView_.findViewById(R.id.CoinsTextView);
 		coins.setText("" + currentPlayer.coins);
 		
+		TextView score = (TextView) rootView_.findViewById(R.id.CurrentScore);
+		score.setText("Score:" + currentPlayer.score);
+		
 		int[] battleMarkerPoint = {1,3,5,-1};
 		Map<Integer, Integer> battleMarkers = new HashMap<Integer, Integer>(4);
 		for (int i: battleMarkerPoint){
