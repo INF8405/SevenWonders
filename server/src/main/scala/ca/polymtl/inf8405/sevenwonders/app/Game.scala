@@ -124,6 +124,7 @@ class GameImpl( system: ActorSystem ) extends TGame {
 
     import utils.Utils._
 
+    println( s"${actions.size} == ${gameImpl.get.players.size}")
     if( actions.size == gameImpl.get.players.size ) {
       val gameActions = actions.mapKeys( usersPlayers )
       val game = gameImpl.get.playTurn(gameActions)
@@ -134,9 +135,18 @@ class GameImpl( system: ActorSystem ) extends TGame {
       // the game updated the players references
       usersPlayers = usersPlayers.mapValues( oldPlayer => game.findPlayer( oldPlayer.civilization ) )
 
-      usersPlayers.foreach{ case ( client, player ) => {
-        client.api.c_sendState( toThriftState( player, game ) )
-      }}
+      if( !game.isDone ) {
+        usersPlayers.foreach{ case ( client, player ) => {
+          client.api.c_sendState( toThriftState( player, game ) )
+        }}
+      } else {
+        val empty = new java.util.ArrayList[java.util.Map[String,Integer]] {}
+
+        usersPlayers.foreach{ case ( client, player ) => {
+          client.api.c_sendEndState( toThriftState( player, game ), empty )
+        }}
+      }
+
 
       actions = Map.empty[User,Action]
       gameImpl = Some( game )
@@ -167,7 +177,7 @@ class GameImpl( system: ActorSystem ) extends TGame {
 
       val tableau: JMap[CardCategory,JList[TCard]] =
         player.played.groupBy( _.getClass ).map{ case ( ( clazz, cards ) ) => {
-          ( bridgeCategory(clazz), (cards.map( card => TCard.valueOf( card.name ) ).toList): JList[TCard] )
+          ( bridgeCategory(clazz), (cards.map( card => cardsBridge.inverse().get(card) ).toList): JList[TCard] )
         }}
 
       // find username
@@ -202,7 +212,7 @@ class GameImpl( system: ActorSystem ) extends TGame {
     val ( before, me :: after ) = game.players.toList.span( _ != player )
     val players = me :: before.reverse ::: after.reverse
 
-    val unplayables = (player.hand -- playableCards).map( card => TCard.valueOf( card.name ) ).toList : JList[TCard]
+    val unplayables = (player.hand -- playableCards).map( card => cardsBridge.inverse().get(card) ).toList : JList[TCard]
 
     new TGameState(
       new Hand( tPlayables, unplayables ),

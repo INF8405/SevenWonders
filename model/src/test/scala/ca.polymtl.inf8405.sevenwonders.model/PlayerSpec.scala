@@ -43,7 +43,8 @@ class PlayerSpec extends Specification with defaults {
     }
 
     "buildForFree" in {
-      pending
+      val hand = MultiSet(GUARD_TOWER, CLAY_POOL)
+      val player = Player(civilization = OLYMPIA_A, nbWonders = 1)
     }
 
     "canBuildForFree" in {
@@ -223,6 +224,11 @@ class PlayerSpec extends Specification with defaults {
       player.militaryStrength === 8
     }
 
+    "evolutions" in {
+      val player = Player(civilization = RHODOS_B, played = Set(BATHS, ALTAR, MARKETPLACE, WORKSHOP))
+      player.availableEvolutions ==== Set(AQUEDUCT, TEMPLE, CARAVANSERY, LABORATORY, ARCHERY_RANGE)
+    }
+
     "score" in {
       defaultPlayer.score(Map()) === 7
     }
@@ -272,6 +278,14 @@ class PlayerSpec extends Specification with defaults {
         4
       )
       player.commerceScore === 5 + 4 + 4 + 1
+    }
+
+    "possibleTrades" in {
+      val player = Player(civilization = GIZAH_A, played = Set(BATHS, TIMBER_YARD), coins = 3)
+     Set(STONE_PIT, STOCKADE)
+      Set(ALTAR, MARKETPLACE)
+
+      player.possibleTrades(AQUEDUCT, Map[NeighborReference, Production](Left -> Stone)) ==== Set()
     }
   }
 }

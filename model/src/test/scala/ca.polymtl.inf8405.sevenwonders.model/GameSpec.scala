@@ -93,6 +93,8 @@ class GameSpec extends Specification {
       game3.findPlayer( BABYLON_A ).played ==== Set( CLAY_PIT, WORKSHOP, BARRACKS )
       game3.playableCards( game3.findPlayer( BABYLON_A ) ) ==== Set( ALTAR, THEATER, STONE_PIT, LUMBER_YARD )
 
+      val beforeScore = game3.score( game3.findPlayer( BABYLON_A ) )
+
       game3.findPlayer( EPHESOS_B ).played ==== Set( GLASSWORKS, EAST_TRADING_POST, WEST_TRADING_POST )
       game3.playableCards( game3.findPlayer( EPHESOS_B ) ) ==== Set( CLAY_POOL, MARKETPLACE, APOTHECARY, LOOM )
 
@@ -110,6 +112,9 @@ class GameSpec extends Specification {
       baby4.hand ==== MultiSet( CLAY_POOL, APOTHECARY, MARKETPLACE )
       baby4.played ==== Set( BARRACKS, CLAY_PIT, WORKSHOP )
       baby4.nbWonders ==== 1
+
+      val afterScore = game4.score( game4.findPlayer( BABYLON_A ) )
+      assert( beforeScore < afterScore )
 
       val ephesos4 = game4.findPlayer( EPHESOS_B )
       ephesos4.played ==== Set( LOOM, GLASSWORKS, EAST_TRADING_POST, WEST_TRADING_POST )

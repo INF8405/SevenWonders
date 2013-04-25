@@ -2,10 +2,9 @@ package ca.polymtl.inf8405.sevenwonders
 package app
 
 import ca.polymtl.inf8405.sevenwonders.api._
-import ApiHelper._
 
 import akka.actor._
-import org.apache.thrift.transport.{TSocket, TTransport}
+import org.apache.thrift.transport.TTransport
 
 import scala.concurrent.duration._
 import org.apache.thrift.TException
@@ -39,9 +38,6 @@ class DispatcherImpl(
    * so we can communicate in both directions
    */
   def getOrAddProcessor( transport: TTransport ) = {
-    val socket = transport.asInstanceOf[TSocket]
-    val ip = socket.getSocket.getInetAddress
-
     if ( clients.contains( transport ) ) {
       clients( transport ).processor
     } else {
