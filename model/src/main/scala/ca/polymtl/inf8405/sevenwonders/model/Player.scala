@@ -235,7 +235,11 @@ case class Player(
 
   def possibleTrades(playable: PlayableElement, tradableProduction: Map[NeighborReference, Production]): Set[Trade] = {
     val a = possibleTradesWithEmptyTrade( playable, tradableProduction )
-    if( a.contains( emptyTrade ) ) Set()
+    val isEvolution = playable match {
+      case card: Card => availableEvolutions.contains(card)
+      case _ => false
+    }
+    if( a.contains( emptyTrade ) || isEvolution ) Set()
     else a
   }
 

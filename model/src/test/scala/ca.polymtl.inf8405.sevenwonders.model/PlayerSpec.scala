@@ -43,7 +43,8 @@ class PlayerSpec extends Specification with defaults {
     }
 
     "buildForFree" in {
-      pending
+      val hand = MultiSet(GUARD_TOWER, CLAY_POOL)
+      val player = Player(civilization = OLYMPIA_A, nbWonders = 1)
     }
 
     "canBuildForFree" in {
@@ -277,6 +278,14 @@ class PlayerSpec extends Specification with defaults {
         4
       )
       player.commerceScore === 5 + 4 + 4 + 1
+    }
+
+    "possibleTrades" in {
+      val player = Player(civilization = GIZAH_A, played = Set(BATHS, TIMBER_YARD), coins = 3)
+     Set(STONE_PIT, STOCKADE)
+      Set(ALTAR, MARKETPLACE)
+
+      player.possibleTrades(AQUEDUCT, Map[NeighborReference, Production](Left -> Stone)) ==== Set()
     }
   }
 }
