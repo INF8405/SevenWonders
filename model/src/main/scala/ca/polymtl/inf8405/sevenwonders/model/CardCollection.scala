@@ -22,9 +22,9 @@ object CardCollection {
   lazy val GUARD_TOWER = MilitaryCard("GUARD_TOWER", Cost(0, MultiSet(Clay)), Set(), 1)
 
   // Science Cards
-  lazy val WORKSHOP = ScienceCard("WORKSHOP", Cost(0, MultiSet(Glass)), evol = Set(LABORATORY, ARCHERY_RANGE), Gear)
-  lazy val SCRIPTORIUM = ScienceCard("SCRIPTORIUM", Cost(0, MultiSet(Paper)), evol = Set(COURTHOUSE, LIBRARY), Tablet)
-  lazy val APOTHECARY = ScienceCard("APOTHECARY", Cost(0, MultiSet(Tapestry)), evol = Set(STABLES, DISPENSARY), Compass)
+  lazy val WORKSHOP = ScienceCard("WORKSHOP", Cost(0, MultiSet(Glass)), Set(LABORATORY, ARCHERY_RANGE), Gear)
+  lazy val SCRIPTORIUM = ScienceCard("SCRIPTORIUM", Cost(0, MultiSet(Paper)), Set(COURTHOUSE, LIBRARY), Tablet)
+  lazy val APOTHECARY = ScienceCard("APOTHECARY", Cost(0, MultiSet(Tapestry)), Set(STABLES, DISPENSARY), Compass)
 
   // Civilian Cards
   lazy val THEATER = CivilianCard("THEATER", Free, Set(STATUE), 2)
