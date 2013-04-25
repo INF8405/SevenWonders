@@ -83,7 +83,7 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
         map.setOnMarkerClickListener( new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                if( null != createGameMarker && marker.getId().equals(createGameMarker.getId())) {
+                if( null != createGameMarker && marker.getId().equals(createGameMarker.getId()) ) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(ListGameRoomActivity.this);
                     builder.setMessage("Create a new game?")
                             .setPositiveButton("Create", createGame)
@@ -144,10 +144,6 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
             switch (which){
                 case DialogInterface.BUTTON_POSITIVE:
 
-                    Intent intent = new Intent(ListGameRoomActivity.this, GameRoomActivity.class);
-                    intent.putExtra(CONNECTED_MESSAGE, new ArrayList<String>().toArray() );
-                    startActivity(intent);
-
                     if (!MainActivity.DEBUG_MODE){
                         try {
                             Sender.getInstance().s_create(new GameRoomDef("-", geo));
@@ -155,6 +151,10 @@ public class ListGameRoomActivity extends Activity implements LocationListener{
                             Log.e( "ListGameRoomActivity", e.getMessage() );
                         }
                     }
+
+                    Intent intent = new Intent(ListGameRoomActivity.this, GameRoomActivity.class);
+                    intent.putExtra(CONNECTED_MESSAGE, new ArrayList<String>().toArray() );
+                    startActivity(intent);
 
                     break;
 

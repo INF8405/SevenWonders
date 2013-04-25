@@ -96,37 +96,33 @@ public class ZoomCardView extends RelativeLayout{
 			bl.addRule(RelativeLayout.CENTER_IN_PARENT);
 			playButton_.setLayoutParams(bl);
 			playButton_.setText("Play");
-			playButton_.setOnTouchListener(new OnTouchListener() {
-				@Override
-				public boolean onTouch(View arg0, MotionEvent event) {
-					GameScreenActivity screen = (GameScreenActivity)sefl_.getContext();
-					if (allCards_.get(current_).isPlayable()){
-						if (allCards_.get(current_).getTrades().size() == 0){
-							// Play card without trade
-							screen.play(allCards_.get(current_).getName(), new HashMap<Resource, List<NeighborReference>>(), false);
-						} 
-						else{ // Play card with trade
-							if (event.getActionMasked() == MotionEvent.ACTION_DOWN){
-								// Show trade popup - Fixme: send all trades to popup
-								showTradePopup(allCards_.get(current_).getTrades(), false);
-							}
-						}
-					}
-					closeMe();
-					return false;
-				}
-			});
+			playButton_.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    GameScreenActivity screen = (GameScreenActivity) sefl_.getContext();
+                    if (allCards_.get(current_).isPlayable()) {
+                        if (allCards_.get(current_).getTrades().size() == 0) {
+                            // Play card without trade
+                            screen.play(allCards_.get(current_).getName(), new HashMap<Resource, List<NeighborReference>>(), false);
+                        } else { // Play card with trade
+                            // Show trade popup - Fixme: send all trades to popup
+                            showTradePopup(allCards_.get(current_).getTrades(), false);
+                        }
+                    }
+                    closeMe();
+                }
+            });
 			playButton_.setEnabled(allCards_.get(current_).isPlayable());
 
 			Button discard = new Button(context);
 			discard.setLayoutParams(bl);
 			discard.setText("Discard");
-			discard.setOnTouchListener(new OnTouchListener() {
+			discard.setOnClickListener(new OnClickListener() {
                 @Override
-                public boolean onTouch(View view, MotionEvent motionEvent) {
+                public void onClick(View view) {
                     GameScreenActivity screen = (GameScreenActivity)sefl_.getContext();
                     screen.discard(allCards_.get(current_).getName());
-                    return false;
+                    closeMe();
                 }
             });
 
@@ -134,16 +130,12 @@ public class ZoomCardView extends RelativeLayout{
 			wonders.setLayoutParams(bl);
 			wonders.setText("Wonders");
 			if (canPlayWonder)
-				wonders.setOnTouchListener(new OnTouchListener() {				
-					@Override
-					public boolean onTouch(View arg0, MotionEvent event) {
-						int action = event.getActionMasked();
-						if (action == MotionEvent.ACTION_DOWN){
-							List<Player> allPlayers = ScreenSlidePagerAdapter.players_;
-							showTradePopup(allPlayers.get(allPlayers.size() - 1).wonderTrades, true);
-							closeMe();
-						}
-						return false;
+				wonders.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        List<Player> allPlayers = ScreenSlidePagerAdapter.players_;
+                        showTradePopup(allPlayers.get(allPlayers.size() - 1).wonderTrades, true);
+                        closeMe();
 					}
 				});
 			else 
