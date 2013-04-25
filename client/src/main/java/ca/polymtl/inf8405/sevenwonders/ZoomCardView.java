@@ -134,7 +134,13 @@ public class ZoomCardView extends RelativeLayout{
                     @Override
                     public void onClick(View view) {
                         List<Player> allPlayers = ScreenSlidePagerAdapter.players_;
-                        showTradePopup(allPlayers.get(allPlayers.size() - 1).wonderTrades, true);
+                        if (allPlayers.get(allPlayers.size() - 1).wonderTrades.size() != 0)
+                        	showTradePopup(allPlayers.get(allPlayers.size() - 1).wonderTrades, true);
+                        else {
+                        	GameScreenActivity screen = (GameScreenActivity)sefl_.getContext();
+                        	screen.play(allCards_.get(current_).getName(), 
+                        			new HashMap<Resource, List<NeighborReference>>(), true);
+                        }
                         closeMe();
 					}
 				});
