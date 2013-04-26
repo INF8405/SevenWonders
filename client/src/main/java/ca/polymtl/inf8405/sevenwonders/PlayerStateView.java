@@ -21,6 +21,7 @@ import java.util.*;
 public class PlayerStateView extends View{
 
 	private HashMap<CardInfo, Bitmap> cardsInHand_;
+	private List<CardInfo> listCardNames_ = new ArrayList<CardInfo>();
 	private Player player_;
 	private static float cardWidth_ = 0;
 	private static float cardHeight_ = 0;
@@ -28,20 +29,14 @@ public class PlayerStateView extends View{
 
 	private void init(Context context){
 		// Image by default
-//		setBackgroundResource(R.drawable.seven_wonders_bg);
+		//		setBackgroundResource(R.drawable.seven_wonders_bg);
 		cardsInHand_ = new HashMap<CardInfo, Bitmap>();
 		setOnTouchListener(new OnTouchListener() {
 			@Override
 			public boolean onTouch(View view, MotionEvent evt) {
-				// Get all card names
-				List<CardInfo> cards = new ArrayList<CardInfo>();
-				for( Map.Entry<CardInfo,Bitmap> entry : cardsInHand_.entrySet() ) {
-                    cards.add(entry.getKey());
-                }
-
 				int selectedCardId = findSelectedCard(evt.getX(), evt.getY());
 				if (selectedCardId != -1)
-					GameScreenActivity.showZoomPopup(self_, selectedCardId, cards, true, player_.canPlayWonder);
+					GameScreenActivity.showZoomPopup(self_, selectedCardId, listCardNames_, true, player_.canPlayWonder);
 				return false;
 			}
 		});
@@ -65,9 +60,9 @@ public class PlayerStateView extends View{
 		int top = getHeight() / 6; // 40
 		int left = 0;
 
-        for( Map.Entry<CardInfo,Bitmap> entry : cardsInHand_.entrySet() ) {
-            canvas.drawBitmap(entry.getValue(), left, top, null);
-            left += (int)cardWidth_;
+		for (CardInfo card: listCardNames_){
+			canvas.drawBitmap(cardsInHand_.get(card), left, top, null);
+			left += (int)cardWidth_;
 		}
 	}
 
@@ -78,6 +73,7 @@ public class PlayerStateView extends View{
 	}
 
 	public void setCards(List<CardInfo> cards){
+		listCardNames_ = cards;
 		Bitmap cardBm;
 		cardsInHand_.clear();
 		for (CardInfo card: cards){
@@ -91,17 +87,17 @@ public class PlayerStateView extends View{
 						(int)cardWidth_, (int)cardHeight_, false);
 			}
 			cardsInHand_.put(card, cardBm );
-		} 
+		}
 	}
-		
+
 	public void setPlayer(Player player){
 		invalidate();
 		player_ = player;
-//		Drawable civiDrawable = CivilisationLoader.getInstance().getDrawable(getContext(), player_.civilisation);
-//		Bitmap resized = Bitmap.createScaledBitmap(CardLoader.drawableToBitmap(civiDrawable), 
-//				getWidth(), getHeight(), false);
-//		setBackgroundDrawable(new BitmapDrawable(resized));
-		
+		//		Drawable civiDrawable = CivilisationLoader.getInstance().getDrawable(getContext(), player_.civilisation);
+		//		Bitmap resized = Bitmap.createScaledBitmap(CardLoader.drawableToBitmap(civiDrawable), 
+		//				getWidth(), getHeight(), false);
+		//		setBackgroundDrawable(new BitmapDrawable(resized));
+
 		setBackgroundDrawable(CivilisationLoader.getInstance().getDrawable(getContext(), player_.civilisation));
 	}
 
