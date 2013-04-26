@@ -14,7 +14,7 @@ import android.widget.Toast;
 import org.apache.thrift.TException;
 
 public class LogInActivity extends Activity {
-	private String username = "";
+	public static  String username = "";
 	public static String USER_NAME_MESSAGE="userName";
 
 	public LogInActivity(){

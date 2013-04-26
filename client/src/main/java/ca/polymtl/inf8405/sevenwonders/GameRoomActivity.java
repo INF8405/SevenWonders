@@ -42,7 +42,9 @@ public class GameRoomActivity extends Activity{
 			players_.add((String)user);
 		}
 
-
+		if (!players_.contains(LogInActivity.username))
+			players_.add(LogInActivity.username);
+		
 		adapter_.notifyDataSetChanged();
 	}
 
@@ -69,6 +71,7 @@ public class GameRoomActivity extends Activity{
 			runOnUiThread( new Thread( new Runnable() {
 				@Override
 				public void run() {
+					players_.clear();
 					Intent intent = new Intent(GameRoomActivity.this, GameScreenActivity.class);
 					intent.putExtra(MESSAGE_GAME_BEGIN, state);
 					startActivity(intent);
