@@ -15,5 +15,6 @@
 	</string>
     
     <color name="sand">#FFEF9C</color>
+    <color name="ressourceBg">#FFEF6C</color>
     <color name="black">#000000</color>
 </resources>

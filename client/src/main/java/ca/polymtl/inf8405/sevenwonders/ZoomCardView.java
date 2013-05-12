@@ -33,10 +33,10 @@ public class ZoomCardView extends RelativeLayout{
 	private boolean withButtonPanel_;
 
 	// Test - TO REMOVE
-	private TextView text;
-	private void changeText(){
-		text.setText("Index=" + current_);
-	}
+//	private TextView text;
+//	private void changeText(){
+//		text.setText("Index=" + current_);
+//	}
 
 	/**
 	 * Build the zoom view
@@ -64,12 +64,12 @@ public class ZoomCardView extends RelativeLayout{
 		img.setTag("imageView");
 		addView(img);
 
-		// Test textview - TO REMOVE
-		text = new TextView(context);
-		text.setLayoutParams(imgLayout);
-		text.setTextSize(40);
-		changeText();
-		addView(text);
+//		// Test textview - TO REMOVE
+//		text = new TextView(context);
+//		text.setLayoutParams(imgLayout);
+//		text.setTextSize(40);
+//		changeText();
+//		addView(text);
 
 		// Button close
 		Button closeButton = new Button(context);
@@ -150,7 +150,6 @@ public class ZoomCardView extends RelativeLayout{
 			LinearLayout ln = new LinearLayout(context);
 			ln.setOrientation(LinearLayout.VERTICAL);
 			ln.setGravity(Gravity.CENTER_VERTICAL);
-			ln.setBackgroundColor(Color.RED);
 			ln.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.FILL_PARENT));
 			ln.addView(playButton_);
 			ln.addView(wonders);
@@ -201,7 +200,7 @@ public class ZoomCardView extends RelativeLayout{
 			ImageView img = (ImageView)findViewWithTag("imageView");
 			img.setImageBitmap(CardLoader.getInstance()
 					.getBitmap(sefl_.getContext(), allCards_.get(current_).getName()));
-			changeText();
+//			changeText();
 		}
 		changePlayButtonState();
 	}
@@ -212,7 +211,7 @@ public class ZoomCardView extends RelativeLayout{
 			ImageView img = (ImageView)findViewWithTag("imageView");
 			img.setImageBitmap(CardLoader.getInstance()
 					.getBitmap(sefl_.getContext(), allCards_.get(current_).getName()));
-			changeText();
+//			changeText();
 		}
 		changePlayButtonState();
 	}

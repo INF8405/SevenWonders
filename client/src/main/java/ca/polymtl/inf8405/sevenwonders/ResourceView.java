@@ -16,6 +16,8 @@ import ca.polymtl.inf8405.sevenwonders.model.*;
 
 import java.util.*;
 
+import com.google.android.gms.R.color;
+
 public class ResourceView extends CardView {
 
 	private ResourceView sefl_ = this;
@@ -24,7 +26,7 @@ public class ResourceView extends CardView {
 	private static float CARD_HEIGHT = 0;
 
 	private void init(Context context){
-		setBackgroundColor(Color.GREEN);
+		//setBackgroundResource(color.ressourceBg);
 
 		// Calcul card size and margin value based on the screen dimensions
 		int screenWidth = ((WindowManager)context
