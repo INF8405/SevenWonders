@@ -16,4 +16,5 @@ server on his own, we beleive that there is no effect on the sales of the physic
 copyright holder.
 
 == Trello
+
 https://trello.com/b/epzEegka/seven-wonders
