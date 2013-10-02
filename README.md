@@ -14,3 +14,6 @@ of the game for the educational purpose
 We didn't distributed the work on google play distrubtion network or over other means. While someone could host a game
 server on his own, we beleive that there is no effect on the sales of the physical game for the 
 copyright holder.
+
+== Trello
+https://trello.com/b/epzEegka/seven-wonders
