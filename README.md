@@ -1,3 +1,30 @@
+*An electronic version of Seven Wonders*
+
+== Android Client
+
+* 
+* 
+* missing some civilisation abilities
+
+== Server
+
+== Model
+
+* contains base version
+* city expension
+* leaders expension (barely started)
+
+## Setup
+
+* ```chmod a+x setup.sh```
+* ```./setup.sh```
+
+## Trello
+
+https://trello.com/b/epzEegka/seven-wonders
+
+## Legal
+
 This project contains the game logic and the game server for the seven wonders game
 
 it's was done in the academical context of INF8405 Informatique Mobile at Polytechnique Montreal 
@@ -14,7 +41,3 @@ of the game for the educational purpose
 We didn't distributed the work on google play distrubtion network or over other means. While someone could host a game
 server on his own, we beleive that there is no effect on the sales of the physical game for the 
 copyright holder.
-
-## Trello
-
-https://trello.com/b/epzEegka/seven-wonders
