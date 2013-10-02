@@ -1,14 +1,31 @@
 *An electronic version of Seven Wonders*
 
-== Android Client
+## Android Client
 
-* 
-* 
-* missing some civilisation abilities
+![Android device in landscape with a full screen google map. A droid icon is pinned to the map where your are located](https://raw.github.com/INF8405/SevenWonders/master/screenshots/1_CreateGame.png)
+*Figure 1 - User create a game*
 
-== Server
+![Android device in landscape showing one player with is civilisation (Gizah B) and his hand (seven cards) at the begining of the game](https://raw.github.com/INF8405/SevenWonders/master/screenshots/4_GameStart.png)
+*Figure 2 - Game begins*
 
-== Model
+![Android device in landscape showing three possible actions for baths: play, wonders and discard. Ore vain is in the player tableau and her civilisation is babylon A](https://raw.github.com/INF8405/SevenWonders/master/screenshots/6_GameHand.png)
+*Figure 2 - Possible actions*
+
+![Android device in landscape a modal screen is showing: trade choices: 1 Stone from Left; you can select the trade text or a cancel button](https://raw.github.com/INF8405/SevenWonders/master/screenshots/7_GameTrade.png)
+*Figure 2 - Trade*
+
+![Android device in landscape. guix swipping to the left the picture showes the transition between the screens](https://raw.github.com/INF8405/SevenWonders/master/screenshots/8_GameSwipeLeft.png)
+*Figure 2 - Swipping left*
+
+![Android device in landscape JR has a card that gives stone/wood](https://github.com/INF8405/SevenWonders/blob/master/screenshots/8_GamePlayerLeft.png)
+*Figure 2 - Left player has the stone required for the car Bath*
+
+![Multiple ressources and civil card are stacked in the player's tableau](https://raw.github.com/INF8405/SevenWonders/master/screenshots/8_GameScore.png)
+*Figure 2 - Mid Game*
+
+## Server
+
+## Model
 
 * contains base version
 * city expension
